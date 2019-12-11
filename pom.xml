@@ -36,7 +36,7 @@
         <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
     </properties>
   
-  <!-- <repositories>
+  <repositories>
     <repository>
       <id>gitlab-nexus</id>
       <url>${env.MVN_SNAPSHOTS}</url>
@@ -51,7 +51,7 @@
       <id>gitlab-nexus</id>
       <url>${env.MVN_SNAPSHOTS}</url>
     </snapshotRepository>
-  </distributionManagement> -->
+  </distributionManagement>
   
   <dependencies>
   	<dependency>
