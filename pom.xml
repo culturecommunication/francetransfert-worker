@@ -12,11 +12,31 @@
     <version>1.5.7.RELEASE</version>
   </parent>
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
+    <swagger-annotations-version>1.5.21</swagger-annotations-version>
+        <swagger.codegen.version>2.3.1</swagger.codegen.version>
+        <springfox-swagger.version>2.9.2</springfox-swagger.version>
+        <jersey-version>2.25.1</jersey-version>
+        <jodatime-version>2.7</jodatime-version>
+        <build-helper-maven-plugin.version>1.9.1</build-helper-maven-plugin.version>
+        <model.mapper.version>2.3.0</model.mapper.version>
+        <java.jwt.version>3.7.0</java.jwt.version>
+        <!-- java version -->
+        <java.source.version>11</java.source.version>
+        <java.target.version>11</java.target.version>
+
+		<maven.compiler.source>1.8</maven.compiler.source>
+	    <maven.compiler.target>1.8</maven.compiler.target>
+        <!-- Project properties -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Maven plugins version -->
+        <maven-javadoc-plugin.version>2.10.2</maven-javadoc-plugin.version>
+        <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+        <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
+    </properties>
   
-  <repositories>
+  <!-- <repositories>
     <repository>
       <id>gitlab-nexus</id>
       <url>${env.MVN_SNAPSHOTS}</url>
@@ -31,7 +51,7 @@
       <id>gitlab-nexus</id>
       <url>${env.MVN_SNAPSHOTS}</url>
     </snapshotRepository>
-  </distributionManagement>
+  </distributionManagement> -->
   
   <dependencies>
   	<dependency>
