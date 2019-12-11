@@ -15,6 +15,24 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
+  
+  <repositories>
+    <repository>
+      <id>gitlab-nexus</id>
+      <url>${env.MVN_SNAPSHOTS}</url>
+    </repository>
+  </repositories>
+  <distributionManagement>
+    <repository>
+      <id>gitlab-nexus</id>
+      <url>${env.MVN_RELEASES}</url>
+    </repository>
+    <snapshotRepository>
+      <id>gitlab-nexus</id>
+      <url>${env.MVN_SNAPSHOTS}</url>
+    </snapshotRepository>
+  </distributionManagement>
+  
   <dependencies>
   	<dependency>
 		<groupId>com.opengroup.mc.francetransfert.api</groupId>
