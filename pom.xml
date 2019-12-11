@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.opengroup.mc.francetransfert.api</groupId>
   <artifactId>francetransfert-worker-api</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.0.1-SNAPSHOT</version>
   <name>France Transfert Task Worker</name>
   <parent>
     <!-- Your own application should inherit from spring-boot-starter-parent -->
