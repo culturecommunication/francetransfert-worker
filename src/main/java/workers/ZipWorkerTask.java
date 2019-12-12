@@ -4,26 +4,21 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
 
 public class ZipWorkerTask implements Runnable {
 
 	String prefix;
-	String tmpFolderPath = "C:\\Users\\EXT_HTA37\\tmp\\";
+	String tmpFolderPath = "";
 
 	public ZipWorkerTask(String prefix) {
 		this.prefix = prefix;
