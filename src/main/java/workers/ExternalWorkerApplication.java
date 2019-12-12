@@ -19,9 +19,9 @@ public class ExternalWorkerApplication {
     SpringApplication.run(ExternalWorkerApplication.class, args);
     RedisManager manager = new RedisManager();
     ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-    StatsWorker statsWorker = new StatsWorker(manager);
+//    StatsWorker statsWorker = new StatsWorker(manager);
     ZipWorker zipWorker = new ZipWorker(manager);
-    executor.execute(statsWorker);
+//    executor.execute(statsWorker);
     executor.execute(zipWorker);
   }
 } 

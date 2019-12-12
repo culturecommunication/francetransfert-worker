@@ -24,7 +24,7 @@ public class ZipWorker implements Runnable{
 	    		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
 	            @Override
 	            public void onMessage(String channel, String message) {
-	            	ZipWorkerTask task = new ZipWorkerTask();
+	            	ZipWorkerTask task = new ZipWorkerTask(message);
 	            	executor.execute(task);
 	                System.out.println("Channel " + channel + " has sent a message : " + message );
 	            }
