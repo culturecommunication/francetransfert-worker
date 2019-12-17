@@ -37,7 +37,7 @@ public class NotificationWorker {
 	private ArrayList<String> getEmailsToBeNotifiedList(String fileName) {
 		ArrayList<String> emailList = new ArrayList<String>();
 		
-		//TODO get dat from redis and for each user that has not downloaded 
+		//TODO get that from redis and for each user that has not downloaded 
 		// the file yet we add them to the list of emails to notify.
 		
 		return emailList;

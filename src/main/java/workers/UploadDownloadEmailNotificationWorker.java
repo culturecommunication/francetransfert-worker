@@ -9,11 +9,11 @@ import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisMa
 import redis.clients.jedis.JedisPubSub;
 
 
-public class ZipWorker implements Runnable{
+public class UploadDownloadEmailNotificationWorker implements Runnable{
 	
     RedisManager manager;
     JedisPubSub jedisPubSub;
-    public ZipWorker() {
+    public UploadDownloadEmailNotificationWorker() {
     	this.manager = RedisManager.getInstance();
 //    	this.jedisPubSub = createPubSub();
     }
@@ -51,11 +51,11 @@ public class ZipWorker implements Runnable{
 	public void run() {
 		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
 		while (true) {
-			List<String> returnedBLPOPList = manager.subscribeFT("zip-worker-queue");
-			ZipWorkerTask task = new ZipWorkerTask(returnedBLPOPList.get(1));
+			List<String> returnedBLPOPList = manager.subscribeFT("email-notification-queue");
+			UploadDownloadEmailNotificationWorkerTask task = new UploadDownloadEmailNotificationWorkerTask(returnedBLPOPList.get(1));
         	executor.execute(task);
-			System.out.println(returnedBLPOPList);
+//			System.out.println(returnedBLPOPList);
 		}
-//		manager.subscribe(jedisPubSub, "zip-worker-queue");
+//		manager.subscribe(jedisPubSub, "email-notification-queue");
 	}
 }

@@ -13,12 +13,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.amazonaws.services.s3.model.S3Object;
+import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
 import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
 
 public class ZipWorkerTask implements Runnable {
 
 	String prefix;
-	String tmpFolderPath = "";
+	String tmpFolderPath = "C:\\Users\\EXT_HTA37\\tmp\\";
+	String emailNotificationChannel = "email-notification-queue";
 
 	public ZipWorkerTask(String prefix) {
 		this.prefix = prefix;
@@ -26,8 +28,10 @@ public class ZipWorkerTask implements Runnable {
 
 	@Override
 	public void run() {
+		System.out.println("I AM INSIDE ZIPPER");
 		StorageManager manager = new StorageManager();
 		String bucketName = manager.getTodayBucketName();
+		bucketName = "fr-gouv-culture-francetransfert-rec1-20191212";
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, getPrefix());
 		try {
 			downloadFilesToTempFolder(manager, bucketName, list);
@@ -36,10 +40,15 @@ public class ZipWorkerTask implements Runnable {
 			File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix());
 			deleteFilesFromTemp(fileToDelete);
 			deleteFilesFromOSU(manager, bucketName);
+			notifyEmailWorker();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private void notifyEmailWorker() {
+		RedisManager.getInstance().publishFT(emailNotificationChannel, prefix);
 	}
 
 	private void deleteFilesFromOSU(StorageManager manager, String bucketName) {
@@ -58,17 +67,16 @@ public class ZipWorkerTask implements Runnable {
 	}
 
 	private void uploadZippedEnclosure() {
-		// TODO Auto-generated method stub
-
+		
 	}
 
 	private void zipDownloadedContent(String zippedFileName) throws IOException {
 		String sourceFile = getBaseFolderNameWithEnclosurePrefix();
-		FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithEnclosurePrefix() + ".zip");
+		FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName) + ".zip");
 		ZipOutputStream zipOut = new ZipOutputStream(fos);
 		File fileToZip = new File(sourceFile);
 
-		zipFile(fileToZip, zippedFileName, zipOut);
+		zipFile(fileToZip, fileToZip.getName(), zipOut);
 		zipOut.flush();
 		zipOut.close();
 		fos.flush();
@@ -105,7 +113,7 @@ public class ZipWorkerTask implements Runnable {
 		try {
 			for (String fileName : list) {
 				S3Object object = manager.getObjectByName(bucketName, fileName);
-				if (!fileName.endsWith(File.separator)) {
+				if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
 					writeFile(object, fileName);
 				}
 			}
@@ -136,6 +144,11 @@ public class ZipWorkerTask implements Runnable {
 
 	private String getBaseFolderNameWithEnclosurePrefix() {
 		String baseString = tmpFolderPath + getPrefix();
+		return baseString;
+	}
+	
+	private String getBaseFolderNameWithZipPrefix(String zippedFileName) {
+		String baseString = tmpFolderPath + zippedFileName;
 		return baseString;
 	}
 
