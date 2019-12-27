@@ -1,12 +1,11 @@
 package workers;
 
+import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
+import redis.clients.jedis.JedisPubSub;
+
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-
-import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
-
-import redis.clients.jedis.JedisPubSub;
 
 
 public class StatsWorker implements Runnable{
