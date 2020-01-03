@@ -36,7 +36,7 @@ public class Enclosure {
 
     private String message;
 
-    private boolean existPassword;
+    private boolean withPassword;
 
     private String urlDownload;
 
@@ -51,7 +51,7 @@ public class Enclosure {
         String dateCreationEnclosure = enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey());
         String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
         String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
-        boolean existPassword = password != null && !password.isEmpty();
+        boolean withPassword = password != null && !password.isEmpty();
 
         return Enclosure.builder()
                 .guid(enclosureId)
@@ -63,7 +63,7 @@ public class Enclosure {
                 .sender(senderEnclosure)
                 .recipients(recipientsEnclosure)
                 .message(message)
-                .existPassword(existPassword)
+                .withPassword(withPassword)
                 .build();
     }
 

@@ -44,19 +44,19 @@ public class MailNotificationServicesTest {
                 .totalSize(17)
                 .expireDate(LocalDateTime.now().plusDays(30).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)))
                 .sender("louay.haddad@live.fr")
-                .recipients(Arrays.asList("louay.haddad@live.fr", "louayhadded2012@gmail.com"))
+                .recipients(Arrays.asList("louay.haddad@gouv.fr", "louayhadded2012@gmail.com"))
                 .message("Test message content")
-                .existPassword(false)
+                .withPassword(false)
                 .build();
     }
 
     @Test
-    public void shouldSendMailToRecipient() throws Exception {
+    public void shouldSendMailToRecipientTest() throws Exception {
         //given
-        String recipient = "louay.haddad@live.fr";
+        String recipient = "louay.haddad@gouv.fr";
         String message = "Test message content";
+        enclosure.setUrlDownload("download_url");
         //when
-//        mailClient.sendMails(enclosure);
         mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_RECIPIENT.getValue());
         //then
         String content = message + "</span>";
@@ -64,16 +64,28 @@ public class MailNotificationServicesTest {
     }
 
     @Test
-    public void shouldSendMailToSender() throws Exception {
+    public void shouldSendMailToSenderTest() throws Exception {
         //given
         String recipient = "louay.haddad@live.fr";
         String message = "Test message content";
+        enclosure.setUrlDownload("download_url");
         //when
         mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_SENDER.getValue());
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
     }
+
+    @Test
+    public void sendToRecipientsTests() throws Exception {
+        //given
+        //when
+        mailNotificationServices.sendToRecipients(enclosure, NotificationTemplate.MAIL_RECIPIENT.getValue());
+        //then
+        String content ="</span>";
+        assertReceivedMessageContains(content);
+    }
+
 
     private void assertReceivedMessageContains(String expected) throws IOException, MessagingException {
         MimeMessage[] receivedMessages = smtpServer.getReceivedMessages();

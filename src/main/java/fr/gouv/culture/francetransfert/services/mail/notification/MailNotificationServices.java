@@ -1,5 +1,7 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
+import fr.gouv.culture.francetransfert.security.JwtRequest;
+import fr.gouv.culture.francetransfert.security.JwtTokenUtil;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +23,6 @@ import java.util.List;
 @Slf4j
 public class MailNotificationServices {
 
-    @Autowired
-    private JavaMailSender emailSender;
-
-    @Autowired
-    private MailContentBuilder htmlBuilder;
-
     @Value("${subject.recipient}")
     private String subjectRecipient;
 
@@ -36,8 +32,20 @@ public class MailNotificationServices {
     @Value("${spring.mail.username}")
     private String franceTransfertMail;
 
+    @Value("${url.download.api}")
+    private String urlDownloadApi;
 
     private final static String logo_france_transfert = "/static/images/france_transfert.PNG";
+
+    @Autowired
+    private JavaMailSender emailSender;
+
+    @Autowired
+    private MailContentBuilder htmlBuilder;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
 
     public void sendMails(Enclosure enclosure) throws Exception{
         sendToSenderEnclosure(enclosure, NotificationTemplate.MAIL_SENDER.getValue());
@@ -53,6 +61,8 @@ public class MailNotificationServices {
         List<String> recipients = enclosure.getRecipients();
         if (!CollectionUtils.isEmpty(recipients)) {
             for (String recipient: recipients) {
+                String token = jwtTokenUtil.generateTokenDownload(new JwtRequest(enclosure.getGuid(), recipient, enclosure.isWithPassword()));
+                enclosure.setUrlDownload(urlDownloadApi + "/" + token);
                 prepareAndSend(recipient, subject, enclosure, templateName);
             }
         }
