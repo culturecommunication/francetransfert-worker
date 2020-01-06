@@ -3,6 +3,7 @@ package fr.gouv.culture.francetransfert.worker;
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
+import fr.gouv.culture.francetransfert.worker.enums.RedisQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,19 +20,26 @@ public class ScheduledTasks {
     @Autowired
     MailNotificationServices mailNotificationServices;
 
+
     @Scheduled(cron = "0 * * * * ?")
     public void sendEmailNotificationUploadDownload() throws Exception {
         RedisManager manager = RedisManager.getInstance();
-        List<String> returnedBLPOPList = manager.subscribeFT("email-notification-queue");
+        List<String> returnedBLPOPList = manager.subscribeFT(RedisQueue.MAIL_QUEUE.getValue());
         String enclosureId = returnedBLPOPList.get(1);
         log.debug("start send emails for enclosure N: {}", enclosureId);
-        mailNotificationServices.sendMails(Enclosure.build(enclosureId));
+        mailNotificationServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId));
     }
 
     @Scheduled(cron = "0 * * * * ?")
     public void zipWorker() throws IOException {
         RedisManager manager = RedisManager.getInstance();
-        List<String> returnedBLPOPList = manager.subscribeFT("zip-worker-queue");
+        List<String> returnedBLPOPList = manager.subscribeFT(RedisQueue.ZIP_QUEUE.getValue());
+//        zipWorkerTask.zipWorker();
+    }
+
+    @Scheduled(cron = "${scheduled.relaunch.mail}")
+    public void relaunchMail() throws Exception{
+        mailNotificationServices.sendMailsRelaunch();
     }
 
     @Scheduled(cron = "0 * * * * ?")

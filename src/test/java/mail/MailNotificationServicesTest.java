@@ -57,7 +57,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_RECIPIENT.getValue());
+        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
@@ -70,7 +70,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_SENDER.getValue());
+        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
@@ -80,7 +80,17 @@ public class MailNotificationServicesTest {
     public void sendToRecipientsTests() throws Exception {
         //given
         //when
-        mailNotificationServices.sendToRecipients(enclosure, NotificationTemplate.MAIL_RECIPIENT.getValue());
+        mailNotificationServices.sendToRecipients(enclosure, null, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
+        //then
+        String content ="</span>";
+        assertReceivedMessageContains(content);
+    }
+
+    @Test
+    public void sendMailsRelaunchTests() throws Exception {
+        //given
+        //when
+        mailNotificationServices.sendMailsRelaunch();
         //then
         String content ="</span>";
         assertReceivedMessageContains(content);

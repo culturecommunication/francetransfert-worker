@@ -39,15 +39,12 @@ public class JwtTokenUtil implements Serializable {
 	 * @return
 	 */
 	public String generateTokenDownload(JwtRequest jwtToken) throws ParseException {
-		SimpleDateFormat sdf = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
-		String dateInString = "01-01-2025 10:20:56";
-		Date date = sdf.parse(dateInString);
 		return Jwts.builder()
 				.claim("mailRecipient", jwtToken.getMailRecipient())
 				.claim("enclosureId", jwtToken.getEnclosureId())
 				.claim("withPassword", jwtToken.isWithPassword())
 				.setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(date)
+				.setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 60 * 60 * 1000))
 				.signWith(getKey(), SignatureAlgorithm.HS512)
 				.compact();
 	}

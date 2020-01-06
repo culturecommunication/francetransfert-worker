@@ -1,7 +1,9 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
+import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.security.JwtRequest;
 import fr.gouv.culture.francetransfert.security.JwtTokenUtil;
+import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import lombok.extern.slf4j.Slf4j;
@@ -17,23 +19,40 @@ import org.springframework.util.CollectionUtils;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @Slf4j
 public class MailNotificationServices {
+//  subject mail
+    @Value("${subject.sender}")
+    private String subjectSender;
 
     @Value("${subject.recipient}")
     private String subjectRecipient;
 
-    @Value("${subject.sender}")
-    private String subjectSender;
+    @Value("${subject.relaunch.recipient}")
+    private String subjectRelaunchRecipient;
 
+    @Value("${subject.relaunch.sender}")
+    private String subjectRelaunchSender;
+
+//    properties mail France transfert SMTP
     @Value("${spring.mail.username}")
     private String franceTransfertMail;
 
     @Value("${url.download.api}")
     private String urlDownloadApi;
+
+    @Value("${relaunch.mail.days}")
+    private int relaunchDays;
+
+    @Value("${enclosure.expire.days}")
+    private int numberDaysOfValidityEnclosure;
+
+
 
     private final static String logo_france_transfert = "/static/images/france_transfert.PNG";
 
@@ -46,18 +65,36 @@ public class MailNotificationServices {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
-
-    public void sendMails(Enclosure enclosure) throws Exception{
-        sendToSenderEnclosure(enclosure, NotificationTemplate.MAIL_SENDER.getValue());
-        sendToRecipients(enclosure, NotificationTemplate.MAIL_RECIPIENT.getValue());
+    // Send Mails to snder and recipients
+    public void sendMailsAvailableEnclosure(Enclosure enclosure) throws Exception{
+        sendToSenderEnclosure(enclosure, subjectSender, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
+        sendToRecipients(enclosure, subjectRecipient, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
     }
 
-    public void sendToSenderEnclosure(Enclosure enclosure, String templateName) throws Exception{
-        prepareAndSend(enclosure.getSender(), subjectSender, enclosure, templateName);
+    // Send mails relaunch to recipients
+    public void sendMailsRelaunch() throws Exception {
+        StorageManager storageManager = new StorageManager();
+        String buketName ="fr-gouv-culture-francetransfert-devic1-plis-" + LocalDateTime.now().minusDays(numberDaysOfValidityEnclosure - relaunchDays).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        List<String> bucketcontents = storageManager.listBucketContent(buketName);
+        bucketcontents.stream().forEach(enclosureId -> {
+            try {
+                Enclosure enclosure = Enclosure.build(enclosureId);
+                sendToSenderEnclosure(enclosure, subjectRelaunchSender, NotificationTemplate.MAIL_RELAUNCH_SENDER.getValue());
+                sendToRecipients(enclosure, subjectRelaunchRecipient, NotificationTemplate.MAIL_RELAUNCH_RECIPIENT.getValue());
+            } catch (Exception e) {
+                throw new WorkerException("Enclosure build");
+            }
+        });
     }
 
-    public void sendToRecipients(Enclosure enclosure, String templateName) throws Exception{
-        String subject = enclosure.getSender() + " " + subjectRecipient;
+    // Send mails to sender
+    public void sendToSenderEnclosure(Enclosure enclosure, String subject, String templateName) throws Exception{
+        prepareAndSend(enclosure.getSender(), subject, enclosure, templateName);
+    }
+
+    // Send mails to recipients
+    public void sendToRecipients(Enclosure enclosure, String subject, String templateName) throws Exception{
+        subject = enclosure.getSender() + " " + subject;
         List<String> recipients = enclosure.getRecipients();
         if (!CollectionUtils.isEmpty(recipients)) {
             for (String recipient: recipients) {
