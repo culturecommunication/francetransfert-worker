@@ -1,13 +1,12 @@
+/*
 package workers;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @SpringBootApplication
 @EnableScheduling
@@ -23,4 +22,4 @@ public class ExternalWorkerApplication {
     executor.execute(statsWorker);
     executor.execute(uploadDownloadEmailNotificationWorker);
   }
-} 
+} */
