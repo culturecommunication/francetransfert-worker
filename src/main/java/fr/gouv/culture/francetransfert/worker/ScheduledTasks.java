@@ -35,6 +35,8 @@ public class ScheduledTasks {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueue.ZIP_QUEUE.getValue());
 //        zipWorkerTask.zipWorker();
+        String enclosureId = "";
+        manager.rpush(RedisQueue.MAIL_QUEUE.getValue(), enclosureId);
     }
 
     @Scheduled(cron = "${scheduled.relaunch.mail}")

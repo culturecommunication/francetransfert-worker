@@ -1,5 +1,9 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
+import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
+import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.enums.RedisKeysEnum;
+import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.DateUtils;
 import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.security.JwtRequest;
 import fr.gouv.culture.francetransfert.security.JwtTokenUtil;
@@ -19,6 +23,7 @@ import org.springframework.util.CollectionUtils;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -49,11 +54,6 @@ public class MailNotificationServices {
     @Value("${relaunch.mail.days}")
     private int relaunchDays;
 
-    @Value("${enclosure.expire.days}")
-    private int numberDaysOfValidityEnclosure;
-
-
-
     private final static String logo_france_transfert = "/static/images/france_transfert.PNG";
 
     @Autowired
@@ -73,17 +73,20 @@ public class MailNotificationServices {
 
     // Send mails relaunch to recipients
     public void sendMailsRelaunch() throws Exception {
-        StorageManager storageManager = new StorageManager();
-        String buketName ="fr-gouv-culture-francetransfert-devic1-plis-" + LocalDateTime.now().minusDays(numberDaysOfValidityEnclosure - relaunchDays).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        List<String> bucketcontents = storageManager.listBucketContent(buketName);
-        bucketcontents.stream().forEach(enclosureId -> {
-            try {
-                Enclosure enclosure = Enclosure.build(enclosureId);
-                sendToSenderEnclosure(enclosure, subjectRelaunchSender, NotificationTemplate.MAIL_RELAUNCH_SENDER.getValue());
-                sendToRecipients(enclosure, subjectRelaunchRecipient, NotificationTemplate.MAIL_RELAUNCH_RECIPIENT.getValue());
-            } catch (Exception e) {
-                throw new WorkerException("Enclosure build");
-            }
+        RedisManager redisManager = RedisManager.getInstance();
+        redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).stream().forEach(date -> {
+            redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).stream().forEach(enclosureId -> {
+                try {
+                    LocalDateTime exipireEnclosureDate = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(enclosureId, EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
+                    if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
+                        Enclosure enclosure = Enclosure.build(enclosureId);
+                        sendToSenderEnclosure(enclosure, subjectRelaunchSender, NotificationTemplate.MAIL_RELAUNCH_SENDER.getValue());
+                        sendToRecipients(enclosure, subjectRelaunchRecipient, NotificationTemplate.MAIL_RELAUNCH_RECIPIENT.getValue());
+                    }
+                } catch (Exception e) {
+                    throw new WorkerException("Enclosure build error");
+                }
+            });
         });
     }
 
