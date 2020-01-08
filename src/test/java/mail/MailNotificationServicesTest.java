@@ -9,6 +9,7 @@ import fr.gouv.culture.francetransfert.services.mail.notification.enums.Notifica
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
 
+@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = FranceTransfertWorkerStarter.class)
 public class MailNotificationServicesTest {
@@ -64,6 +66,7 @@ public class MailNotificationServicesTest {
         assertReceivedMessageContains(content);
     }
 
+    @Ignore
     @Test
     public void shouldSendMailToSenderTest() throws Exception {
         //given
