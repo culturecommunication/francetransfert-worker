@@ -32,7 +32,7 @@ public class Enclosure {
 
     private String sender;
 
-    private List<String> recipients;
+    private Map<String, String> recipients;
 
     private String message;
 
@@ -46,9 +46,9 @@ public class Enclosure {
         List<String> dirsOfEnclosure = RedisUtils.getRootDirs(redisManager, enclosureId);
         int totalSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
         String senderEnclosure = RedisUtils.getSenderEnclosure(redisManager, enclosureId);
-        List<String> recipientsEnclosure = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
+        Map<String, String> recipientsEnclosure = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
         Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
-        String dateCreationEnclosure = enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey());
+        String expireEnclosureDate = enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey());
         String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
         String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
         boolean withPassword = password != null && !password.isEmpty();
@@ -59,7 +59,7 @@ public class Enclosure {
                 .rootDirs(dirsOfEnclosure)
                 .countElements(filesOfEnclosure.size()+dirsOfEnclosure.size())
                 .totalSize(totalSize)
-                .expireDate(WorkerUtils.getExipreDate(dateCreationEnclosure))
+                .expireDate(expireEnclosureDate)
                 .sender(senderEnclosure)
                 .recipients(recipientsEnclosure)
                 .message(message)

@@ -2,6 +2,7 @@ package mail;
 
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
+import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.FranceTransfertWorkerStarter;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
@@ -44,7 +45,7 @@ public class MailNotificationServicesTest {
                 .totalSize(17)
                 .expireDate(LocalDateTime.now().plusDays(30).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)))
                 .sender("louay.haddad@live.fr")
-                .recipients(Arrays.asList("louay.haddad@gouv.fr", "louayhadded2012@gmail.com"))
+                .recipients(RedisUtils.generateMapRedis(Arrays.asList("louay.haddad@gouv.fr", "louayhadded2012@gmail.com"), Arrays.asList("e4cce869-6f3d-4e10-900a-74299602f460", "6efb01a7-bd3d-46a9-ac12-33085f76ce1c")))
                 .message("Test message content")
                 .withPassword(false)
                 .build();

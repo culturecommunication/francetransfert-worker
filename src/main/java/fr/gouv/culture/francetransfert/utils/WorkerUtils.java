@@ -1,7 +1,9 @@
 package fr.gouv.culture.francetransfert.utils;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.Locale;
 
 public class WorkerUtils {
@@ -24,7 +26,8 @@ public class WorkerUtils {
         return result;
     }
 
-    public static String getExipreDate(String dateCreationEnclosure) {
-        return  convertStringToLocalDateTime(convertStringToLocalDateTime(dateCreationEnclosure).plusDays(30));
+    public static String base64Encoder(String string) throws UnsupportedEncodingException {
+        return Base64.getEncoder().encodeToString(string.getBytes("utf-8"));
     }
+
 }
