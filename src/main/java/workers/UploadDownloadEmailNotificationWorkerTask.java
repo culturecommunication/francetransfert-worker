@@ -1,3 +1,4 @@
+/*
 package workers;
 
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
@@ -43,3 +44,4 @@ public class UploadDownloadEmailNotificationWorkerTask implements Runnable {
 		RedisManager.getInstance().publish(statsChannel, prefix);
 	}
 }
+*/

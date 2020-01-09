@@ -1,3 +1,4 @@
+/*
 package workers;
 
 import org.slf4j.Logger;
@@ -167,3 +168,4 @@ public class MailSender {
 		this.textTemplate = textTemplate;
 	}
 }
+*/

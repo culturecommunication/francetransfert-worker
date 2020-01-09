@@ -30,9 +30,6 @@ public class MailNotificationServices {
     @Value("${url.download.api}")
     private String urlDownloadApi;
 
-    @Value("${testprofile}")
-    private String testprofile;
-
     @Autowired
     private JavaMailSender emailSender;
 

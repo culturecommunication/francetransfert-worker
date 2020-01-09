@@ -1,3 +1,4 @@
+/*
 package workers;
 
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
@@ -57,4 +58,4 @@ public class UploadDownloadEmailNotificationWorker implements Runnable{
 		}
 //		manager.subscribe(jedisPubSub, "email-notification-queue");
 	}
-}
+}*/

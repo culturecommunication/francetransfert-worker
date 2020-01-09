@@ -28,8 +28,8 @@ public class NotificationWorker {
 		// TODO Get data for file from redis, check for each user if it was downloaded, if not send email
 		ArrayList<String> emailList = getEmailsToBeNotifiedList(fileName);
 		for (String emailAddress : emailList) {
-			MailSender mailSender = new MailSender();
-			mailSender.sendDeletionNotificationMail(emailAddress);
+//			MailSender mailSender = new MailSender();
+//			mailSender.sendDeletionNotificationMail(emailAddress);
 		}
 	}
 
