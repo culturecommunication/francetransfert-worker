@@ -4,7 +4,9 @@ import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.FranceTransfertWorkerStarter;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import org.junit.After;
@@ -31,6 +33,13 @@ public class MailNotificationServicesTest {
 
     @Autowired
     private MailNotificationServices mailNotificationServices;
+
+    @Autowired
+    private MailRelaunchServices mailRelaunchServices;
+
+    @Autowired
+    private MailAvailbleEnclosureServices mailAvailbleEnclosureServices;
+
 
     private GreenMail smtpServer;
     private Enclosure enclosure;
@@ -81,20 +90,10 @@ public class MailNotificationServicesTest {
     }
 
     @Test
-    public void sendToRecipientsTests() throws Exception {
-        //given
-        //when
-        mailNotificationServices.sendToRecipients(enclosure, null, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
-        //then
-        String content ="</span>";
-        assertReceivedMessageContains(content);
-    }
-
-    @Test
     public void sendMailsRelaunchTests() throws Exception {
         //given
         //when
-        mailNotificationServices.sendMailsRelaunch();
+        mailRelaunchServices.sendMailsRelaunch();
         //then
         String content ="</span>";
         assertReceivedMessageContains(content);

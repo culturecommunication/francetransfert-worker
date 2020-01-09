@@ -40,6 +40,8 @@ public class Enclosure {
 
     private String urlDownload;
 
+    private String recipientDownloadInProgress;
+
     public static Enclosure build(String enclosureId) throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
         List<String> filesOfEnclosure = RedisUtils.getRootFiles(redisManager, enclosureId);
