@@ -1,6 +1,7 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,12 @@ public class MailDownloadServices {
     MailNotificationServices mailNotificationServices;
 
     public void sendDownloadEnclosure(Enclosure enclosure, String recipientId) throws Exception {
-        Optional<Map.Entry<String, String>> optionEntry = enclosure.getRecipients().entrySet().stream().filter(
-                entryRecipient -> entryRecipient.getValue().equals(recipientId)
+        Optional<Recipient> optionalRecipient = enclosure.getRecipients().stream().filter(
+                entryRecipient -> entryRecipient.getId().equals(recipientId)
         ).findFirst();
-        if (optionEntry.isPresent()) {
-            Map.Entry<String, String> entry = optionEntry.get();
-            enclosure.setRecipientDownloadInProgress(entry.getKey());
+        if (optionalRecipient.isPresent()) {
+            Recipient entry = optionalRecipient.get();
+            enclosure.setRecipientDownloadInProgress(entry.getMail());
             mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownload, enclosure, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
         }
     }

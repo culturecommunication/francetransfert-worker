@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,19 +21,19 @@ public class Enclosure {
 
     private String guid;
 
-    private List<String> rootFiles;
+    private List<RootData> rootFiles;
 
-    private List<String> rootDirs;
+    private List<RootData> rootDirs;
 
     private int countElements;
 
-    private int totalSize;
+    private String totalSize;
 
     private String expireDate;
 
     private String sender;
 
-    private Map<String, String> recipients;
+    private List<Recipient> recipients;
 
     private String message;
 
@@ -44,11 +45,20 @@ public class Enclosure {
 
     public static Enclosure build(String enclosureId) throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
-        List<String> filesOfEnclosure = RedisUtils.getRootFiles(redisManager, enclosureId);
-        List<String> dirsOfEnclosure = RedisUtils.getRootDirs(redisManager, enclosureId);
-        int totalSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
+        List<RootData> filesOfEnclosure = new ArrayList<>();
+        for (Map.Entry<String, Integer> rootFile: RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
+            filesOfEnclosure.add(RootData.builder().name(rootFile.getKey()).size(WorkerUtils.getFormattedFileSize(rootFile.getValue())).build());
+        }
+        List<RootData> dirsOfEnclosure = new ArrayList<>();
+        for (Map.Entry<String, Integer> rootDir: RedisUtils.getRootDirsWithSize(redisManager, enclosureId).entrySet()) {
+            dirsOfEnclosure.add(RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormattedFileSize(rootDir.getValue())).build());
+        }
+        String totalSize = WorkerUtils.getFormattedFileSize(RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
         String senderEnclosure = RedisUtils.getSenderEnclosure(redisManager, enclosureId);
-        Map<String, String> recipientsEnclosure = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
+        List<Recipient> recipientsEnclosure = new ArrayList<>();
+        for (Map.Entry<String, String> recipient: RedisUtils.getRecipientsEnclosure(redisManager, enclosureId).entrySet()) {
+            recipientsEnclosure.add(Recipient.builder().mail(recipient.getKey()).id(recipient.getValue()).build());
+        }
         Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
         String expireEnclosureDate = enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey());
         String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
@@ -68,5 +78,4 @@ public class Enclosure {
                 .withPassword(withPassword)
                 .build();
     }
-
 }

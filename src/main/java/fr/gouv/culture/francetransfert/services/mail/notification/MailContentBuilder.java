@@ -34,6 +34,7 @@ public class MailContentBuilder {
             String jsonInString = new Gson().toJson(obj);
             jsonObject = new JsonParser().parse(jsonInString).getAsJsonObject();
         }
+
         Context context = new Context();
         context.setVariable("enclosure", jsonObject);
         context.setVariable("france_transfert", new ClassPathResource(logo_france_transfert));
