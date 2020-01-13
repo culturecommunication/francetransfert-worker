@@ -2,7 +2,9 @@ package fr.gouv.culture.francetransfert.worker;
 
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.enums.RedisQueueEnum;
+import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
@@ -28,6 +30,19 @@ public class ScheduledTasks {
     @Autowired
     private MailDownloadServices mailDownloadServices;
 
+    @Autowired
+    private CleanUpServices cleanUpServices;
+
+
+    @Scheduled(cron = "${scheduled.relaunch.mail}")
+    public void relaunchMail() throws Exception{
+        mailRelaunchServices.sendMailsRelaunch();
+    }
+
+    @Scheduled(cron = "${scheduled.clean.up}")
+    public void cleanUp() {
+        cleanUpServices.cleanUp();
+    }
 
     @Scheduled(cron = "0 * * * * ?")
     public void sendEmailNotificationUploadDownload() throws Exception {
@@ -36,11 +51,6 @@ public class ScheduledTasks {
         String enclosureId = returnedBLPOPList.get(1);
         log.debug("start send emails for enclosure N: {}", enclosureId);
         mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId));
-    }
-
-    @Scheduled(cron = "${scheduled.relaunch.mail}")
-    public void relaunchMail() throws Exception{
-        mailRelaunchServices.sendMailsRelaunch();
     }
 
     @Scheduled(cron = "0 * * * * ?")
@@ -55,16 +65,13 @@ public class ScheduledTasks {
     }
 
     @Scheduled(cron = "0 * * * * ?")
-    public void zipWorker() throws IOException {
+    public void zipWorker() throws IOException, InterruptedException {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
-//        zipWorkerTask.zipWorker();
-        String enclosureId = "";
+        StorageManager storageManager = new StorageManager();
+        storageManager.zip("fr-gouv-culture-francetransfert-devic1-plis-20200109", "687bc068-286c-4f72-823e-3c8ac3fe912b");
+        String enclosureId = "687bc068-286c-4f72-823e-3c8ac3fe912b";
         manager.rpush(RedisQueueEnum.MAIL_QUEUE.getValue(), enclosureId);
-    }
-
-    @Scheduled(cron = "0 * * * * ?")
-    public void cleanUp() {
     }
 
     @Scheduled(cron = "0 * * * * ?")

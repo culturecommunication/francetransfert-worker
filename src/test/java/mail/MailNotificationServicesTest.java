@@ -2,13 +2,15 @@ package mail;
 
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
-import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.FranceTransfertWorkerStarter;
+import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.model.Recipient;
+import fr.gouv.culture.francetransfert.model.RootData;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
-import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -50,13 +52,13 @@ public class MailNotificationServicesTest {
         smtpServer.start();
        enclosure = Enclosure.builder()
                 .guid("enclosureId")
-                .rootFiles(Arrays.asList("file_a.png","file_b.pdf"))
-                .rootDirs(Arrays.asList("dir_1", "dir_2"))
+               .rootFiles(Arrays.asList(new RootData("file_1",WorkerUtils.getFormattedFileSize(12)), new RootData("file_2",WorkerUtils.getFormattedFileSize(5))))
+                .rootDirs(Arrays.asList(new RootData("dir_1",WorkerUtils.getFormattedFileSize(120)), new RootData("dir_2",WorkerUtils.getFormattedFileSize(50))))
                 .countElements(2)
-                .totalSize(17)
+                .totalSize(WorkerUtils.getFormattedFileSize(17))
                 .expireDate(LocalDateTime.now().plusDays(30).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)))
                 .sender("louay.haddad@live.fr")
-                .recipients(RedisUtils.generateMapRedis(Arrays.asList("louay.haddad@gouv.fr", "louayhadded2012@gmail.com"), Arrays.asList("e4cce869-6f3d-4e10-900a-74299602f460", "6efb01a7-bd3d-46a9-ac12-33085f76ce1c")))
+                .recipients(Arrays.asList(new Recipient("e4cce869-6f3d-4e10-900a-74299602f460", "louay.haddad@gouv.fr"), new Recipient("6efb01a7-bd3d-46a9-ac12-33085f76ce1c","louayhadded2012@gmail.com")))
                 .message("Test message content")
                 .withPassword(false)
                 .build();
@@ -69,13 +71,13 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
+        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
     }
 
-    @Ignore
+
     @Test
     public void shouldSendMailToSenderTest() throws Exception {
         //given
@@ -89,6 +91,7 @@ public class MailNotificationServicesTest {
         assertReceivedMessageContains(content);
     }
 
+    @Ignore
     @Test
     public void sendMailsRelaunchTests() throws Exception {
         //given

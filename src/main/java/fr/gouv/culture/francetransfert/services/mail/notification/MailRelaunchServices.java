@@ -7,6 +7,7 @@ import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.enums.R
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.DateUtils;
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -55,14 +57,14 @@ public class MailRelaunchServices {
     // Send mails Relaunch to recipients
     private void sendToRecipientsAndSenderRelaunch(RedisManager redisManager, Enclosure enclosure, String templateName) throws Exception {
         String subject = enclosure.getSender() + " " + subjectRelaunchRecipient;
-        Map<String, String> recipients = enclosure.getRecipients();
+        List<Recipient> recipients = enclosure.getRecipients();
         if (!CollectionUtils.isEmpty(recipients)) {
-            for (Map.Entry<String, String> recipient: recipients.entrySet()) {
-                Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getValue());
-                boolean isFileDownloaded = (0 == Integer.parseInt(recipientMap.get(RecipientKeysEnum.NB_DL.getKey())));
+            for (Recipient recipient: recipients) {
+                Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());
+                boolean isFileDownloaded = (!CollectionUtils.isEmpty(recipientMap) && 0 == Integer.parseInt(recipientMap.get(RecipientKeysEnum.NB_DL.getKey())));
                 if (isFileDownloaded) {
-                    enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(), recipient.getKey(), recipient.getValue()));
-                    mailNotificationServices.prepareAndSend(recipient.getKey(), subject, enclosure, templateName);
+                    enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(), recipient.getMail(), recipient.getId()));
+                    mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName);
                 }
             }
         }
