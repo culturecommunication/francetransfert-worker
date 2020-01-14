@@ -44,7 +44,7 @@ public class ScheduledTasks {
     }
 
     @Scheduled(cron = "${scheduled.clean.up}")
-    public void cleanUp() {
+    public void cleanUp() throws Exception {
         cleanUpServices.cleanUp();
     }
 
@@ -70,7 +70,7 @@ public class ScheduledTasks {
     }
 
     @Scheduled(cron = "0 * * * * ?")
-    public void zipWorker() throws IOException, InterruptedException {
+    public void zipWorker() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
         if(returnedBLPOPList != null) {
@@ -82,7 +82,7 @@ public class ScheduledTasks {
     }
     
     @Scheduled(cron = "0 * * * * ?")
-    public void tempDataCleanUp() throws IOException, InterruptedException {
+    public void tempDataCleanUp() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
         if(returnedBLPOPList != null) {

@@ -13,7 +13,7 @@ public class ZipWorker implements Runnable{
     RedisManager manager;
     JedisPubSub jedisPubSub;
     public ZipWorker() {
-    	this.manager = RedisManager.getInstance();
+//    	this.manager = RedisManager.getInstance();
 //    	this.jedisPubSub = createPubSub();
     }
 

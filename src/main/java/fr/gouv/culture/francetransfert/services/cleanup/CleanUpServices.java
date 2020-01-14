@@ -20,9 +20,9 @@ public class CleanUpServices {
 
     /**
      * clean all expired data in OSU and REDIS
-     * @throws WorkerException
+     * @throws Exception 
      */
-    public void cleanUp() throws WorkerException {
+    public void cleanUp() throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach( enclosureId -> {
@@ -47,9 +47,9 @@ public class CleanUpServices {
     /**
      * clean all data expired in OSU
      * @param enclosureId
-     * @throws WorkerException
+     * @throws Exception 
      */
-    private void cleanUpOSU(String bucketName, String enclosureId) throws WorkerException {
+    private void cleanUpOSU(String bucketName, String enclosureId) throws Exception {
         StorageManager storageManager = new StorageManager();
         storageManager.deleteFilesWithPrefix(bucketName, enclosureId + ".zip");
     }

@@ -15,7 +15,7 @@ public class StatsWorker implements Runnable{
     
     public StatsWorker() {
 //        this.jedisPubSub = createPubSub();
-        this.manager = RedisManager.getInstance();
+//        this.manager = RedisManager.getInstance();
     }
 
 //	private JedisPubSub createPubSub() {

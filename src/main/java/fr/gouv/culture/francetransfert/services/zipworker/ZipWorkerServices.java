@@ -31,7 +31,7 @@ public class ZipWorkerServices {
 	@Value("${tmp.folder.path}")
     private String tmpFolderPath;
 	
-	public void startZip(String prefix) {
+	public void startZip(String prefix) throws Exception {
 		setPrefix(prefix);
 		StorageManager manager = new StorageManager();
 		String bucketName = manager.getTodayBucketName();
@@ -50,11 +50,11 @@ public class ZipWorkerServices {
 		}
 	}
 
-	private void notifyEmailWorker() {
+	private void notifyEmailWorker() throws Exception {
 		RedisManager.getInstance().publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), getPrefix());
 	}
 
-	private void deleteFilesFromOSU(StorageManager manager, String bucketName) {
+	private void deleteFilesFromOSU(StorageManager manager, String bucketName) throws Exception {
 		manager.deleteFilesWithPrefix(bucketName, getPrefix());
 	}
 
@@ -69,7 +69,7 @@ public class ZipWorkerServices {
 		file.delete();
 	}
 
-	private void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, File fileToUpload) {
+	private void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, File fileToUpload) throws Exception {
 		manager.createFile(bucketName, fileToUpload, fileName);
 	}
 

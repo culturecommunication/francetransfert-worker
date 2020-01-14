@@ -37,7 +37,7 @@ public class MailRelaunchServices {
     @Autowired
     MailNotificationServices mailNotificationServices;
 
-    public void sendMailsRelaunch() throws WorkerException {
+    public void sendMailsRelaunch() throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
