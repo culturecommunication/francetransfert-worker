@@ -85,6 +85,25 @@ public class CleanUpServices {
     }
 
     /**
+     * clean temp data in REDIS for Enclosure
+     * @param redisManager
+     * @param enclosureId
+     * @throws WorkerException
+     */
+    public void cleanUpEnclosureTempDataInRedis(RedisManager redisManager, String enclosureId) throws WorkerException {
+        //delete part-etags
+        redisManager.deleteKey(RedisKeysEnum.FT_PART_ETAGS.getKey(enclosureId));
+        log.debug("clean part-etags {}", RedisKeysEnum.FT_PART_ETAGS.getKey(enclosureId));
+        //delete list and HASH root-files
+        deleteListAndHashFiles(redisManager, RedisKeysEnum.FT_ROOT_FILES, RedisKeysEnum.FT_ROOT_FILE, enclosureId);
+        log.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
+        //delete list and HASH root-dirs
+        deleteListAndHashFiles(redisManager, RedisKeysEnum.FT_ROOT_DIRS, RedisKeysEnum.FT_ROOT_DIR, enclosureId);
+        log.debug("clean root-dirs {}", RedisKeysEnum.FT_ROOT_DIRS.getKey(enclosureId));
+    }
+    
+    
+    /**
      * clean expired data in REDIS: Enclosure dates
      * @param redisManager
      * @param date

@@ -8,6 +8,7 @@ import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
+import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class ScheduledTasks {
 
     @Autowired
     private CleanUpServices cleanUpServices;
+    
+    @Autowired
+    private ZipWorkerServices zipWorkerServices;
 
 
     @Scheduled(cron = "${scheduled.relaunch.mail}")
@@ -51,6 +55,7 @@ public class ScheduledTasks {
         String enclosureId = returnedBLPOPList.get(1);
         log.debug("start send emails for enclosure N: {}", enclosureId);
         mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId));
+        manager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
     }
 
     @Scheduled(cron = "0 * * * * ?")
@@ -68,10 +73,23 @@ public class ScheduledTasks {
     public void zipWorker() throws IOException, InterruptedException {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
-        StorageManager storageManager = new StorageManager();
-        storageManager.zip("fr-gouv-culture-francetransfert-devic1-plis-20200109", "687bc068-286c-4f72-823e-3c8ac3fe912b");
-        String enclosureId = "687bc068-286c-4f72-823e-3c8ac3fe912b";
-        manager.rpush(RedisQueueEnum.MAIL_QUEUE.getValue(), enclosureId);
+        if(returnedBLPOPList != null) {
+        	String enclosureId = returnedBLPOPList.get(1);
+        	log.debug("start Zip process for enclosure N: {}", enclosureId);
+        	zipWorkerServices.startZip(enclosureId);
+        	manager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), enclosureId);
+        }
+    }
+    
+    @Scheduled(cron = "0 * * * * ?")
+    public void tempDataCleanUp() throws IOException, InterruptedException {
+        RedisManager manager = RedisManager.getInstance();
+        List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
+        if(returnedBLPOPList != null) {
+        	String enclosureId = returnedBLPOPList.get(1);
+        	log.debug("start temp data cleanup process for enclosure N: {}", enclosureId);
+        	cleanUpServices.cleanUpEnclosureTempDataInRedis(manager, enclosureId);
+        }
     }
 
     @Scheduled(cron = "0 * * * * ?")
