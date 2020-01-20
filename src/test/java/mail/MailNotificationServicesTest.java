@@ -7,6 +7,7 @@ import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.model.RootData;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
@@ -41,6 +42,9 @@ public class MailNotificationServicesTest {
 
     @Autowired
     private MailAvailbleEnclosureServices mailAvailbleEnclosureServices;
+
+    @Autowired
+    private MailEnclosureNoLongerAvailbleServices mailEnclosureNoLongerAvailbleServices;
 
 
     private GreenMail smtpServer;
@@ -99,6 +103,19 @@ public class MailNotificationServicesTest {
         mailRelaunchServices.sendMailsRelaunch();
         //then
         String content ="</span>";
+        assertReceivedMessageContains(content);
+    }
+
+    @Test
+    public void sendMailToRecipientsEnclosureNotAvailbleTest() throws Exception {
+        //given
+        String recipient = "louay.haddad@gouv.fr";
+        String message = "Test message content";
+        enclosure.setUrlDownload("download_url");
+        //when
+        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enclosure);
+        //then
+        String content = message + "</span>";
         assertReceivedMessageContains(content);
     }
 

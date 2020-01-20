@@ -6,6 +6,7 @@ import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageM
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
 import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
@@ -30,6 +31,11 @@ public class ScheduledTasks {
 
     @Autowired
     private MailDownloadServices mailDownloadServices;
+
+    @Autowired
+    private MailConfirmationCodeServices mailConfirmationCodeServices;
+
+
 
     @Autowired
     private CleanUpServices cleanUpServices;
@@ -85,11 +91,19 @@ public class ScheduledTasks {
     public void tempDataCleanUp() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
-        if(returnedBLPOPList != null) {
-        	String enclosureId = returnedBLPOPList.get(1);
-        	log.debug("start temp data cleanup process for enclosure N: {}", enclosureId);
-        	cleanUpServices.cleanUpEnclosureTempDataInRedis(manager, enclosureId);
+        if (returnedBLPOPList != null) {
+            String enclosureId = returnedBLPOPList.get(1);
+            log.debug("start temp data cleanup process for enclosure N: {}", enclosureId);
+            cleanUpServices.cleanUpEnclosureTempDataInRedis(manager, enclosureId);
         }
+    }
+
+    public void sendEmailConfirmationCode() throws Exception {
+        RedisManager manager = RedisManager.getInstance();
+        List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
+        String mailCode = returnedBLPOPList.get(1);
+        log.debug("start send confirmation code", mailCode);
+        mailConfirmationCodeServices.sendConfirmationCode(mailCode);
     }
 
     @Scheduled(cron = "0 * * * * ?")
