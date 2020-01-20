@@ -55,6 +55,25 @@ public class MailNotificationServices {
         }
     }
 
+    public void prepareAndSend(String to, String subject, String body, String templateName) {
+        try {
+            log.debug("start send emails for enclosure ");
+            templateName = templateName != null && !templateName.isEmpty() ? templateName : NotificationTemplate.MAIL_TEMPLATE.getValue();
+            JavaMailSenderImpl sender = new JavaMailSenderImpl();
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true,"UTF-8");
+            helper.setFrom(franceTransfertMail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.addAttachment("france_transfert", new ClassPathResource(logo_france_transfert));
+            String htmlContent = htmlBuilder.build(body, templateName);
+            helper.setText(htmlContent, true);
+            emailSender.send(message);
+        } catch (MessagingException e) {
+            throw new WorkerException("Enclosure build error");
+        }
+    }
+
     public String generateUrlForDownload(String enclosureId, String recipientMail, String recipientId) {
         try {
             return urlDownloadApi + "?enclosure=" + enclosureId + "&recipient=" + WorkerUtils.base64Encoder(recipientMail) + "&token=" + recipientId;

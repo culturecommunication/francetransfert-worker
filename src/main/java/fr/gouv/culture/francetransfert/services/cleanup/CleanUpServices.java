@@ -6,8 +6,11 @@ import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.enums.R
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.DateUtils;
 import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.RedisUtils;
 import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
+import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,6 +21,10 @@ import java.util.Map;
 @Slf4j
 public class CleanUpServices {
 
+    @Autowired
+    MailEnclosureNoLongerAvailbleServices mailEnclosureNoLongerAvailbleServices;
+
+
     /**
      * clean all expired data in OSU and REDIS
      * @throws Exception 
@@ -27,6 +34,7 @@ public class CleanUpServices {
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach( enclosureId -> {
                 try {
+                    mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId));
                     LocalDate enclosureExipireDateRedis = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(enclosureId, EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey())).toLocalDate();
                     if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) {// expire date + 1
                         // clean enclosure in OSU : delete enclosure
