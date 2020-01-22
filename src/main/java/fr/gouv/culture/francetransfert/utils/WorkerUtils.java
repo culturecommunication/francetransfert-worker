@@ -10,6 +10,10 @@ import java.util.regex.Pattern;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 
 public class WorkerUtils {
+	
+	private WorkerUtils() {
+		// private Constructor
+	}
 
     public static String infinity_Date = "2000-12-31";
 
