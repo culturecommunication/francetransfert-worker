@@ -1,18 +1,13 @@
 package fr.gouv.culture.francetransfert.utils;
 
-import com.amazonaws.services.s3.model.PartETag;
-import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.utils.RedisUtils;
-import fr.gouv.culture.francetransfert.security.WorkerException;
-import org.redisson.client.RedisTryAgainException;
-
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+
+import fr.gouv.culture.francetransfert.security.WorkerException;
 
 public class WorkerUtils {
 

@@ -1,8 +1,9 @@
 package workers;
 
 import com.amazonaws.services.s3.model.S3Object;
-import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
-import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
+
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
+import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 
 import java.io.*;
 import java.util.ArrayList;
