@@ -1,8 +1,9 @@
 package workers;
 
-import com.opengroup.mc.francetransfert.api.francetransfert_storage_api.StorageManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 
 import java.util.ArrayList;
 

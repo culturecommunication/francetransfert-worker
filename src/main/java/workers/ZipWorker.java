@@ -1,11 +1,12 @@
 package workers;
 
-import com.opengroup.mc.francetransfert.api.francetransfert_metaload_api.RedisManager;
 import redis.clients.jedis.JedisPubSub;
 
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 
 
 public class ZipWorker implements Runnable{
