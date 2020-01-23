@@ -20,6 +20,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
+import fr.gouv.culture.francetransfert.security.WorkerException;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -112,7 +113,7 @@ public class ZipWorkerServices {
 				zipOut.write(bytes, 0, length);
 			}
 		} catch (Exception e) {
-			
+			throw new WorkerException("Error During ZipFile");
 		}finally {
 			if(fis != null) {
 				fis.close();
@@ -129,7 +130,7 @@ public class ZipWorkerServices {
 				}
 			}
 		} catch (Exception e) {
-
+			throw new WorkerException("Error During File Dowload from OSU to Temp Folder");
 		}
 	}
 
@@ -147,7 +148,7 @@ public class ZipWorkerServices {
 				writer.write(read);
 			}
 		} catch (Exception e) {
-			
+			throw new WorkerException("Error During WriteFile");
 		}finally {
 			if(writer != null) {
 				writer.flush();
