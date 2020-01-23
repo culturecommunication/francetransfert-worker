@@ -50,8 +50,7 @@ public class ZipWorkerServices {
 			deleteFilesFromOSU(manager, bucketName);
 			notifyEmailWorker();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e.getMessage());
 		}
 	}
 
@@ -68,10 +67,14 @@ public class ZipWorkerServices {
 			if (subFile.isDirectory()) {
 				deleteFilesFromTemp(subFile);
 			} else {
-				subFile.delete();
+				if(!subFile.delete()) {
+					LOGGER.error("unable to delete subfile");
+				}
 			}
 		}
-		file.delete();
+		if(!file.delete()) {
+			LOGGER.error("unable to delete file");
+		}
 	}
 
 	private void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, File fileToUpload) throws Exception {
