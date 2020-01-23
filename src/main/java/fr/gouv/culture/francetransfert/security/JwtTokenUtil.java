@@ -40,14 +40,18 @@ public class JwtTokenUtil implements Serializable {
 	 * @return
 	 */
 	public String generateTokenDownload(JwtRequest jwtToken) throws ParseException {
-		return Jwts.builder()
-				.claim("mailRecipient", jwtToken.getMailRecipient())
-				.claim("enclosureId", jwtToken.getEnclosureId())
-				.claim("withPassword", jwtToken.isWithPassword())
-				.setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 60 * 60 * 1000))
-				.signWith(getKey(), SignatureAlgorithm.HS512)
-				.compact();
+		try {
+			return Jwts.builder()
+					.claim("mailRecipient", jwtToken.getMailRecipient())
+					.claim("enclosureId", jwtToken.getEnclosureId())
+					.claim("withPassword", jwtToken.isWithPassword())
+					.setIssuedAt(new Date(System.currentTimeMillis()))
+					.setExpiration(new Date(System.currentTimeMillis() + jwtTokenValidity * 60 * 60 * 1000))
+					.signWith(getKey(), SignatureAlgorithm.HS512)
+					.compact();
+		} catch (IOException e) {
+			throw new WorkerException("access denied");
+		}
 	}
 	
 	/**
