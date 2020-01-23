@@ -1,20 +1,18 @@
 package fr.gouv.culture.francetransfert.security;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import fr.gouv.culture.francetransfert.domain.exceptions.DownloadException;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Key;
 import java.security.KeyStore;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class JwtTokenUtil implements Serializable {
