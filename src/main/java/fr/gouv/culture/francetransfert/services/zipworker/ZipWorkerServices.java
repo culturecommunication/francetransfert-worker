@@ -87,29 +87,37 @@ public class ZipWorkerServices {
 	}
 
 	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
-		if (fileToZip.isDirectory()) {
-			if (fileName.endsWith(File.separator)) {
-				zipOut.putNextEntry(new ZipEntry(fileName));
-				zipOut.closeEntry();
-			} else {
-				zipOut.putNextEntry(new ZipEntry(fileName + File.separator));
-				zipOut.closeEntry();
+		FileInputStream fis = null;
+		try {
+			if (fileToZip.isDirectory()) {
+				if (fileName.endsWith(File.separator)) {
+					zipOut.putNextEntry(new ZipEntry(fileName));
+					zipOut.closeEntry();
+				} else {
+					zipOut.putNextEntry(new ZipEntry(fileName + File.separator));
+					zipOut.closeEntry();
+				}
+				File[] children = fileToZip.listFiles();
+				for (File childFile : children) {
+					zipFile(childFile, fileName + File.separator + childFile.getName(), zipOut);
+				}
+				return;
 			}
-			File[] children = fileToZip.listFiles();
-			for (File childFile : children) {
-				zipFile(childFile, fileName + File.separator + childFile.getName(), zipOut);
+			fis = new FileInputStream(fileToZip);
+			ZipEntry zipEntry = new ZipEntry(fileName);
+			zipOut.putNextEntry(zipEntry);
+			byte[] bytes = new byte[1024];
+			int length;
+			while ((length = fis.read(bytes)) >= 0) {
+				zipOut.write(bytes, 0, length);
 			}
-			return;
+		} catch (Exception e) {
+			
+		}finally {
+			if(fis != null) {
+				fis.close();
+			}
 		}
-		FileInputStream fis = new FileInputStream(fileToZip);
-		ZipEntry zipEntry = new ZipEntry(fileName);
-		zipOut.putNextEntry(zipEntry);
-		byte[] bytes = new byte[1024];
-		int length;
-		while ((length = fis.read(bytes)) >= 0) {
-			zipOut.write(bytes, 0, length);
-		}
-		fis.close();
 	}
 
 	private void downloadFilesToTempFolder(StorageManager manager, String bucketName, ArrayList<String> list) {
@@ -126,18 +134,30 @@ public class ZipWorkerServices {
 	}
 
 	public void writeFile(S3Object object, String fileName) throws IOException {
-		InputStream reader = new BufferedInputStream(object.getObjectContent());
-		String baseFolderName = getBaseFolderName();
-		File file = new File(baseFolderName + fileName);
-		file.getParentFile().mkdirs();
-		OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));
-		int read = -1;
-		while ((read = reader.read()) != -1) {
-			writer.write(read);
+		InputStream reader = null;
+		OutputStream writer = null;
+		try {
+			reader = new BufferedInputStream(object.getObjectContent());
+			String baseFolderName = getBaseFolderName();
+			File file = new File(baseFolderName + fileName);
+			file.getParentFile().mkdirs();
+			writer = new BufferedOutputStream(new FileOutputStream(file));
+			int read = -1;
+			while ((read = reader.read()) != -1) {
+				writer.write(read);
+			}
+		} catch (Exception e) {
+			
+		}finally {
+			if(writer != null) {
+				writer.flush();
+				writer.close();
+			}
+			if(reader != null) {
+				reader.close();
+			}
 		}
-		writer.flush();
-		writer.close();
-		reader.close();
+		
 	}
 
 	private String getBaseFolderName() {
