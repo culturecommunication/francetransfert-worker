@@ -137,12 +137,18 @@ public class ZipWorkerServices {
 	public void writeFile(S3Object object, String fileName) throws IOException {
 		InputStream reader = null;
 		OutputStream writer = null;
+		BufferedInputStream readerBufferedInputStream = null;
+		BufferedOutputStream writerBufferedOutputStream = null;
+		FileOutputStream fileOutputStream = null;
 		try {
-			reader = new BufferedInputStream(object.getObjectContent());
+			readerBufferedInputStream = new BufferedInputStream(object.getObjectContent());
+			reader = readerBufferedInputStream;
 			String baseFolderName = getBaseFolderName();
 			File file = new File(baseFolderName + fileName);
 			file.getParentFile().mkdirs();
-			writer = new BufferedOutputStream(new FileOutputStream(file));
+			fileOutputStream = new FileOutputStream(file);
+			writerBufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+			writer = writerBufferedOutputStream;
 			int read = -1;
 			while ((read = reader.read()) != -1) {
 				writer.write(read);
@@ -150,10 +156,26 @@ public class ZipWorkerServices {
 		} catch (Exception e) {
 			throw new WorkerException("Error During WriteFile");
 		}finally {
+			
+			if(readerBufferedInputStream != null) {
+				readerBufferedInputStream.close();
+			}
+			
+			if(writerBufferedOutputStream != null) {
+				writerBufferedOutputStream.flush();
+				writerBufferedOutputStream.close();
+			}
+			
+			if(fileOutputStream != null) {
+				fileOutputStream.flush();
+				fileOutputStream.close();
+			}
+			
 			if(writer != null) {
 				writer.flush();
 				writer.close();
 			}
+			
 			if(reader != null) {
 				reader.close();
 			}
