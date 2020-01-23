@@ -5,7 +5,10 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import fr.gouv.culture.francetransfert.domain.exceptions.DownloadException;
+
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.Key;
 import java.security.KeyStore;
@@ -48,20 +51,42 @@ public class JwtTokenUtil implements Serializable {
 				.signWith(getKey(), SignatureAlgorithm.HS512)
 				.compact();
 	}
+	
+	/**
+     * Create Key
+     * @param
+     * @return
+     * @throws IOException 
+     */
+    public Key getKey() throws IOException {
+    	FileInputStream in = null;
+    	try {
+            in = new FileInputStream(keyPath);
+            KeyStore ks = KeyStore.getInstance("jceks");
+            ks.load(in, (storePass).toCharArray());
+            return ks.getKey(alias, keyPass.toCharArray());
+        } catch (Exception var5) {
+            throw new WorkerException("access denied");
+        }finally {
+        	if(in != null) {
+        		in.close();
+        	}
+		}
+    }
 
 	/**
 	 * Create Key
 	 * @param
 	 * @return
 	 */
-	public Key getKey() {
-		try {
-			FileInputStream in = new FileInputStream(keyPath);
-			KeyStore ks = KeyStore.getInstance("jceks");
-			ks.load(in, (storePass).toCharArray());
-			return ks.getKey(alias, keyPass.toCharArray());
-		} catch (Exception var5) {
-			throw new WorkerException("access denied");
-		}
-	}
+//	public Key getKey() {
+//		try {
+//			FileInputStream in = new FileInputStream(keyPath);
+//			KeyStore ks = KeyStore.getInstance("jceks");
+//			ks.load(in, (storePass).toCharArray());
+//			return ks.getKey(alias, keyPass.toCharArray());
+//		} catch (Exception var5) {
+//			throw new WorkerException("access denied");
+//		}
+//	}
 }
