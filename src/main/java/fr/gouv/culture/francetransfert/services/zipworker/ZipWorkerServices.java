@@ -165,14 +165,21 @@ public class ZipWorkerServices {
 				readerBufferedInputStream.close();
 			}
 			
-			if(writerBufferedOutputStream != null) {
-				writerBufferedOutputStream.flush();
-				writerBufferedOutputStream.close();
+			try {
+				if(writerBufferedOutputStream != null) {
+					writerBufferedOutputStream.flush();
+					writerBufferedOutputStream.close();
+				}
+			} catch (Exception e2) {
+				e2.printStackTrace();
 			}
-			
-			if(fileOutputStream != null) {
-				fileOutputStream.flush();
-				fileOutputStream.close();
+			try {
+				if(fileOutputStream != null) {
+					fileOutputStream.flush();
+					fileOutputStream.close();
+				}
+			} catch (Exception e2) {
+				e2.printStackTrace();
 			}
 			
 			if(writer != null) {

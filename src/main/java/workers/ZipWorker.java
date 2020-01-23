@@ -1,22 +1,13 @@
 package workers;
 
-import redis.clients.jedis.JedisPubSub;
-
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-
-
-public class ZipWorker implements Runnable{
+public class ZipWorker{
 	
-    RedisManager manager;
-    JedisPubSub jedisPubSub;
-    public ZipWorker() {
+//    RedisManager manager;
+//    JedisPubSub jedisPubSub;
+//    public ZipWorker() {
 //    	this.manager = RedisManager.getInstance();
 //    	this.jedisPubSub = createPubSub();
-    }
+//    }
 
 //	private JedisPubSub createPubSub() {
 //		JedisPubSub jedisPubSub = null;
@@ -47,15 +38,15 @@ public class ZipWorker implements Runnable{
 //		return jedisPubSub;
 //	}
 
-	@Override
-	public void run() {
-		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
-		while (true) {
-			List<String> returnedBLPOPList = manager.subscribeFT("zip-worker-queue");
-			ZipWorkerTask task = new ZipWorkerTask(returnedBLPOPList.get(1));
-        	executor.execute(task);
-			System.out.println(returnedBLPOPList);
-		}
+//	@Override
+//	public void run() {
+//		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
+//		while (true) {
+//			List<String> returnedBLPOPList = manager.subscribeFT("zip-worker-queue");
+//			ZipWorkerTask task = new ZipWorkerTask(returnedBLPOPList.get(1));
+//        	executor.execute(task);
+//			System.out.println(returnedBLPOPList);
+//		}
 //		manager.subscribe(jedisPubSub, "zip-worker-queue");
-	}
+//	}
 }
