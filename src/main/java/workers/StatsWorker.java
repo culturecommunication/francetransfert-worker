@@ -1,24 +1,15 @@
 package workers;
 
-import redis.clients.jedis.JedisPubSub;
-
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-
-
-public class StatsWorker implements Runnable{
-	
-    RedisManager manager ;
-    JedisPubSub jedisPubSub ;
-    
-    public StatsWorker() {
+public class StatsWorker{
+//	
+//    RedisManager manager ;
+//    JedisPubSub jedisPubSub ;
+//    
+//    public StatsWorker() {
 //        this.jedisPubSub = createPubSub();
 //        this.manager = RedisManager.getInstance();
-    }
-
+//    }
+//
 //	private JedisPubSub createPubSub() {
 //		JedisPubSub jedisPubSub = null;
 //		try {
@@ -47,16 +38,16 @@ public class StatsWorker implements Runnable{
 //	        }
 //		return jedisPubSub;
 //	}
-
-	@Override
-	public void run() {
-		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
-		while (true) {
-			List<String> returnedBLPOPList = manager.subscribeFT("email-notification-queue");
+//
+//	@Override
+//	public void run() {
+//		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
+//		while (true) {
+//			List<String> returnedBLPOPList = manager.subscribeFT("email-notification-queue");
 //			StatsWorkerTask task = new StatsWorkerTask();
 //        	executor.execute(task);
-			System.out.println(returnedBLPOPList);
-		}
+//			System.out.println(returnedBLPOPList);
+//		}
 //		manager.subscribe(jedisPubSub, "stats-worker-queue");
-	}
+//	}
 }

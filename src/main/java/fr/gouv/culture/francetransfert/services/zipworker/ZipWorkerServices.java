@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class ZipWorkerServices {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(ZipWorkerServices.class);
 	
 	String prefix;
 	
