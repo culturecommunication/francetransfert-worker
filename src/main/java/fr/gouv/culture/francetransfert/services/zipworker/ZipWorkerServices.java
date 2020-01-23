@@ -142,17 +142,23 @@ public class ZipWorkerServices {
 		InputStream reader = null;
 		OutputStream writer = null;
 		BufferedInputStream readerBufferedInputStream = null;
-		BufferedOutputStream writerBufferedOutputStream = null;
-		FileOutputStream fileOutputStream = null;
 		try {
 			readerBufferedInputStream = new BufferedInputStream(object.getObjectContent());
 			reader = readerBufferedInputStream;
 			String baseFolderName = getBaseFolderName();
 			File file = new File(baseFolderName + fileName);
 			file.getParentFile().mkdirs();
-			fileOutputStream = new FileOutputStream(file);
-			writerBufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-			writer = writerBufferedOutputStream;
+			try(FileOutputStream fileOutputStream = new FileOutputStream(file)){
+				
+				try(BufferedOutputStream writerBufferedOutputStream = new BufferedOutputStream(fileOutputStream)){
+					writer = writerBufferedOutputStream;
+					
+				}catch (Exception e) {
+					throw new WorkerException("Error During WriteFile");
+				}
+			}catch (Exception e) {
+				throw new WorkerException("Error During WriteFile");
+			}
 			int read = -1;
 			while ((read = reader.read()) != -1) {
 				writer.write(read);
@@ -163,23 +169,6 @@ public class ZipWorkerServices {
 			
 			if(readerBufferedInputStream != null) {
 				readerBufferedInputStream.close();
-			}
-			
-			try {
-				if(writerBufferedOutputStream != null) {
-					writerBufferedOutputStream.flush();
-					writerBufferedOutputStream.close();
-				}
-			} catch (Exception e2) {
-				e2.printStackTrace();
-			}
-			try {
-				if(fileOutputStream != null) {
-					fileOutputStream.flush();
-					fileOutputStream.close();
-				}
-			} catch (Exception e2) {
-				e2.printStackTrace();
 			}
 			
 			if(writer != null) {
