@@ -78,7 +78,7 @@ public class ZipWorkerServices {
 	}
 
 	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, File fileToUpload) throws Exception {
-		manager.uploadMultipartForZip(bucketName, fileName, fileToUpload.getAbsolutePath());
+		manager.uploadMultipartForZip(bucketName, fileName, fileToUpload);
 //		manager.createFile(bucketName, fileToUpload, fileName);
 	}
 
