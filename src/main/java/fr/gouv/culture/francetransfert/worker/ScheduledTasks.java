@@ -1,9 +1,10 @@
 package fr.gouv.culture.francetransfert.worker;
 
+import com.google.gson.Gson;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
-import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.model.Rate;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
@@ -16,8 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.List;
+
 
 @Component
 @Slf4j
@@ -97,13 +98,22 @@ public class ScheduledTasks {
             cleanUpServices.cleanUpEnclosureTempDataInRedis(manager, enclosureId);
         }
     }
-
+    @Scheduled(cron = "0 * * * * ?")
     public void sendEmailConfirmationCode() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
         String mailCode = returnedBLPOPList.get(1);
         log.debug("start send confirmation code", mailCode);
         mailConfirmationCodeServices.sendConfirmationCode(mailCode);
+    }
+
+    @Scheduled(cron = "0 * * * * ?")
+    public void satisfactionWorker() throws Exception{
+        RedisManager manager = RedisManager.getInstance();
+        List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
+        Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
+        log.info("convert json in string to object rate");
+        //TODO: insert satisfaction in admin module
     }
 
     @Scheduled(cron = "0 * * * * ?")
