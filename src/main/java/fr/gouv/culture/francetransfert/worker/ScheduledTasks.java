@@ -111,8 +111,10 @@ public class ScheduledTasks {
     public void satisfactionWorker() throws Exception{
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
-        Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
-        log.info("convert json in string to object rate");
+        if (!returnedBLPOPList.isEmpty()) {
+            Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
+            log.info("convert json in string to object rate");
+        }
         //TODO: insert satisfaction in admin module
     }
 
