@@ -77,8 +77,9 @@ public class ZipWorkerServices {
 		}
 	}
 
-	private void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, File fileToUpload) throws Exception {
-		manager.createFile(bucketName, fileToUpload, fileName);
+	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, File fileToUpload) throws Exception {
+		manager.uploadMultipartForZip(bucketName, fileName, fileToUpload);
+//		manager.createFile(bucketName, fileToUpload, fileName);
 	}
 
 	private void zipDownloadedContent(String zippedFileName) throws IOException {
