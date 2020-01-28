@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -59,28 +60,32 @@ public class ScheduledTasks {
     public void sendEmailNotificationUploadDownload() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
-        String enclosureId = returnedBLPOPList.get(1);
-        log.debug("start send emails for enclosure N: {}", enclosureId);
-        mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId));
-        manager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
+        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+            String enclosureId = returnedBLPOPList.get(1);
+            log.debug("start send emails for enclosure N: {}", enclosureId);
+            mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId));
+            manager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
+        }
     }
 
     @Scheduled(cron = "0 * * * * ?")
     public void sendEmailDownloadInProgress() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
-        String downloadQueueValue = returnedBLPOPList.get(1);
-        String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
-        String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
-        log.debug("start send email download in progress", enclosureId);
-        mailDownloadServices.sendDownloadEnclosure(Enclosure.build(enclosureId), recipientId);
+        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+            String downloadQueueValue = returnedBLPOPList.get(1);
+            String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
+            String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
+            log.debug("start send email download in progress", enclosureId);
+            mailDownloadServices.sendDownloadEnclosure(Enclosure.build(enclosureId), recipientId);
+        }
     }
 
     @Scheduled(cron = "0 * * * * ?")
     public void zipWorker() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
-        if(returnedBLPOPList != null) {
+        if(!CollectionUtils.isEmpty(returnedBLPOPList)) {
         	String enclosureId = returnedBLPOPList.get(1);
         	log.debug("start Zip process for enclosure N: {}", enclosureId);
         	zipWorkerServices.startZip(enclosureId);
@@ -92,7 +97,7 @@ public class ScheduledTasks {
     public void tempDataCleanUp() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
-        if (returnedBLPOPList != null) {
+        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             String enclosureId = returnedBLPOPList.get(1);
             log.debug("start temp data cleanup process for enclosure N: {}", enclosureId);
             cleanUpServices.cleanUpEnclosureTempDataInRedis(manager, enclosureId);
@@ -102,16 +107,18 @@ public class ScheduledTasks {
     public void sendEmailConfirmationCode() throws Exception {
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
-        String mailCode = returnedBLPOPList.get(1);
-        log.debug("start send confirmation code", mailCode);
-        mailConfirmationCodeServices.sendConfirmationCode(mailCode);
+        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+            String mailCode = returnedBLPOPList.get(1);
+            log.debug("start send confirmation code", mailCode);
+            mailConfirmationCodeServices.sendConfirmationCode(mailCode);
+        }
     }
 
     @Scheduled(cron = "0 * * * * ?")
     public void satisfactionWorker() throws Exception{
         RedisManager manager = RedisManager.getInstance();
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
-        if (!returnedBLPOPList.isEmpty()) {
+        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
             log.info("convert json in string to object rate");
         }
