@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,14 +40,19 @@ public class ZipWorkerServices {
 	public void startZip(String prefix) throws Exception {
 		setPrefix(prefix);
 		StorageManager manager = new StorageManager();
-		String bucketName = manager.getTodayBucketName();
+		String bucketName = RedisUtils.getBucketName(RedisManager.getInstance(), prefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, getPrefix());
 		try {
 			downloadFilesToTempFolder(manager, bucketName, list);
-			zipDownloadedContent(manager.getZippedEnclosureName(getPrefix()));
-			uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(getPrefix()), new File(manager.getZippedEnclosureName(getPrefix())));
+			zipDownloadedContent(getPrefix());
+			uploadZippedEnclosure(bucketName, manager, getPrefix()+".zip", getBaseFolderNameWithZipPrefix(getPrefix()));
 			File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix());
 			deleteFilesFromTemp(fileToDelete);
+			File fileZip = new File(getBaseFolderNameWithZipPrefix(getPrefix()));
+			if (!fileZip.delete()) {
+				throw  new WorkerException("error delete zip file");
+			}
+
 			deleteFilesFromOSU(manager, bucketName);
 			notifyEmailWorker();
 		} catch (IOException e) {
@@ -59,7 +65,7 @@ public class ZipWorkerServices {
 	}
 
 	private void deleteFilesFromOSU(StorageManager manager, String bucketName) throws Exception {
-		manager.deleteFilesWithPrefix(bucketName, getPrefix());
+//		manager.deleteFilesWithPrefix(bucketName, getPrefix());
 	}
 
 	private void deleteFilesFromTemp(File file) {
@@ -77,8 +83,8 @@ public class ZipWorkerServices {
 		}
 	}
 
-	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, File fileToUpload) throws Exception {
-		manager.uploadMultipartForZip(bucketName, fileName, fileToUpload);
+	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, String fileZipPath) throws Exception {
+		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 //		manager.createFile(bucketName, fileToUpload, fileName);
 	}
 
@@ -143,48 +149,18 @@ public class ZipWorkerServices {
 	}
 
 	public void writeFile(S3Object object, String fileName) throws IOException {
-		InputStream reader = null;
-		OutputStream writer = null;
-		BufferedInputStream readerBufferedInputStream = null;
-		try {
-			readerBufferedInputStream = new BufferedInputStream(object.getObjectContent());
-			reader = readerBufferedInputStream;
-			String baseFolderName = getBaseFolderName();
-			File file = new File(baseFolderName + fileName);
-			file.getParentFile().mkdirs();
-			try(FileOutputStream fileOutputStream = new FileOutputStream(file)){
-				
-				try(BufferedOutputStream writerBufferedOutputStream = new BufferedOutputStream(fileOutputStream)){
-					writer = writerBufferedOutputStream;
-					
-				}catch (Exception e) {
-					throw new WorkerException("Error During WriteFile");
-				}
-			}catch (Exception e) {
-				throw new WorkerException("Error During WriteFile");
-			}
-			int read = -1;
-			while ((read = reader.read()) != -1) {
-				writer.write(read);
-			}
-		} catch (Exception e) {
-			throw new WorkerException("Error During WriteFile");
-		}finally {
-			
-			if(readerBufferedInputStream != null) {
-				readerBufferedInputStream.close();
-			}
-			
-			if(writer != null) {
-				writer.flush();
-				writer.close();
-			}
-			
-			if(reader != null) {
-				reader.close();
-			}
+		InputStream reader = new BufferedInputStream(object.getObjectContent());
+		String baseFolderName = getBaseFolderName();
+		File file = new File(baseFolderName + fileName);
+		file.getParentFile().mkdirs();
+		OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));
+		int read = -1;
+		while ((read = reader.read()) != -1) {
+			writer.write(read);
 		}
-		
+		writer.flush();
+		writer.close();
+		reader.close();
 	}
 
 	private String getBaseFolderName() {

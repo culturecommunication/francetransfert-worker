@@ -103,11 +103,11 @@ public class CleanUpServices {
         redisManager.deleteKey(RedisKeysEnum.FT_PART_ETAGS.getKey(enclosureId));
         log.debug("clean part-etags {}", RedisKeysEnum.FT_PART_ETAGS.getKey(enclosureId));
         //delete list and HASH root-files
-        deleteListAndHashFiles(redisManager, RedisKeysEnum.FT_ROOT_FILES, RedisKeysEnum.FT_ROOT_FILE, enclosureId);
-        log.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
-        //delete list and HASH root-dirs
-        deleteListAndHashFiles(redisManager, RedisKeysEnum.FT_ROOT_DIRS, RedisKeysEnum.FT_ROOT_DIR, enclosureId);
-        log.debug("clean root-dirs {}", RedisKeysEnum.FT_ROOT_DIRS.getKey(enclosureId));
+//        deleteListAndHashFiles(redisManager, RedisKeysEnum.FT_ROOT_FILES, RedisKeysEnum.FT_ROOT_FILE, enclosureId);
+//        log.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
+//        //delete list and HASH root-dirs
+//        deleteListAndHashFiles(redisManager, RedisKeysEnum.FT_ROOT_DIRS, RedisKeysEnum.FT_ROOT_DIR, enclosureId);
+//        log.debug("clean root-dirs {}", RedisKeysEnum.FT_ROOT_DIRS.getKey(enclosureId));
     }
     
     

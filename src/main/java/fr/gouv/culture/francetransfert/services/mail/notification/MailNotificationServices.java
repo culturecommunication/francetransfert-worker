@@ -76,7 +76,7 @@ public class MailNotificationServices {
 
     public String generateUrlForDownload(String enclosureId, String recipientMail, String recipientId) {
         try {
-            return urlDownloadApi + "?enclosure=" + enclosureId + "&recipient=" + WorkerUtils.base64Encoder(recipientMail) + "&token=" + recipientId;
+            return "http://" + urlDownloadApi + "?enclosure=" + enclosureId + "&recipient=" + WorkerUtils.base64Encoder(recipientMail) + "&token=" + recipientId;
         } catch (UnsupportedEncodingException e) {
             throw new WorkerException("Download url error");
         }

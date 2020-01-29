@@ -33,13 +33,13 @@ public class UploadZipInOSUTest {
         //given
         String bucketName = "test-lha-09122019";
         String fileName = "7e4fc103-2517-4dd6-861a-85f1844dd73f.zip";
-        File file = new File("C:/test/7e4fc103-2517-4dd6-861a-85f1844dd73f.zip");
+        String filePath = "C:/test/7e4fc103-2517-4dd6-861a-85f1844dd73f.zip";
         new StorageManager();
         //when
 
-        zipWorkerServices.uploadZippedEnclosure(bucketName, new StorageManager(), fileName, file );
+        zipWorkerServices.uploadZippedEnclosure(bucketName, new StorageManager(), fileName, filePath );
         //then
-        file = null;
+        filePath = null;
     }
 
 
