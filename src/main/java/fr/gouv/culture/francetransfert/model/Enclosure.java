@@ -2,6 +2,7 @@ package fr.gouv.culture.francetransfert.model;
 
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import lombok.AllArgsConstructor;
@@ -60,7 +61,7 @@ public class Enclosure {
             recipientsEnclosure.add(Recipient.builder().mail(recipient.getKey()).id(recipient.getValue()).build());
         }
         Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
-        String expireEnclosureDate = enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey());
+        String expireEnclosureDate = DateUtils.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
         String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
         String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
         boolean withPassword = password != null && !password.isEmpty();
