@@ -36,23 +36,31 @@ public class ZipWorkerServices {
 	
 	@Value("${tmp.folder.path}")
     private String tmpFolderPath;
+
+	@Value("${bucket.prefix}")
+	private String bucketPrefix;
 	
 	public void startZip(String prefix) throws Exception {
 		setPrefix(prefix);
 		StorageManager manager = new StorageManager();
-		String bucketName = RedisUtils.getBucketName(RedisManager.getInstance(), prefix);
+		manager.getZippedEnclosureName(getPrefix());
+		String bucketName = RedisUtils.getBucketName(RedisManager.getInstance(), prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, getPrefix());
 		try {
+			LOGGER.info("================================> start download files temp to disk");
 			downloadFilesToTempFolder(manager, bucketName, list);
+			LOGGER.info("================================> start zip files temp to disk");
 			zipDownloadedContent(getPrefix());
-			uploadZippedEnclosure(bucketName, manager, getPrefix()+".zip", getBaseFolderNameWithZipPrefix(getPrefix()));
+			LOGGER.info("================================> start upload zip file temp to OSU");
+			uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(getPrefix())+".zip", getBaseFolderNameWithZipPrefix(getPrefix()));
 			File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix());
+			LOGGER.info("================================> start delete zip file in local disk");
 			deleteFilesFromTemp(fileToDelete);
 			File fileZip = new File(getBaseFolderNameWithZipPrefix(getPrefix()));
 			if (!fileZip.delete()) {
 				throw  new WorkerException("error delete zip file");
 			}
-
+			LOGGER.info("================================> start delete zip file in OSU");
 			deleteFilesFromOSU(manager, bucketName);
 			notifyEmailWorker();
 		} catch (IOException e) {
@@ -65,7 +73,7 @@ public class ZipWorkerServices {
 	}
 
 	private void deleteFilesFromOSU(StorageManager manager, String bucketName) throws Exception {
-//		manager.deleteFilesWithPrefix(bucketName, getPrefix());
+		manager.deleteFilesWithPrefix(bucketName, getPrefix());
 	}
 
 	private void deleteFilesFromTemp(File file) {
@@ -114,6 +122,7 @@ public class ZipWorkerServices {
 				}
 				File[] children = fileToZip.listFiles();
 				for (File childFile : children) {
+					LOGGER.info("================================> start zip file {} temp to disk", childFile.getName());
 					zipFile(childFile, fileName + File.separator + childFile.getName(), zipOut);
 				}
 				return;
@@ -149,6 +158,7 @@ public class ZipWorkerServices {
 	}
 
 	public void writeFile(S3Object object, String fileName) throws IOException {
+		LOGGER.info("================================> start download file : {}  to disk ", fileName);
 		InputStream reader = new BufferedInputStream(object.getObjectContent());
 		String baseFolderName = getBaseFolderName();
 		File file = new File(baseFolderName + fileName);

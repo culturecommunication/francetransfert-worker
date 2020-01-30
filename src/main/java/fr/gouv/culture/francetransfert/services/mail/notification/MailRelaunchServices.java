@@ -10,7 +10,8 @@ import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@Slf4j
 public class MailRelaunchServices {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailRelaunchServices.class);
 
     @Value("${subject.relaunch.recipient}")
     private String subjectRelaunchRecipient;
@@ -45,6 +47,7 @@ public class MailRelaunchServices {
                     LocalDateTime exipireEnclosureDate = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(enclosureId, EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
                     if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
                         Enclosure enclosure = Enclosure.build(enclosureId);
+                        LOGGER.info("================================> send relaunch mail for enclosure N° {}", enclosureId );
                         sendToRecipientsAndSenderRelaunch(redisManager, enclosure, NotificationTemplate.MAIL_RELAUNCH_RECIPIENT.getValue());
                     }
                 } catch (Exception e) {
@@ -64,6 +67,7 @@ public class MailRelaunchServices {
                 boolean isFileDownloaded = (!CollectionUtils.isEmpty(recipientMap) && 0 == Integer.parseInt(recipientMap.get(RecipientKeysEnum.NB_DL.getKey())));
                 if (isFileDownloaded) {
                     enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(), recipient.getMail(), recipient.getId()));
+                    LOGGER.info("================================> send relaunch mail to {} ", recipient.getMail());
                     mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName);
                 }
             }
