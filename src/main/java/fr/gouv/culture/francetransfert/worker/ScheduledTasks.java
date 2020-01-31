@@ -12,7 +12,8 @@ import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadSe
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
 import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,8 +23,9 @@ import java.util.List;
 
 
 @Component
-@Slf4j
 public class ScheduledTasks {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
 
     @Autowired
     private MailAvailbleEnclosureServices mailAvailbleEnclosureServices;
@@ -48,11 +50,13 @@ public class ScheduledTasks {
 
     @Scheduled(cron = "${scheduled.relaunch.mail}")
     public void relaunchMail() throws Exception{
+        LOGGER.info("================================> worker : start relaunch for download");
         mailRelaunchServices.sendMailsRelaunch();
     }
 
     @Scheduled(cron = "${scheduled.clean.up}")
     public void cleanUp() throws Exception {
+        LOGGER.info("================================> worker : start clean-up expired enclosure");
         cleanUpServices.cleanUp();
     }
 
@@ -62,7 +66,7 @@ public class ScheduledTasks {
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             String enclosureId = returnedBLPOPList.get(1);
-            log.debug("start send emails for enclosure N: {}", enclosureId);
+            LOGGER.info("================================> worker : start send email notification availble enclosure to download for enclosure N° {}", enclosureId);
             mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId));
             manager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
         }
@@ -75,8 +79,8 @@ public class ScheduledTasks {
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             String downloadQueueValue = returnedBLPOPList.get(1);
             String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
+            LOGGER.info("================================> worker : start send email notification download in progress for enclosur N°  {}", enclosureId);
             String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
-            log.debug("start send email download in progress", enclosureId);
             mailDownloadServices.sendDownloadEnclosure(Enclosure.build(enclosureId), recipientId);
         }
     }
@@ -87,7 +91,7 @@ public class ScheduledTasks {
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
         if(!CollectionUtils.isEmpty(returnedBLPOPList)) {
         	String enclosureId = returnedBLPOPList.get(1);
-        	log.debug("start Zip process for enclosure N: {}", enclosureId);
+            LOGGER.info("================================> worker : start zip  process for enclosur N°  {}", enclosureId);
         	zipWorkerServices.startZip(enclosureId);
         	manager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), enclosureId);
         }
@@ -99,7 +103,7 @@ public class ScheduledTasks {
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             String enclosureId = returnedBLPOPList.get(1);
-            log.debug("start temp data cleanup process for enclosure N: {}", enclosureId);
+            LOGGER.info("================================> start temp data cleanup process for enclosure N: {}" , enclosureId);
             cleanUpServices.cleanUpEnclosureTempDataInRedis(manager, enclosureId);
         }
     }
@@ -109,7 +113,7 @@ public class ScheduledTasks {
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             String mailCode = returnedBLPOPList.get(1);
-            log.debug("start send confirmation code", mailCode);
+            LOGGER.info("================================> start send confirmation code", mailCode);
             mailConfirmationCodeServices.sendConfirmationCode(mailCode);
         }
     }
@@ -120,7 +124,7 @@ public class ScheduledTasks {
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
-            log.info("convert json in string to object rate");
+            LOGGER.info("================================> convert json in string to object rate");
         }
         //TODO: insert satisfaction in admin module
     }
