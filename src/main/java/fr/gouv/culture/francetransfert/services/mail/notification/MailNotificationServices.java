@@ -46,7 +46,7 @@ public class MailNotificationServices {
             helper.setFrom(franceTransfertMail);
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.addAttachment("france_transfert", new ClassPathResource(logo_france_transfert));
+//            helper.addAttachment("france_transfert", new ClassPathResource(logo_france_transfert));
             String htmlContent = htmlBuilder.build(object, templateName);
             helper.setText(htmlContent, true);
             emailSender.send(message);
