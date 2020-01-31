@@ -20,16 +20,11 @@ import java.util.Map;
 @Slf4j
 public class MailEnclosureNoLongerAvailbleServices {
 
-    @Value("${subject.no.availble.enclosure.recipient}")
-    private String subjectNoAvailbleEnclosureRecipient;
-
-    @Value("${subject.no.availble.enclosure.sender}")
-    private String subjectNoAvailbleEnclosureSernder;
-
-
+    @Autowired
+    private MailNotificationServices mailNotificationServices;
 
     @Autowired
-    MailNotificationServices mailNotificationServices;
+    private  Messages messages;
 
     public void sendEnclosureNotAvailble(Enclosure enclosure) throws Exception {
 
@@ -42,13 +37,13 @@ public class MailEnclosureNoLongerAvailbleServices {
                 boolean isFileDownloaded = (!CollectionUtils.isEmpty(recipientMap) && 0 == Integer.parseInt(recipientMap.get(RecipientKeysEnum.NB_DL.getKey())));
                 if (isFileDownloaded) {
                     recipientsDoNotDownloadedEnclosure.add(recipient);
-                    mailNotificationServices.prepareAndSend(recipient.getMail(), subjectNoAvailbleEnclosureRecipient, enclosure, NotificationTemplate.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue());
+                    mailNotificationServices.prepareAndSend(recipient.getMail(), messages.get("subject.no.availble.enclosure.recipient"), enclosure, NotificationTemplate.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue());
                 }
             }
             // Send email to the sender of enclosure is no longer available for download to recipients who have not removed it in time
             if (!CollectionUtils.isEmpty(recipientsDoNotDownloadedEnclosure)) {
                 enclosure.setRecipients(recipientsDoNotDownloadedEnclosure);
-                mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectNoAvailbleEnclosureSernder, enclosure, NotificationTemplate.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue());
+                mailNotificationServices.prepareAndSend(enclosure.getSender(), messages.get("subject.no.availble.enclosure.sender"), enclosure, NotificationTemplate.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue());
             }
         }
     }

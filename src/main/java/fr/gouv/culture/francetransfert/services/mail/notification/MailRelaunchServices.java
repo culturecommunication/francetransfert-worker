@@ -27,17 +27,14 @@ public class MailRelaunchServices {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailRelaunchServices.class);
 
-    @Value("${subject.relaunch.recipient}")
-    private String subjectRelaunchRecipient;
-
-    @Value("${subject.relaunch.sender}")
-    private String subjectRelaunchSender;
-
     @Value("${relaunch.mail.days}")
     private int relaunchDays;
 
     @Autowired
     MailNotificationServices mailNotificationServices;
+
+    @Autowired
+    Messages messages;
 
     public void sendMailsRelaunch() throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
@@ -59,7 +56,7 @@ public class MailRelaunchServices {
 
     // Send mails Relaunch to recipients
     private void sendToRecipientsAndSenderRelaunch(RedisManager redisManager, Enclosure enclosure, String templateName) throws Exception {
-        String subject = enclosure.getSender() + " " + subjectRelaunchRecipient;
+        String subject = enclosure.getSender() + " " + messages.get("subject.relaunch.recipient");
         List<Recipient> recipients = enclosure.getRecipients();
         if (!CollectionUtils.isEmpty(recipients)) {
             for (Recipient recipient: recipients) {

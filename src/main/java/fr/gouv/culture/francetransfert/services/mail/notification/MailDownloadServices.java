@@ -18,11 +18,11 @@ public class MailDownloadServices {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDownloadServices.class);
 
-    @Value("${subject.download.progress}")
-    private String subjectDownload;
+    @Autowired
+    private MailNotificationServices mailNotificationServices;
 
     @Autowired
-    MailNotificationServices mailNotificationServices;
+    private Messages messages;
 
     public void sendDownloadEnclosure(Enclosure enclosure, String recipientId) throws Exception {
         Optional<Recipient> optionalRecipient = enclosure.getRecipients().stream().filter(
@@ -32,7 +32,7 @@ public class MailDownloadServices {
             Recipient entry = optionalRecipient.get();
             enclosure.setRecipientDownloadInProgress(entry.getMail());
             LOGGER.info("================================> send email notification download in progress to sender:  {}", enclosure.getSender());
-            mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownload, enclosure, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
+            mailNotificationServices.prepareAndSend(enclosure.getSender(), messages.get("subject.download.progress"), enclosure, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
         }
     }
 }

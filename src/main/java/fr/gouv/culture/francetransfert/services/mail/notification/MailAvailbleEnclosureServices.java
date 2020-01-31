@@ -19,20 +19,17 @@ public class MailAvailbleEnclosureServices {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailAvailbleEnclosureServices.class);
 
-    @Value("${subject.sender}")
-    private String subjectSender;
-
-    @Value("${subject.recipient}")
-    private String subjectRecipient;
-
     @Autowired
     MailNotificationServices mailNotificationServices;
+
+    @Autowired
+    Messages messages;
 
     // Send Mails to snder and recipients
     public void sendMailsAvailableEnclosure(Enclosure enclosure) throws Exception{
         LOGGER.info("================================>send email notification availble to sender: {}", enclosure.getSender());
-        mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSender, enclosure, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
-        sendToRecipients(enclosure, subjectRecipient, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
+        mailNotificationServices.prepareAndSend(enclosure.getSender(), messages.get("subject.sender"), enclosure, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
+        sendToRecipients(enclosure, messages.get("subject.recipient"), NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
     }
 
     // Send mails to recipients
