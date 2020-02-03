@@ -37,7 +37,7 @@ public class MailContentBuilder {
 
         Context context = new Context();
         context.setVariable("enclosure", jsonObject);
-        context.setVariable("france_transfert", new ClassPathResource(logo_france_transfert));
+//        context.setVariable("france_transfert", new ClassPathResource(logo_france_transfert));
         return templateEngine.process(tempName, context);
     }
 
