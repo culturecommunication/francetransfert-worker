@@ -1,32 +1,32 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import fr.gouv.culture.francetransfert.model.ConfirmationCode;
-import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
-@Slf4j
 @Service
 public class MailConfirmationCodeServices {
 
-    private static final String subjct = "Code de confirmation";
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailConfirmationCodeServices.class);
 
     @Autowired
-    MailNotificationServices mailNotificationServices;
+    private MailNotificationServices mailNotificationServices;
+
+    @Autowired
+    private Messages messages;
 
     public void sendConfirmationCode(String mailCode) throws Exception {
         String senderMail = extractSenderMail(mailCode);
         String code = extractConfirmationCode(mailCode);
         ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail).build();
-        mailNotificationServices.prepareAndSend(senderMail, subjct, confirmationCode, NotificationTemplate.MAIL_CONFIRMATION_CODE.getValue());
+        LOGGER.info("================================> send email confirmation code to sender:  {}", senderMail);
+        mailNotificationServices.prepareAndSend(senderMail, messages.get("subject.confirmation.code"), confirmationCode, NotificationTemplate.MAIL_CONFIRMATION_CODE.getValue());
     }
 
     /**
@@ -43,7 +43,7 @@ public class MailConfirmationCodeServices {
             result =items[part];
 
         } else {
-            log.error("=======================> error extract mail and code");
+            LOGGER.error("=======================> error extract mail and code");
             throw new WorkerException("error extract mail and code");
         }
         return result;
