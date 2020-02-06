@@ -67,7 +67,7 @@ public class CleanUpServices {
      * @throws Exception 
      */
     private void cleanUpOSU(String bucketName, String enclosureId) throws Exception {
-        StorageManager storageManager = new StorageManager();
+        StorageManager storageManager = StorageManager.getInstance();
         storageManager.deleteFilesWithPrefix(bucketName, enclosureId + ".zip");
     }
 

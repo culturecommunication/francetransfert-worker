@@ -42,7 +42,7 @@ public class ZipWorkerServices {
 	
 	public void startZip(String prefix) throws Exception {
 		setPrefix(prefix);
-		StorageManager manager = new StorageManager();
+		StorageManager manager = StorageManager.getInstance();
 		manager.getZippedEnclosureName(getPrefix());
 		String bucketName = RedisUtils.getBucketName(RedisManager.getInstance(), prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, getPrefix());
