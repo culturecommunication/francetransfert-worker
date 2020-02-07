@@ -140,7 +140,7 @@ public class ScheduledTasks {
     @Scheduled(cron = "0 * * * * ?")
     public void stat() throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
-        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
+        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.STAT_QUEUE.getValue());
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             String enclosureId = returnedBLPOPList.get(1);
             LOGGER.info("================================> start save data in mongoDb", enclosureId);
