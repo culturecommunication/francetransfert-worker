@@ -10,6 +10,8 @@ import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEn
 import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
+import fr.gouv.culture.francetransfert.services.satisfaction.SatisfactionService;
+import fr.gouv.culture.francetransfert.services.stat.StatServices;
 import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import org.slf4j.Logger;
@@ -39,13 +41,17 @@ public class ScheduledTasks {
     @Autowired
     private MailConfirmationCodeServices mailConfirmationCodeServices;
 
-
-
     @Autowired
     private CleanUpServices cleanUpServices;
     
     @Autowired
     private ZipWorkerServices zipWorkerServices;
+
+    @Autowired
+    private StatServices statServices;
+
+    @Autowired
+    private SatisfactionService satisfactionService;
 
 
     @Scheduled(cron = "${scheduled.relaunch.mail}")
@@ -68,7 +74,7 @@ public class ScheduledTasks {
             String enclosureId = returnedBLPOPList.get(1);
             LOGGER.info("================================> worker : start send email notification availble enclosure to download for enclosure N° {}", enclosureId);
             mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId));
-            manager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
+            manager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), enclosureId);
         }
     }
 
@@ -103,6 +109,7 @@ public class ScheduledTasks {
         List<String> returnedBLPOPList = manager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             String enclosureId = returnedBLPOPList.get(1);
+
             LOGGER.info("================================> start temp data cleanup process for enclosure N: {}" , enclosureId);
             cleanUpServices.cleanUpEnclosureTempDataInRedis(manager, enclosureId);
         }
@@ -125,12 +132,21 @@ public class ScheduledTasks {
         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
             Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
             LOGGER.info("================================> convert json in string to object rate");
+            LOGGER.info("================================> start save satisfaction data in mongoDb");
+            satisfactionService.saveData(rate);
         }
-        //TODO: insert satisfaction in admin module
     }
 
     @Scheduled(cron = "0 * * * * ?")
-    public void stat() {
+    public void stat() throws Exception {
+        RedisManager redisManager = RedisManager.getInstance();
+        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
+        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+            String enclosureId = returnedBLPOPList.get(1);
+            LOGGER.info("================================> start save data in mongoDb", enclosureId);
+            statServices.saveData(enclosureId);
+            redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
+        }
     }
 
 }

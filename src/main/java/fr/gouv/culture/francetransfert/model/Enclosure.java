@@ -55,7 +55,7 @@ public class Enclosure {
             dirsOfEnclosure.add(RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormattedFileSize(rootDir.getValue())).build());
         }
         String totalSize = WorkerUtils.getFormattedFileSize(RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
-        String senderEnclosure = RedisUtils.getSenderEnclosure(redisManager, enclosureId);
+        String senderEnclosure = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
         List<Recipient> recipientsEnclosure = new ArrayList<>();
         for (Map.Entry<String, String> recipient: RedisUtils.getRecipientsEnclosure(redisManager, enclosureId).entrySet()) {
             recipientsEnclosure.add(Recipient.builder().mail(recipient.getKey()).id(recipient.getValue()).build());

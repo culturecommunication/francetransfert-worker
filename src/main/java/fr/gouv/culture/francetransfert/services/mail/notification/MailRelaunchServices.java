@@ -9,7 +9,7 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisU
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.security.WorkerException;
-import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
+import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ public class MailRelaunchServices {
                     if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
                         Enclosure enclosure = Enclosure.build(enclosureId);
                         LOGGER.info("================================> send relaunch mail for enclosure N° {}", enclosureId );
-                        sendToRecipientsAndSenderRelaunch(redisManager, enclosure, NotificationTemplate.MAIL_RELAUNCH_RECIPIENT.getValue());
+                        sendToRecipientsAndSenderRelaunch(redisManager, enclosure, NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
                     }
                 } catch (Exception e) {
                     throw new WorkerException("Enclosure build error");

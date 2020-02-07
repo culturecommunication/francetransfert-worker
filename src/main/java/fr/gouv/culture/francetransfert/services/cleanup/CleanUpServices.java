@@ -40,9 +40,9 @@ public class CleanUpServices {
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach( enclosureId -> {
                 try {
-                    mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId));
                     LocalDate enclosureExipireDateRedis = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(enclosureId, EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey())).toLocalDate();
                     if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) {// expire date + 1
+                        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId));
                         LOGGER.info("================================> clean up for enclosure N° {}", enclosureId );
                         // clean enclosure in OSU : delete enclosure
                         String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);

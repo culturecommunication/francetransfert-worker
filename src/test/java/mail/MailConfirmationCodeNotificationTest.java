@@ -7,7 +7,6 @@ import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.model.RootData;
 import fr.gouv.culture.francetransfert.services.mail.notification.*;
-import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import org.junit.After;
 import org.junit.Before;
