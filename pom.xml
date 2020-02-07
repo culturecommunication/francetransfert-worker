@@ -34,6 +34,8 @@
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
         <jjwt.version>0.10.6</jjwt.version>
+
+        <ft.dependencie.stats.version>0.1.0-SNAPSHOT</ft.dependencie.stats.version>
     </properties>
   
   <repositories>
@@ -93,6 +95,11 @@
           <scope>test</scope>
       </dependency>
       <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <optional>true</optional>
+      </dependency>
+      <dependency>
           <groupId>com.icegreen</groupId>
           <artifactId>greenmail</artifactId>
           <version>1.5.0</version>
@@ -136,6 +143,11 @@
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-storage-api</artifactId>
           <version>0.1.0</version>
+      </dependency>
+      <dependency>
+          <groupId>fr.gouv.culture.francetransfert</groupId>
+          <artifactId>FTR-stats-api</artifactId>
+          <version>${ft.dependencie.stats.version}</version>
       </dependency>
   </dependencies>
     <!--  Profile  -->

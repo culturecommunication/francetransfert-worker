@@ -1,7 +1,7 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import fr.gouv.culture.francetransfert.security.WorkerException;
-import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
+import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class MailNotificationServices {
     public void prepareAndSend(String to, String subject, Object object, String templateName) {
         try {
             LOGGER.debug("start send emails for enclosure ");
-            templateName = templateName != null && !templateName.isEmpty() ? templateName : NotificationTemplate.MAIL_TEMPLATE.getValue();
+            templateName = templateName != null && !templateName.isEmpty() ? templateName : NotificationTemplateEnum.MAIL_TEMPLATE.getValue();
             JavaMailSenderImpl sender = new JavaMailSenderImpl();
             MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true,"UTF-8");
@@ -56,7 +56,7 @@ public class MailNotificationServices {
     public void prepareAndSend(String to, String subject, String body, String templateName) {
         try {
             LOGGER.debug("start send emails for enclosure ");
-            templateName = templateName != null && !templateName.isEmpty() ? templateName : NotificationTemplate.MAIL_TEMPLATE.getValue();
+            templateName = templateName != null && !templateName.isEmpty() ? templateName : NotificationTemplateEnum.MAIL_TEMPLATE.getValue();
             JavaMailSenderImpl sender = new JavaMailSenderImpl();
             MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true,"UTF-8");

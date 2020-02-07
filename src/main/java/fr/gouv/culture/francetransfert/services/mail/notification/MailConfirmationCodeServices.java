@@ -2,7 +2,7 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import fr.gouv.culture.francetransfert.model.ConfirmationCode;
 import fr.gouv.culture.francetransfert.security.WorkerException;
-import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
+import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ public class MailConfirmationCodeServices {
         String code = extractConfirmationCode(mailCode);
         ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail).build();
         LOGGER.info("================================> send email confirmation code to sender:  {}", senderMail);
-        mailNotificationServices.prepareAndSend(senderMail, messages.get("subject.confirmation.code"), confirmationCode, NotificationTemplate.MAIL_CONFIRMATION_CODE.getValue());
+        mailNotificationServices.prepareAndSend(senderMail, messages.get("subject.confirmation.code"), confirmationCode, NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue());
     }
 
     /**

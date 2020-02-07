@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum NotificationTemplate {
+public enum NotificationTemplateEnum {
     MAIL_TEMPLATE("mail-template"),
     MAIL_AVAILABLE_SENDER("mail-available-sender-template"),
     MAIL_AVAILABLE_RECIPIENT("mail-available-recipient-template"),

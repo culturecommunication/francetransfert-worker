@@ -14,6 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 
+@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = FranceTransfertWorkerStarter.class)
 public class UploadZipInOSUTest {

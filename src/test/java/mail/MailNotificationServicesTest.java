@@ -10,7 +10,7 @@ import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEn
 import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplate;
+import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -75,7 +75,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplate.MAIL_AVAILABLE_RECIPIENT.getValue());
+        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
@@ -89,7 +89,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplate.MAIL_AVAILABLE_SENDER.getValue());
+        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
