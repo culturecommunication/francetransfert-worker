@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fr.gouv.culture.francetransfert</groupId>
   <artifactId>FTR-worker-api</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <name>France Transfert Task Worker</name>
   <parent>
         <groupId>org.springframework.boot</groupId>
@@ -35,13 +35,13 @@
         <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
         <jjwt.version>0.10.6</jjwt.version>
 
-        <ft.dependencie.stats.version>0.1.0-SNAPSHOT</ft.dependencie.stats.version>
+        <ft.dependencie.stats.version>0.2.0</ft.dependencie.stats.version>
     </properties>
   
   <repositories>
     <repository>
       <id>gitlab-nexus</id>
-      <url>${env.MVN_SNAPSHOTS}</url>
+      <url>${env.MVN_RELEASES}</url>
     </repository>
   </repositories>
   <distributionManagement>
@@ -142,7 +142,7 @@
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-storage-api</artifactId>
-          <version>0.1.0</version>
+          <version>0.2.0</version>
       </dependency>
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
