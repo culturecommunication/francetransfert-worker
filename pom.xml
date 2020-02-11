@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fr.gouv.culture.francetransfert</groupId>
   <artifactId>FTR-worker-api</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0-SNAPSHOT</version>
   <name>France Transfert Task Worker</name>
   <parent>
         <groupId>org.springframework.boot</groupId>
@@ -35,7 +35,7 @@
         <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
         <jjwt.version>0.10.6</jjwt.version>
 
-        <ft.dependencie.stats.version>0.2.0</ft.dependencie.stats.version>
+        <ft.dependencie.stats.version>0.3.0-SNAPSHOT</ft.dependencie.stats.version>
     </properties>
   
   <repositories>
@@ -118,6 +118,11 @@
           <artifactId>lombok</artifactId>
           <optional>true</optional>
       </dependency>
+      <dependency>
+       	<groupId>org.apache.httpcomponents</groupId>
+       	<artifactId>httpclient</artifactId>
+       	<version>4.5.9</version>
+      </dependency>
       <!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
       <dependency>
           <groupId>io.jsonwebtoken</groupId>
@@ -137,12 +142,12 @@
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-metaload-api</artifactId>
-          <version>0.2.0</version>
+          <version>0.3.0-SNAPSHOT</version>
       </dependency>
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-storage-api</artifactId>
-          <version>0.2.0</version>
+          <version>0.3.0-SNAPSHOT</version>
       </dependency>
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
