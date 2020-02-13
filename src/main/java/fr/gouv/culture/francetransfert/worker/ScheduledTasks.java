@@ -99,7 +99,6 @@ public class ScheduledTasks {
         	String enclosureId = returnedBLPOPList.get(1);
             LOGGER.info("================================> worker : start zip  process for enclosur N°  {}", enclosureId);
         	zipWorkerServices.startZip(enclosureId);
-        	manager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), enclosureId);
         }
     }
     
