@@ -101,8 +101,10 @@ public class ZipWorkerServices {
 		FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
 		ZipOutputStream zipOut = new ZipOutputStream(fos);
 		File fileToZip = new File(sourceFile);
-
-		zipFile(fileToZip, fileToZip.getName(), zipOut);
+		for (File file :fileToZip.listFiles()) {
+			zipFile(file, file.getName(), zipOut);
+		}
+//		zipFile(fileToZip, fileToZip.getName(), zipOut);
 		zipOut.flush();
 		zipOut.close();
 		fos.flush();
