@@ -88,4 +88,20 @@ public class WorkerUtils {
         return Pattern.matches(p, str);
     }
 
+    public static String getExtension(String fileName) {
+        char ch;
+        int len;
+        if(fileName==null ||
+                (len = fileName.length())==0
+                || (ch = fileName.charAt(len-1))=='/' //in the case of a directory
+                || ch=='\\' || ch=='.' )              //in the case of . or ..
+            return ""; // empty extension
+        int dotInd = fileName.lastIndexOf('.'),
+                sepInd = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
+        if( dotInd<=sepInd )
+            return ""; // empty extension
+        else
+            return fileName.substring(dotInd+1).toLowerCase();
+    }
+
 }
