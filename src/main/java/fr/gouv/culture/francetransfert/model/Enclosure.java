@@ -47,11 +47,11 @@ public class Enclosure {
     public static Enclosure build(String enclosureId) throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
         List<RootData> filesOfEnclosure = new ArrayList<>();
-        for (Map.Entry<String, Integer> rootFile: RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
+        for (Map.Entry<String, Long> rootFile: RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
             filesOfEnclosure.add(RootData.builder().name(rootFile.getKey()).extension(WorkerUtils.getExtension(rootFile.getKey())).size(WorkerUtils.getFormattedFileSize(rootFile.getValue())).build());
         }
         List<RootData> dirsOfEnclosure = new ArrayList<>();
-        for (Map.Entry<String, Integer> rootDir: RedisUtils.getRootDirsWithSize(redisManager, enclosureId).entrySet()) {
+        for (Map.Entry<String, Long> rootDir: RedisUtils.getRootDirsWithSize(redisManager, enclosureId).entrySet()) {
             dirsOfEnclosure.add(RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormattedFileSize(rootDir.getValue())).build());
         }
         String totalSize = WorkerUtils.getFormattedFileSize(RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));

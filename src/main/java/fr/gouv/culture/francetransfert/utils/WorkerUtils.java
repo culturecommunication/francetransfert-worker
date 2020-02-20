@@ -71,7 +71,7 @@ public class WorkerUtils {
 
         // arrondi à 10^-2
         tmpSize *= 100;
-        tmpSize = (int) (tmpSize + 0.5);
+        tmpSize = (long) (tmpSize + 0.5);
         tmpSize /= 100;
 
         return tmpSize + " " + suffixes[i];
