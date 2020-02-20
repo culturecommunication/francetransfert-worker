@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
@@ -15,7 +16,15 @@ import java.io.IOException;
 public class MailContentBuilder {
     private TemplateEngine templateEngine;
 
-    private final static String logo_france_transfert = "/static/images/france_transfert.PNG";
+    @Value("${mail.image.ft.logo}")
+    private String logoFT;
+
+    @Value("${mail.image.ft.file}")
+    private String fileIcone;
+
+    @Value("${mail.image.ft.foler}")
+    private String folderIcone;
+
 
     @Autowired
     public MailContentBuilder(TemplateEngine templateEngine) {
@@ -37,7 +46,9 @@ public class MailContentBuilder {
 
         Context context = new Context();
         context.setVariable("enclosure", jsonObject);
-//        context.setVariable("france_transfert", new ClassPathResource(logo_france_transfert));
+        context.setVariable("logoFt", logoFT);
+        context.setVariable("fileIcone", fileIcone);
+        context.setVariable("folerIcone", folderIcone);
         return templateEngine.process(tempName, context);
     }
 

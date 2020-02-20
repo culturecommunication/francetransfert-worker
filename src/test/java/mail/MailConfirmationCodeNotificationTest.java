@@ -52,8 +52,8 @@ public class MailConfirmationCodeNotificationTest {
             smtpServer.start();
             enclosure = Enclosure.builder()
                     .guid("enclosureId")
-                    .rootFiles(Arrays.asList(new RootData("file_1", WorkerUtils.getFormattedFileSize(12)), new RootData("file_2",WorkerUtils.getFormattedFileSize(5))))
-                    .rootDirs(Arrays.asList(new RootData("dir_1",WorkerUtils.getFormattedFileSize(120)), new RootData("dir_2",WorkerUtils.getFormattedFileSize(50))))
+                    .rootFiles(Arrays.asList(new RootData("file_1","txt", WorkerUtils.getFormattedFileSize(12)), new RootData("file_2", "txt",WorkerUtils.getFormattedFileSize(5))))
+                    .rootDirs(Arrays.asList(new RootData("dir_1",null, WorkerUtils.getFormattedFileSize(120)), new RootData("dir_2", null, WorkerUtils.getFormattedFileSize(50))))
                     .countElements(2)
                     .totalSize(WorkerUtils.getFormattedFileSize(17))
                     .expireDate(LocalDateTime.now().plusDays(30).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)))
