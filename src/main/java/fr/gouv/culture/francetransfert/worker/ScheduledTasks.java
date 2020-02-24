@@ -5,6 +5,7 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Rate;
+import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
@@ -34,6 +35,9 @@ public class ScheduledTasks {
 
     @Autowired
     private MailRelaunchServices mailRelaunchServices;
+    
+    @Autowired
+    private AppSyncServices appSyncServices;
 
     @Autowired
     private MailDownloadServices mailDownloadServices;
@@ -56,14 +60,32 @@ public class ScheduledTasks {
 
     @Scheduled(cron = "${scheduled.relaunch.mail}")
     public void relaunchMail() throws Exception{
-        LOGGER.info("================================> worker : start relaunch for download");
-        mailRelaunchServices.sendMailsRelaunch();
+    	LOGGER.info("================================> worker : start relaunch for download Check");
+    	if(appSyncServices.shouldRelaunch()) {
+    		LOGGER.info("================================> worker : start relaunch for download Checked and Started");
+    		mailRelaunchServices.sendMailsRelaunch();
+    	}
     }
 
     @Scheduled(cron = "${scheduled.clean.up}")
     public void cleanUp() throws Exception {
-        LOGGER.info("================================> worker : start clean-up expired enclosure");
-        cleanUpServices.cleanUp();
+    	LOGGER.info("================================> worker : start clean-up expired enclosure Check");
+    	if(appSyncServices.shouldCleanup()) {
+    		LOGGER.info("================================> worker : start clean-up expired enclosure Checked and Started");
+    		cleanUpServices.cleanUp();
+    	}
+    }
+    
+    @Scheduled(cron = "${scheduled.app.sync.cleanup}")
+    public void appSyncCleanup() throws Exception {
+        LOGGER.info("================================> worker : start Application synchronization cleanup");
+        appSyncServices.appSyncCleanup();
+    }
+    
+    @Scheduled(cron = "${scheduled.app.sync.relaunch}")
+    public void appSyncRelaunch() throws Exception {
+        LOGGER.info("================================> worker : start Application synchronization relaunch");
+        appSyncServices.appSyncRelaunch();
     }
 
     @Scheduled(cron = "0 * * * * ?")
