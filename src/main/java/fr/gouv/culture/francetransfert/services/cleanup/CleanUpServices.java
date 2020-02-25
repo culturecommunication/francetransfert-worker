@@ -111,6 +111,8 @@ public class CleanUpServices {
         //delete part-etags
         redisManager.deleteKey(RedisKeysEnum.FT_PART_ETAGS.getKey(enclosureId));
         LOGGER.debug("clean part-etags {}", RedisKeysEnum.FT_PART_ETAGS.getKey(enclosureId));
+        // delete counters enclosure
+        deleteEnclosureCounter(redisManager, enclosureId);
         //delete list and HASH root-files
 //        deleteListAndHashFiles(redisManager, RedisKeysEnum.FT_ROOT_FILES, RedisKeysEnum.FT_ROOT_FILE, enclosureId);
 //        log.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
@@ -173,6 +175,23 @@ public class CleanUpServices {
             redisManager.deleteKey(RedisKeysEnum.FT_RECIPIENTS.getKey(enclosureId));
         } catch (Exception e) {
             throw new WorkerException("");
+        }
+    }
+
+    /**
+     *
+     * @param redisManager
+     * @param enclosureId
+     */
+    private void deleteEnclosureCounter(RedisManager redisManager, String enclosureId) {
+        //        delete counter : FT_SUCCESSFUL_UPLOAD_FILES_COUNTER
+        LOGGER.debug("clean successful upload files counter ");
+        redisManager.deleteKey(RedisKeysEnum.FT_SUCCESSFUL_UPLOAD_FILES_COUNTER.getKey(enclosureId));
+        //        delete counter : FT_FLOW_CHUNCKS_COUNTER
+        LOGGER.debug("clean flow chuncks counter for all files in enclosure");
+        List<String> listFileIds = redisManager.lrange(RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId), 0, -1);
+        for (String fileId : listFileIds) {
+            redisManager.deleteKey(RedisKeysEnum.FT_FLOW_CHUNCKS_COUNTER.getKey(fileId));
         }
     }
 }
