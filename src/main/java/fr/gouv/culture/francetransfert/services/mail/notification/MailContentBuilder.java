@@ -22,7 +22,7 @@ public class MailContentBuilder {
     @Value("${mail.image.ft.file}")
     private String fileIcone;
 
-    @Value("${mail.image.ft.foler}")
+    @Value("${mail.image.ft.folder}")
     private String folderIcone;
 
 
