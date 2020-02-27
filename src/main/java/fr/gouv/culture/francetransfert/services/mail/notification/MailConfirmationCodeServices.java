@@ -6,6 +6,7 @@ import fr.gouv.culture.francetransfert.services.mail.notification.enums.Notifica
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;
@@ -18,15 +19,15 @@ public class MailConfirmationCodeServices {
     @Autowired
     private MailNotificationServices mailNotificationServices;
 
-    @Autowired
-    private Messages messages;
+    @Value("${subject.confirmation.code}")
+    private String subjectConfirmationCode;
 
     public void sendConfirmationCode(String mailCode) throws Exception {
         String senderMail = extractSenderMail(mailCode);
         String code = extractConfirmationCode(mailCode);
         ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail).build();
         LOGGER.info("================================> send email confirmation code to sender:  {}", senderMail);
-        mailNotificationServices.prepareAndSend(senderMail, messages.get("subject.confirmation.code"), confirmationCode, NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue());
+        mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode, NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue());
     }
 
     /**
