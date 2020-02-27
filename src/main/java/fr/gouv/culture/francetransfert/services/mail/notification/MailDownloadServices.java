@@ -6,6 +6,7 @@ import fr.gouv.culture.francetransfert.services.mail.notification.enums.Notifica
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,11 +16,11 @@ public class MailDownloadServices {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDownloadServices.class);
 
-    @Autowired
-    private MailNotificationServices mailNotificationServices;
+    @Value("${subject.download.progress}")
+    private String subjectDownloadProgress;
 
     @Autowired
-    private Messages messages;
+    private MailNotificationServices mailNotificationServices;
 
     public void sendDownloadEnclosure(Enclosure enclosure, String recipientId) throws Exception {
         Optional<Recipient> optionalRecipient = enclosure.getRecipients().stream().filter(
@@ -29,7 +30,7 @@ public class MailDownloadServices {
             Recipient entry = optionalRecipient.get();
             enclosure.setRecipientDownloadInProgress(entry.getMail());
             LOGGER.info("================================> send email notification download in progress to sender:  {}", enclosure.getSender());
-            mailNotificationServices.prepareAndSend(enclosure.getSender(), messages.get("subject.download.progress"), enclosure, NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
+            mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownloadProgress, enclosure, NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
         }
     }
 }

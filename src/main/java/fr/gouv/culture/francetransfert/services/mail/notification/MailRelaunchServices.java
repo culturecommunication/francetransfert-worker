@@ -30,18 +30,19 @@ public class MailRelaunchServices {
     @Value("${relaunch.mail.days}")
     private int relaunchDays;
 
+    @Value("${subject.relaunch.recipient}")
+    private String subjectRelaunchRecipient;
+
     @Autowired
     MailNotificationServices mailNotificationServices;
 
-    @Autowired
-    Messages messages;
 
     public void sendMailsRelaunch() throws Exception {
         RedisManager redisManager = RedisManager.getInstance();
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
                 try {
-                    LocalDateTime exipireEnclosureDate = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(enclosureId, EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
+                    LocalDateTime exipireEnclosureDate = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
                     if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
                         Enclosure enclosure = Enclosure.build(enclosureId);
                         LOGGER.info("================================> send relaunch mail for enclosure N° {}", enclosureId );
@@ -56,7 +57,6 @@ public class MailRelaunchServices {
 
     // Send mails Relaunch to recipients
     private void sendToRecipientsAndSenderRelaunch(RedisManager redisManager, Enclosure enclosure, String templateName) throws Exception {
-        String subject = enclosure.getSender() + " " + messages.get("subject.relaunch.recipient");
         List<Recipient> recipients = enclosure.getRecipients();
         if (!CollectionUtils.isEmpty(recipients)) {
             for (Recipient recipient: recipients) {
@@ -65,7 +65,7 @@ public class MailRelaunchServices {
                 if (isFileDownloaded) {
                     enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(), recipient.getMail(), recipient.getId()));
                     LOGGER.info("================================> send relaunch mail to {} ", recipient.getMail());
-                    mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName);
+                    mailNotificationServices.prepareAndSend(recipient.getMail(), subjectRelaunchRecipient, enclosure, templateName);
                 }
             }
         }
