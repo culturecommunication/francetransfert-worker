@@ -31,6 +31,9 @@ public class CleanUpServices {
     MailEnclosureNoLongerAvailbleServices mailEnclosureNoLongerAvailbleServices;
 
 
+    @Autowired
+    StorageManager storageManager;
+    
     /**
      * clean all expired data in OSU and REDIS
      * @throws Exception 
@@ -67,7 +70,7 @@ public class CleanUpServices {
      * @throws Exception 
      */
     private void cleanUpOSU(String bucketName, String enclosureId) throws Exception {
-        StorageManager storageManager = StorageManager.getInstance();
+//        StorageManager storageManager = StorageManager.getInstance();
         storageManager.deleteFilesWithPrefix(bucketName, storageManager.getZippedEnclosureName(enclosureId) + ".zip");
     }
 

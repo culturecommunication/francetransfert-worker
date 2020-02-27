@@ -21,6 +21,9 @@ public class UploadZipInOSUTest {
 
     @Autowired
     ZipWorkerServices zipWorkerServices;
+    
+    @Autowired
+    StorageManager manager;
 
 
     @Before
@@ -35,7 +38,7 @@ public class UploadZipInOSUTest {
         String bucketName = "test-lha-09122019";
         String fileName = "7e4fc103-2517-4dd6-861a-85f1844dd73f.zip";
         String filePath = "C:/test/7e4fc103-2517-4dd6-861a-85f1844dd73f.zip";
-        StorageManager manager = StorageManager.getInstance();
+//        StorageManager manager = StorageManager.getInstance();
         //when
 manager.getZippedEnclosureName("d895a459-f638-455c-9e81-d2ab4678219f");
 //        zipWorkerServices.uploadZippedEnclosure(bucketName, new StorageManager(), fileName, filePath );

@@ -15,6 +15,7 @@ import java.util.zip.ZipOutputStream;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,9 @@ public class ZipWorkerServices {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZipWorkerServices.class);
 	
+	 @Autowired
+	 StorageManager manager;
+	
 	String prefix;
 	
 	@Value("${tmp.folder.path}")
@@ -42,7 +46,7 @@ public class ZipWorkerServices {
 	
 	public void startZip(String prefix) throws Exception {
 		setPrefix(prefix);
-		StorageManager manager = StorageManager.getInstance();
+//		StorageManager manager = StorageManager.getInstance();
 		manager.getZippedEnclosureName(getPrefix());
 		String bucketName = RedisUtils.getBucketName(RedisManager.getInstance(), prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, getPrefix());
