@@ -28,11 +28,14 @@ public class StatServices {
 
     @Autowired
     private SizeDataRepository sizeDataRepository;
+    
+    @Autowired
+    RedisManager redisManager;
 
     public boolean saveData(String enclosureId) throws WorkerException {
         try {
             boolean isSaved = true;
-            RedisManager redisManager = RedisManager.getInstance();
+//            RedisManager redisManager = RedisManager.getInstance();
             Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
             MongoLocalDateTime mongoLocalDateTime = MongoLocalDateTime.of(DateUtils.convertStringToLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey())));
             LOGGER.info("=================== save collection usage data mongoDB");

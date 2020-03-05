@@ -35,6 +35,9 @@ public class ZipWorkerServices {
 	
 	 @Autowired
 	 StorageManager manager;
+	 
+	 @Autowired
+	 RedisManager redisManager;
 	
 	String prefix;
 	
@@ -48,7 +51,7 @@ public class ZipWorkerServices {
 		setPrefix(prefix);
 //		StorageManager manager = StorageManager.getInstance();
 		manager.getZippedEnclosureName(getPrefix());
-		String bucketName = RedisUtils.getBucketName(RedisManager.getInstance(), prefix, bucketPrefix);
+		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, getPrefix());
 		try {
 			LOGGER.info("================================> start download files temp to disk");
@@ -73,7 +76,7 @@ public class ZipWorkerServices {
 	}
 
 	private void notifyEmailWorker() throws Exception {
-		RedisManager.getInstance().publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), getPrefix());
+		redisManager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), getPrefix());
 	}
 
 	private void deleteFilesFromOSU(StorageManager manager, String bucketName) throws Exception {

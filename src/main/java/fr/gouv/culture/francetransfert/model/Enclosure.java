@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -43,9 +45,10 @@ public class Enclosure {
     private String urlDownload;
 
     private String recipientDownloadInProgress;
+    
 
-    public static Enclosure build(String enclosureId) throws Exception {
-        RedisManager redisManager = RedisManager.getInstance();
+    public static Enclosure build(String enclosureId, RedisManager redisManager) throws Exception {
+//        RedisManager redisManager = RedisManager.getInstance();
         List<RootData> filesOfEnclosure = new ArrayList<>();
         for (Map.Entry<String, Long> rootFile: RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
             filesOfEnclosure.add(RootData.builder().name(rootFile.getKey()).extension(WorkerUtils.getExtension(rootFile.getKey())).size(WorkerUtils.getFormattedFileSize(rootFile.getValue())).build());

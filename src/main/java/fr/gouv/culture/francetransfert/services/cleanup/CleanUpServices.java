@@ -34,18 +34,21 @@ public class CleanUpServices {
     @Autowired
     StorageManager storageManager;
     
+    @Autowired
+    RedisManager redisManager;
+    
     /**
      * clean all expired data in OSU and REDIS
      * @throws Exception 
      */
     public void cleanUp() throws Exception {
-        RedisManager redisManager = RedisManager.getInstance();
+//        RedisManager redisManager = RedisManager.getInstance();
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach( enclosureId -> {
                 try {
                     LocalDate enclosureExipireDateRedis = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey())).toLocalDate();
                     if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) { // expire date + 1
-                        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId));
+                        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager));
                         LOGGER.info("================================> clean up for enclosure N° {}", enclosureId );
                         // clean enclosure in OSU : delete enclosure
                         String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);

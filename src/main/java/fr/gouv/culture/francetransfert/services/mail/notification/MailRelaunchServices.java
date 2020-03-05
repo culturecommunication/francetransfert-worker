@@ -35,16 +35,19 @@ public class MailRelaunchServices {
 
     @Autowired
     MailNotificationServices mailNotificationServices;
+    
+    @Autowired
+    RedisManager redisManager;
 
 
     public void sendMailsRelaunch() throws Exception {
-        RedisManager redisManager = RedisManager.getInstance();
+//        RedisManager redisManager = RedisManager.getInstance();
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
                 try {
                     LocalDateTime exipireEnclosureDate = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
                     if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
-                        Enclosure enclosure = Enclosure.build(enclosureId);
+                        Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
                         LOGGER.info("================================> send relaunch mail for enclosure N° {}", enclosureId );
                         sendToRecipientsAndSenderRelaunch(redisManager, enclosure, NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
                     }

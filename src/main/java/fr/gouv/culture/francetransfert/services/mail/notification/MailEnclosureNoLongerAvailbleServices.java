@@ -30,10 +30,13 @@ public class MailEnclosureNoLongerAvailbleServices {
 
     @Autowired
     private MailNotificationServices mailNotificationServices;
+    
+    @Autowired
+    RedisManager redisManager;
 
     public void sendEnclosureNotAvailble(Enclosure enclosure) throws Exception {
 
-        RedisManager redisManager = RedisManager.getInstance();
+//        RedisManager redisManager = RedisManager.getInstance();
         List<Recipient> recipients = enclosure.getRecipients();
         if (!CollectionUtils.isEmpty(recipients)) {
             List<Recipient> recipientsDoNotDownloadedEnclosure = new ArrayList<>();
