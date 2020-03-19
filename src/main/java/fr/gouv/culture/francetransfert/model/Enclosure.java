@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Data
@@ -51,11 +52,11 @@ public class Enclosure {
 //        RedisManager redisManager = RedisManager.getInstance();
         List<RootData> filesOfEnclosure = new ArrayList<>();
         for (Map.Entry<String, Long> rootFile: RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
-            filesOfEnclosure.add(RootData.builder().name(rootFile.getKey()).extension(WorkerUtils.getExtension(rootFile.getKey())).size(WorkerUtils.getFormattedFileSize(rootFile.getValue())).build());
+            filesOfEnclosure.add(RootData.builder().name(rootFile.getKey()).extension(WorkerUtils.getExtension(rootFile.getKey())).size(WorkerUtils.getFormattedFileSize(rootFile.getValue())).nameWithoutExtension(FilenameUtils.removeExtension(rootFile.getKey())).build());
         }
         List<RootData> dirsOfEnclosure = new ArrayList<>();
         for (Map.Entry<String, Long> rootDir: RedisUtils.getRootDirsWithSize(redisManager, enclosureId).entrySet()) {
-            dirsOfEnclosure.add(RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormattedFileSize(rootDir.getValue())).build());
+            dirsOfEnclosure.add(RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormattedFileSize(rootDir.getValue())).nameWithoutExtension(rootDir.getKey()).build());
         }
         String totalSize = WorkerUtils.getFormattedFileSize(RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
         String senderEnclosure = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);

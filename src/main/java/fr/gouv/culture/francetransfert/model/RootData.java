@@ -13,4 +13,5 @@ public class RootData {
     private String name;
     private String extension;
     private String size;
+    private String nameWithoutExtension;
 }

@@ -283,7 +283,7 @@
                                         <div th:each="rootFile : ${enclosure.get('rootFiles')}">
                                             <div class="titre file">
                                                 <div style="font-size: 14px; line-height: 1.2; font-family: 'Lato', Tahoma, Verdana, Segoe, sans-serif; color: #555555; mso-line-height-alt: 17px;">
-                                                    <p style="font-size: 14px; line-height: 1.2; font-family: Lato, Tahoma, Verdana, Segoe, sans-serif; word-break: break-word; mso-line-height-alt: 17px; margin: 0;"><span style="font-size: 14px; color: #000000;"><strong><a th:text="${rootFile.get('name').getAsString()}"></a></strong></span></p>
+                                                    <p style="font-size: 14px; line-height: 1.2; font-family: Lato, Tahoma, Verdana, Segoe, sans-serif; word-break: break-word; mso-line-height-alt: 17px; margin: 0;"><span style="font-size: 14px; color: #000000;"><strong><a th:text="${rootFile.get('nameWithoutExtension').getAsString()}"></a></strong></span></p>
                                                 </div>
                                             </div>
                                             <!--[if mso]></td></tr></table><![endif]-->
