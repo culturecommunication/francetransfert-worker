@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
 
+@Ignore
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = FranceTransfertWorkerStarter.class)
 public class MailNotificationServicesTest {
