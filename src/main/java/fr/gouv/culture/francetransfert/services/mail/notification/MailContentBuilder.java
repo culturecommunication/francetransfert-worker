@@ -18,6 +18,9 @@ public class MailContentBuilder {
 
     @Value("${mail.image.ft.logo}")
     private String logoFT;
+    
+    @Value("${mail.image.ft.accessbutton}")
+    private String accessButtonIcone;
 
     @Value("${mail.image.ft.file}")
     private String fileIcone;
@@ -49,6 +52,7 @@ public class MailContentBuilder {
         context.setVariable("logoFt", logoFT);
         context.setVariable("fileIcone", fileIcone);
         context.setVariable("folerIcone", folderIcone);
+        context.setVariable("accessButton", accessButtonIcone);
         return templateEngine.process(tempName, context);
     }
 
