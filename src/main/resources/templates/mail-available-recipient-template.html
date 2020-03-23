@@ -224,9 +224,8 @@ QXFGpfVB5xM/nTsx/9TpecevLj0TcsmrMb9W/CyIxYULV48aYSARQTjaSWcTg3J8LvkGWvqXJhcL
 OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC" alt="FranceTransfert" /></strong>
             <![endif]-->
             <!--[if !((gte mso 9) | (IE))]><!-->
-            <!-- th:src="${logoFt}" -->
             <strong><img alt="FranceTransfert"
-                srcth:src="${logoFt}"/></strong>
+                th:src="${logoFt}"/></strong>
             <!--<![endif]-->
         </td>
     </tr>
@@ -253,15 +252,12 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC" alt="FranceTransfert" /></strong>
             <p class="ft-email-main-enclosure-quantities"
                 style="margin: 13px 0px 13px 0px;">
                 <strong>
-                    <!-- th:text="${enclosure.get('countElements')}" -->
                     <span><a th:text="${enclosure.get('countElements')}"></a></span> élément(s),
-                    <!-- th:text="${enclosure.get('totalSize').getAsString()} -->
                     <span><a th:text="${enclosure.get('totalSize').getAsString()}"></a></span> au total
                 </strong>
             </p>
             <p style="margin: 13px 0px 13px 0px; line-height: 18px;">
                 Le téléchargement sera disponible jusqu'au
-                <!-- th:text="${enclosure.get('expireDate').getAsString()}" -->
                 <strong><span><a th:text="${enclosure.get('expireDate').getAsString()}"></a></span></strong>.<br />
                 Au-delà, il sera supprimé.
             </p>
@@ -280,7 +276,6 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC" alt="FranceTransfert" /></strong>
                     <td bgcolor="#0269CC" align="center" valign="middle"
                         style="background-color: #0269CC; border-radius: 4px 4px 4px 4px; text-align: center;">
 
-                        <!-- th:href="${enclosure.get('urlDownload').getAsString()}" -->
                         <a style="color: #FFFFFF; font-size: 16px;"
                             th:href="${enclosure.get('urlDownload').getAsString()}">
                             <!--[if (gte mso 9) | (IE)]>
@@ -325,7 +320,6 @@ f4ktzJhdbH7iG9jE7M/iPiexeSqqxZyGm8l2UfQpCu55BQun7K7cYQcDbAunwuySV9MmijKPcLFS
 ftCRoSPf0/MPdGjowPvP6dWzT67oluFveOfjZ6/+BM9XccASLy91AAAAAElFTkSuQmCC" alt="Accéder aux fichiers"/></strong>
                             <![endif]-->
                             <!--[if !((gte mso 9) | (IE))]><!-->
-                            <!-- (TODO nouvelle propriété) th:src="${accessButton}" -->
                             <strong><img alt="Accéder aux fichiers"
                                 th:src="${accessButton}"/></strong>
                             <!--<![endif]-->
@@ -345,7 +339,6 @@ ftCRoSPf0/MPdGjowPvP6dWzT67oluFveOfjZ6/+BM9XccASLy91AAAAAElFTkSuQmCC" alt="Accé
             <p style="margin: 0px 0px 0px 0px;">
                 <em>
                     Si le bouton ne fonctionne pas dans votre messagerie, utilisez le lien :
-                    <!-- th:href="${enclosure.get('urlDownload').getAsString()}" -->
                     <a
                         th:href="${enclosure.get('urlDownload').getAsString()}">Accéder
                         aux fichiers</a>
@@ -371,23 +364,17 @@ ftCRoSPf0/MPdGjowPvP6dWzT67oluFveOfjZ6/+BM9XccASLy91AAAAAElFTkSuQmCC" alt="Accé
         <td class="ft-email-enclosure-contents" align="left" valign="top"
             style="padding: 5px 25px 40px 25px; text-align: left; color: #414856; font-size: 13px;">
 
-            <!-- : Optionnel (s'il y a un message) -->
-            <!-- th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}" -->
             <p th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}" class="ft-email-enclosure-message-intro" style="margin: 0px 0px 10px 0px; color: #000000;">
                 <strong>Message :</strong>
             </p>
-            <!-- th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}" -->
             <p th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}" class="ft-email-enclosure-message-body" style="margin: 10px 0px 16px 0px; color: #414856;">
-                <!-- th:text="${enclosure.get('message').getAsString()} -->
                 <span><a th:text="${enclosure.get('message').getAsString()}"></a></span>
             </p>
-            <!-- / Optionnel -->
-
+            
             <table align="center" border="0" cellpadding="0" cellspacing="0" width="470"
                 style="border-collapse: collapse;">
 
                 <!-- : Répéter (pour chaque fichier à la racine du pli) -->
-                <!-- th:each="rootFile : ${enclosure.get('rootFiles')}" -->
                 <tr th:each="rootFile : ${enclosure.get('rootFiles')}">
                     <!-- Note : taille de l'icône fichier sur cercle bleu : 36x36px -->
                     <td class="ft-email-enclosure-contents-item-icon-file" align="center"
@@ -409,8 +396,6 @@ vqIJYiJQcQV0FHkFMTKYshXkRTwIWhADMXlVDByFTiBcViGqGLpWnkBAv2YBBNCvwQMEdG3KAQH9
 GqkQQL/mNwTQr2MBB3TqMsEB/TqDyIA63dz//wExLLFF5+/BugAAAABJRU5ErkJggg==" alt="&#x1f5ce;" /></strong>
                         <![endif]-->
                         <!--[if !((gte mso 9) | (IE))]><!-->
-                        <!-- th:src="${fileIcone}" -->
-                        <!-- avec mail.image.ft.file=https://recette.francetransfert.culture.gouv.fr/email-contents/root-file.png -->
                         <strong><img alt="&#x1f5ce;" 
                             th:src="${fileIcone}" /></strong>
                         <!--<![endif]-->
@@ -420,34 +405,23 @@ GqkQQL/mNwTQr2MBB3TqMsEB/TqDyIA63dz//wExLLFF5+/BugAAAABJRU5ErkJggg==" alt="&#x1f
                         <p class="ft-email-enclosure-contents-item-name"
                             style="margin: 0px 0px 3px 0px; color: #000000;">
                             <strong>
-                                <!-- th:text="${rootFile.get('nameWithoutExtension').getAsString()}" -->
                                 <span><a th:text="${rootFile.get('nameWithoutExtension').getAsString()}"></a></span>
                             </strong>
                         </p>
                         <p class="ft-email-enclosure-contents-item-details"
                             style="margin: 3px 0px 0px 0px; color: #414856; font-size: 12px;">
-                            <!-- th:text="${rootFile.get('size').getAsString()}" -->
                             <span><a th:text="${rootFile.get('size').getAsString()}"></a></span>
                             <strong>&nbsp;&bull;&nbsp;</strong> Fichier
-                            <!-- th:text="${rootFile.get('extension').getAsString()}" -->
                             <span><a th:text="${rootFile.get('extension').getAsString()}"></a></span>
                         </p>
                     </td>
                 </tr>
-                <!-- / Répéter -->
-
-                <!-- : Optionnel (s'il y a des fichiers au-dessus) -->
-                <!-- th:if="${enclosure.get('rootFiles').size() > 0}" -->
                 <tr th:if="${enclosure.get('rootFiles').size() > 0}">
                     <td colspan="2" class="ft-email-enclosure-contents-sep"
                         style="padding: 0px 0px 0px 0px;">
                         <hr />
                     </td>
                 </tr>
-                <!-- / Optionnel -->
-
-                <!-- : Répéter (pour chaque dossier à la racine du pli) -->
-                <!-- th:each="rootDir : ${enclosure.get('rootDirs')}" -->
                 <tr th:each="rootDir : ${enclosure.get('rootDirs')}">
                     <!-- Note : taille de l'icône dossier sur cercle bleu : 36x36px -->
                     <td class="ft-email-enclosure-contents-item-icon-folder" align="center"
@@ -469,8 +443,6 @@ vIendIYWxEBMVBVTtB8PEiNU7yCqGLpWnkBAv2YBBNCvwQMEdG3KAQH9GqkQQL/mNwTQr2MBB3Tq
 MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg==" alt="&#x1f5c0;" /></strong>
                         <![endif]-->
                         <!--[if !((gte mso 9) | (IE))]><!-->
-                        <!-- th:src="${folerIcone}" -->
-                        <!-- avec mail.image.ft.folder=https://recette.francetransfert.culture.gouv.fr/email-contents/root-dir.png -->
                         <strong><img alt="&#x1f5c0;" 
                             th:src="${folerIcone}" /></strong>
                         <!--<![endif]-->
@@ -480,30 +452,23 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg==" alt="&#x1f5c0;" /></strong>
                         <p class="ft-email-enclosure-contents-item-name"
                             style="margin: 0px 0px 3px 0px; color: #000000;">
                             <strong>
-                                <!-- th:text="${rootDir.get('name').getAsString()}" -->
                                 <span><a th:text="${rootDir.get('name').getAsString()}"></a></span>
                             </strong>
                         </p>
                         <p class="ft-email-enclosure-contents-item-details"
                             style="margin: 3px 0px 0px 0px; color: #414856; font-size: 12px;">
-                            <!-- th:text="${rootDir.get('size').getAsString()}" -->
                             <span><a th:text="${rootDir.get('size').getAsString()}"></a></span>
                             <strong>&nbsp;&bull;&nbsp;</strong> Dossier
                         </p>
                     </td>
                 </tr>
-                <!-- / Répéter -->
-
-                <!-- : Optionnel (s'il y a des dossiers au-dessus) -->
-                <!-- th:if="${enclosure.get('rootDirs').size() > 0}" -->
                 <tr th:if="${enclosure.get('rootDirs').size() > 0}">
                     <td colspan="2" class="ft-email-enclosure-contents-sep"
                         style="padding: 0px 0px 0px 0px;">
                         <hr />
                     </td>
                 </tr>
-                <!-- / Optionnel -->
-
+                
             </table>
 
         </td>
