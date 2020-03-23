@@ -23,7 +23,7 @@ public class MailNotificationServices {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailNotificationServices.class);
 
 //    properties mail France transfert SMTP
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.ftmail}")
     private String franceTransfertMail;
 
     @Value("${url.download.api}")
