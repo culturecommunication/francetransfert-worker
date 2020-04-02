@@ -8,7 +8,7 @@
 
   <body
     bgcolor="#D9D9D9"
-    style="margin: 0px 0px 0px 0px; padding: 40px 0px 40px 0px; background-color: #D9D9D9; font-family: Arial, Helvetica, sans-serif;"
+    style="margin: 0px 0px 0px 0px; padding: 40px 0px 40px 0px; background-color: #D9D9D9; font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;"
   >
     <!-- Container table -->
     <table
@@ -281,11 +281,11 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC"
                     >
                       <p
                         class="ft-email-main-sender-email"
-                        style="margin: 5px 0px 18px 0px; width: 520px; font-size: 22px;"
+                        style="margin: 5px 0px 18px 0px; width: 520px; font-size: 26px;"
                       >
                         <strong>
                           <!-- th:text="${enclosure.get('sender').getAsString()}" -->
-                          <span>Vos fichiers ont bien été envoyés</a></span>
+                          <span>Vos fichiers ont été envoyés</span>
                         </strong>
                       </p>
                       <p
@@ -332,7 +332,6 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC"
                       <p th:each="recipient : ${enclosure.get('recipients')}"
                         style="
                       float: left;
-                      border: 1px solid;
                       padding: 4px 8px;
                       border-radius: 15px;
                       font-size: 11px;
@@ -365,7 +364,7 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC"
                     >
                       <!-- : Optionnel (s'il y a un message) -->
                       <!-- th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}" -->
-                      <p th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}"
+                      <p th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}" 
                         class="ft-email-enclosure-message-intro"
                         style="margin: 0px 0px 10px 0px; color: #000000;"
                       >
@@ -535,7 +534,7 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg=="
                               style="margin: 3px 0px 0px 0px; color: #414856; font-size: 12px;"
                             >
                               <!-- th:text="${rootDir.get('size').getAsString()}" -->
-                              <span><a th:text="${rootDir.get('size').getAsString()}"></a></span>
+                              <span><a th:text="${enclosure.get('code').getAsString()}"></a></span>
                               <strong>&nbsp;&bull;&nbsp;</strong> Dossier
                             </p>
                           </td>
@@ -553,6 +552,7 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg=="
                             <hr />
                           </td>
                         </tr>
+                        <!-- / Optionnel -->
                       </table>
                     </td>
                   </tr>
