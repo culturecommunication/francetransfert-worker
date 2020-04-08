@@ -68,7 +68,7 @@ public class MailRelaunchServices {
                 if (isFileDownloaded) {
                     enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(), recipient.getMail(), recipient.getId()));
                     LOGGER.info("================================> send relaunch mail to {} ", recipient.getMail());
-                    mailNotificationServices.prepareAndSend(recipient.getMail(), subjectRelaunchRecipient, enclosure, templateName);
+                    mailNotificationServices.prepareAndSend(recipient.getMail(), subjectRelaunchRecipient + enclosure.getSender(), enclosure, templateName);
                 }
             }
         }

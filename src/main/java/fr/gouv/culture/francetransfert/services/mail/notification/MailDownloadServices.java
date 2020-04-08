@@ -30,7 +30,7 @@ public class MailDownloadServices {
             Recipient entry = optionalRecipient.get();
             enclosure.setRecipientDownloadInProgress(entry.getMail());
             LOGGER.info("================================> send email notification download in progress to sender:  {}", enclosure.getSender());
-            mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownloadProgress + enclosure.getSender(), enclosure, NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
+            mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownloadProgress + entry.getMail(), enclosure, NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
         }
     }
 }
