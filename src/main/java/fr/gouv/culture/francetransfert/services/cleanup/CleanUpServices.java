@@ -50,13 +50,20 @@ public class CleanUpServices {
                     if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) { // expire date + 1
                         mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager));
                         LOGGER.info("================================> clean up for enclosure N° {}", enclosureId );
-                        // clean enclosure in OSU : delete enclosure
                         String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
+                        
+                        //clean temp data in REDIS for Enclosure
+                        cleanUpEnclosureTempDataInRedis(redisManager, enclosureId);
+                        LOGGER.info("================================> clean up REDIS temp data");
+                        
+                        // clean enclosure in OSU : delete enclosure
                         LOGGER.info("================================> clean up OSU");
                         cleanUpOSU(bucketName, enclosureId);
+                        
                         // clean enclosure Core in REDIS : delete files, root-files, root-dirs, recipients, sender and enclosure
                         LOGGER.info("================================> clean up REDIS");
                         cleanUpEnclosureCoreInRedis(redisManager, enclosureId);
+                        
                         // clean enclosure date : delete list enclosureId and date expired
                         cleanUpEnclosureDatesInRedis(redisManager, date);
                     }
@@ -110,6 +117,8 @@ public class CleanUpServices {
     public void cleanUpEnclosureTempDataInRedis(RedisManager redisManager, String enclosureId) throws WorkerException {
         //delete part-etags
         deleteListPartEtags(redisManager, enclosureId);
+        //delete id container list
+        deleteListIdContainer(redisManager, enclosureId);
         //delete list and HASH files
         deleteFiles(redisManager, enclosureId);
     }
@@ -187,6 +196,16 @@ public class CleanUpServices {
         for (String fileId :listFileIds) {
             redisManager.deleteKey(RedisKeysEnum.FT_PART_ETAGS.getKey(fileId));
             LOGGER.debug("clean part-etags {}", RedisKeysEnum.FT_PART_ETAGS.getKey(fileId));
+        }
+    }
+    
+    private void deleteListIdContainer(RedisManager redisManager, String enclosureId) {
+        //list files
+        List<String> listFileIds = redisManager.lrange(RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId), 0, -1);
+        //delete list id container
+        for (String fileId :listFileIds) {
+            redisManager.deleteKey(RedisKeysEnum.FT_ID_CONTAINER.getKey(fileId));
+            LOGGER.debug("clean id container {}", RedisKeysEnum.FT_ID_CONTAINER.getKey(fileId));
         }
     }
 
