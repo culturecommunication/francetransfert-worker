@@ -41,7 +41,6 @@ public class MailRelaunchServices {
 
 
     public void sendMailsRelaunch() throws Exception {
-//        RedisManager redisManager = RedisManager.getInstance();
         redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
             redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
                 try {
