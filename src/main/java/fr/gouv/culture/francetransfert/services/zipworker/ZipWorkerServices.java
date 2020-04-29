@@ -39,8 +39,6 @@ public class ZipWorkerServices {
 	 @Autowired
 	 RedisManager redisManager;
 	
-	String prefix;
-	
 	@Value("${tmp.folder.path}")
     private String tmpFolderPath;
 
@@ -48,39 +46,38 @@ public class ZipWorkerServices {
 	private String bucketPrefix;
 	
 	public void startZip(String prefix) throws Exception {
-		setPrefix(prefix);
-//		StorageManager manager = StorageManager.getInstance();
-		manager.getZippedEnclosureName(getPrefix());
+		manager.getZippedEnclosureName(prefix);
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
-		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, getPrefix());
+		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
+		LOGGER.info("================================> SIZE " + list.size() + " LIST ===> " + list.toString());
 		try {
 			LOGGER.info("================================> start download files temp to disk");
 			downloadFilesToTempFolder(manager, bucketName, list);
 			LOGGER.info("================================> start zip files temp to disk");
-			zipDownloadedContent(getPrefix());
+			zipDownloadedContent(prefix);
 			LOGGER.info("================================> start upload zip file temp to OSU");
-			uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(getPrefix())+".zip", getBaseFolderNameWithZipPrefix(getPrefix()));
-			File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix());
+			uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix)+".zip", getBaseFolderNameWithZipPrefix(prefix));
+			File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
 			LOGGER.info("================================> start delete zip file in local disk");
 			deleteFilesFromTemp(fileToDelete);
-			File fileZip = new File(getBaseFolderNameWithZipPrefix(getPrefix()));
+			File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
 			if (!fileZip.delete()) {
 				throw  new WorkerException("error delete zip file");
 			}
 			LOGGER.info("================================> start delete zip file in OSU");
-			deleteFilesFromOSU(manager, bucketName);
-			notifyEmailWorker();
+			deleteFilesFromOSU(manager, bucketName, prefix);
+			notifyEmailWorker(prefix);
 		} catch (IOException e) {
 			LOGGER.error(e.getMessage());
 		}
 	}
 
-	private void notifyEmailWorker() throws Exception {
-		redisManager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), getPrefix());
+	private void notifyEmailWorker(String prefix) throws Exception {
+		redisManager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), prefix);
 	}
 
-	private void deleteFilesFromOSU(StorageManager manager, String bucketName) throws Exception {
-		manager.deleteFilesWithPrefix(bucketName, getPrefix());
+	private void deleteFilesFromOSU(StorageManager manager, String bucketName, String prefix) throws Exception {
+		manager.deleteFilesWithPrefix(bucketName, prefix);
 	}
 
 	private void deleteFilesFromTemp(File file) {
@@ -104,7 +101,7 @@ public class ZipWorkerServices {
 	}
 
 	private void zipDownloadedContent(String zippedFileName) throws IOException {
-		String sourceFile = getBaseFolderNameWithEnclosurePrefix();
+		String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
 		FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
 		ZipOutputStream zipOut = new ZipOutputStream(fos);
 		File fileToZip = new File(sourceFile);
@@ -187,8 +184,8 @@ public class ZipWorkerServices {
 		return baseString;
 	}
 
-	private String getBaseFolderNameWithEnclosurePrefix() {
-		String baseString = tmpFolderPath + getPrefix();
+	private String getBaseFolderNameWithEnclosurePrefix(String prefix) {
+		String baseString = tmpFolderPath + prefix;
 		return baseString;
 	}
 	
@@ -196,13 +193,4 @@ public class ZipWorkerServices {
 		String baseString = tmpFolderPath + zippedFileName + ".zip";
 		return baseString;
 	}
-
-	public String getPrefix() {
-		return prefix;
-	}
-
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
 }
