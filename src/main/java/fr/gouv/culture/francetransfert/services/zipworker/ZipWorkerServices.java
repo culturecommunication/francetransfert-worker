@@ -90,7 +90,7 @@ public class ZipWorkerServices {
             } else {
                 LOGGER.info("================================> Virus found in uploaded files And process clean up {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
 
-               /** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
+                /** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
 
                 LOGGER.info("================================> clean up OSU");
                 deleteFilesFromOSU(manager, bucketName, prefix);
@@ -145,17 +145,18 @@ public class ZipWorkerServices {
 
     private void zipDownloadedContent(String zippedFileName) throws IOException {
         String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
-        FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
-        ZipOutputStream zipOut = new ZipOutputStream(fos);
-        File fileToZip = new File(sourceFile);
-        for (File file : fileToZip.listFiles()) {
-            zipFile(file, file.getName(), zipOut);
-        }
+        try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
+             ZipOutputStream zipOut = new ZipOutputStream(fos);) {
+            File fileToZip = new File(sourceFile);
+            for (File file : fileToZip.listFiles()) {
+                zipFile(file, file.getName(), zipOut);
+            }
 //		zipFile(fileToZip, fileToZip.getName(), zipOut);
-        zipOut.flush();
-        zipOut.close();
-        fos.flush();
-        fos.close();
+            zipOut.flush();
+            zipOut.close();
+            fos.flush();
+            fos.close();
+        }
     }
 
     private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
@@ -225,7 +226,6 @@ public class ZipWorkerServices {
     }
 
     /**
-     *
      * @param object
      * @param fileName
      * @throws IOException
@@ -261,26 +261,27 @@ public class ZipWorkerServices {
 
             for (String fileName : list) {
 
-                if(!isClean){
+                if (!isClean) {
                     break;
                 }
                 S3Object object = manager.getObjectByName(bucketName, fileName);
                 if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
 
-                    InputStream inputStream = new BufferedInputStream(object.getObjectContent());
+                    try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
 
-                    Path path = Paths.get(baseFolderName).resolve(fileName);
+                        Path path = Paths.get(baseFolderName).resolve(fileName);
 
-                    Files.createDirectories(path.resolve(path.getParent()));
-                    Files.write(path, inputStream.readAllBytes());
+                        Files.createDirectories(path.resolve(path.getParent()));
+                        Files.write(path, inputStream.readAllBytes());
 
-                    FileChannel fileChannel = FileChannel.open(path);
+                        FileChannel fileChannel = FileChannel.open(path);
 
-                    LOGGER.info("--------- File size  [{}] /  Limit Size: [{}]  Path: [{}]", fileChannel.size(), scanLimitSize, path.toString());
-                    if(fileChannel.size() <= scanLimitSize) {
-                        String status = clamAVScannerManager.performScan(fileChannel);
-                        if (!Objects.equals("OK", status)) {
-                            isClean = false;
+                        LOGGER.info("--------- File size  [{}] /  Limit Size: [{}]  Path: [{}]", fileChannel.size(), scanLimitSize, path.toString());
+                        if (fileChannel.size() <= scanLimitSize) {
+                            String status = clamAVScannerManager.performScan(fileChannel);
+                            if (!Objects.equals("OK", status)) {
+                                isClean = false;
+                            }
                         }
                     }
                 }
@@ -289,7 +290,7 @@ public class ZipWorkerServices {
             throw new WorkerException("Error During File Dowload from OSU to Temp Folder And Security scan");
         }
 
-        return  isClean;
+        return isClean;
     }
 
     private String getBaseFolderName() {
