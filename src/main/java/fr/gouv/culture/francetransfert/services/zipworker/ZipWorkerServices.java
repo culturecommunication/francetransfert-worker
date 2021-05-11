@@ -274,13 +274,14 @@ public class ZipWorkerServices {
                         Files.createDirectories(path.resolve(path.getParent()));
                         Files.write(path, inputStream.readAllBytes());
 
-                        FileChannel fileChannel = FileChannel.open(path);
+                        try (FileChannel fileChannel = FileChannel.open(path);) {
 
-                        LOGGER.info("--------- File size  [{}] /  Limit Size: [{}]  Path: [{}]", fileChannel.size(), scanLimitSize, path.toString());
-                        if (fileChannel.size() <= scanLimitSize) {
-                            String status = clamAVScannerManager.performScan(fileChannel);
-                            if (!Objects.equals("OK", status)) {
-                                isClean = false;
+                            LOGGER.info("--------- File size  [{}] /  Limit Size: [{}]  Path: [{}]", fileChannel.size(), scanLimitSize, path.toString());
+                            if (fileChannel.size() <= scanLimitSize) {
+                                String status = clamAVScannerManager.performScan(fileChannel);
+                                if (!Objects.equals("OK", status)) {
+                                    isClean = false;
+                                }
                             }
                         }
                     }
