@@ -36,8 +36,9 @@
         <jjwt.version>0.10.6</jjwt.version>
 
         <ft.dependencie.stats.version>1.0.1-SNAPSHOT</ft.dependencie.stats.version>
+        <ft.dependencie.secuirty.scan.version>0.1.0-SNAPSHOT</ft.dependencie.secuirty.scan.version>
     </properties>
-  
+
   <repositories>
     <repository>
       <id>gitlab-nexus</id>
@@ -148,6 +149,11 @@
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-stats-api</artifactId>
           <version>${ft.dependencie.stats.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>fr.gouv.culture.francetransfert</groupId>
+          <artifactId>FTR-secuirty-scan-api</artifactId>
+          <version>${ft.dependencie.secuirty.scan.version}</version>
       </dependency>
   </dependencies>
     <!--  Profile  -->
