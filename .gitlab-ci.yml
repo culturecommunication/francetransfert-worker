@@ -38,8 +38,8 @@ sbapi:sonar:
   stage: test
   dependencies:
     - sbapi:build
-  only:
-    - develop
+  #only:
+   # - develop
   script:
     - >
       mvn sonar:sonar
