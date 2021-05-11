@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 public class CleanUpServices {
@@ -247,10 +248,14 @@ public class CleanUpServices {
     public void deleteUploadDirectory(String uri) {
         LOGGER.info("================================> clean up Upload directory {} ", uri);
         try {
+
             Path pathToBeDeleted = Paths.get(uri);
-            Files.walk(pathToBeDeleted)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile).forEach(File::delete);
+            try (Stream<Path> walk = Files.walk(pathToBeDeleted)) {
+                walk
+                        .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            };
             //LOGGER.debug("================================> Directory still exists {} ", Files.exists(pathToBeDeleted));
         } catch (IOException e) {
             LOGGER.error("unable to delete directory [{}] / {} ", uri, e.getMessage());
