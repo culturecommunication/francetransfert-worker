@@ -36,7 +36,7 @@
         <jjwt.version>0.10.6</jjwt.version>
 
         <ft.dependencie.stats.version>1.0.1-SNAPSHOT</ft.dependencie.stats.version>
-        <ft.dependencie.secuirty.scan.version>0.1.0-SNAPSHOT</ft.dependencie.secuirty.scan.version>
+        <ft.dependencie.virusscanner.version>0.1.0-SNAPSHOT</ft.dependencie.virusscanner.version>
     </properties>
 
   <repositories>
@@ -152,8 +152,8 @@
       </dependency>
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
-          <artifactId>FTR-secuirty-scan-api</artifactId>
-          <version>${ft.dependencie.secuirty.scan.version}</version>
+          <artifactId>FTR-virusscanner-api</artifactId>
+          <version>${ft.dependencie.virusscanner.version}</version>
       </dependency>
   </dependencies>
     <!--  Profile  -->
