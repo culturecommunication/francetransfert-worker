@@ -88,7 +88,7 @@ public class ZipWorkerServices {
                 deleteFilesFromOSU(manager, bucketName, prefix);
                 notifyEmailWorker(prefix);
             } else {
-                LOGGER.info("================================> Virus found in uploaded files And process clean up {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
+                LOGGER.error("================================> Virus found in uploaded files And process clean up {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
 
                 /** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
 
@@ -257,7 +257,7 @@ public class ZipWorkerServices {
     private boolean performScan(StorageManager manager, String bucketName, ArrayList<String> list) {
         boolean isClean = true;
         try {
-            String baseFolderName = getBaseFolderName();
+            //String baseFolderName = getBaseFolderName();
 
             for (String fileName : list) {
 
@@ -269,30 +269,10 @@ public class ZipWorkerServices {
 
                     try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
 
-                        LOGGER.info("--------- S3Object  inputStream [{}] ", inputStream.available());
-
-
-                        String status = clamAVScannerManager.performScan(inputStream);;
+                        String status = clamAVScannerManager.performScan(inputStream, fileName);;
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
-
-                      /*  Path path = Paths.get(baseFolderName).resolve(fileName);
-
-                        Files.createDirectories(path.resolve(path.getParent()));
-
-                        Files.write(path, inputStream.readAllBytes());
-
-                        try (FileChannel fileChannel = FileChannel.open(path);) {
-
-                            LOGGER.info("--------- File size  [{}] /  Limit Size: [{}]  Path: [{}]", fileChannel.size(), scanLimitSize, path.toString());
-                            if (fileChannel.size() <= scanLimitSize) {
-                                String status = clamAVScannerManager.performScan(fileChannel);
-                                if (!Objects.equals("OK", status)) {
-                                    isClean = false;
-                                }
-                            }
-                        }*/
                     }
                 }
             }
