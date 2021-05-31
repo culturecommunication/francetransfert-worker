@@ -9,6 +9,7 @@ RUN mkdir /run/clamav && chown clamav:clamav /run/clamav
 RUN groupadd virusgroup
 COPY etc/clamav /etc/clamav/
 COPY bootstrap.sh /
+RUN chmod +x bootstrap.sh
 
 EXPOSE 8080
 
