@@ -268,10 +268,15 @@ public class ZipWorkerServices {
                 if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
 
                     try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
+                        String status = clamAVScannerManager.performScan(inputStream);
+                        if (!Objects.equals("OK", status)) {
+                            isClean = false;
+                        }
 
-                        Path path = Paths.get(baseFolderName).resolve(fileName);
+                      /*  Path path = Paths.get(baseFolderName).resolve(fileName);
 
                         Files.createDirectories(path.resolve(path.getParent()));
+
                         Files.write(path, inputStream.readAllBytes());
 
                         try (FileChannel fileChannel = FileChannel.open(path);) {
@@ -283,7 +288,7 @@ public class ZipWorkerServices {
                                     isClean = false;
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
             }
