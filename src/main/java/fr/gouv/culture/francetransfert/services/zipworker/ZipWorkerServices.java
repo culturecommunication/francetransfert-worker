@@ -269,10 +269,10 @@ public class ZipWorkerServices {
 
                     try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
 
-                        LOGGER.info("--------- S3Object  inputStream [{}] ", inputStream);
+                        LOGGER.info("--------- S3Object  inputStream [{}] ", inputStream.available());
 
 
-                        String status = "clamAVScannerManager.performScan(inputStream);";
+                        String status = clamAVScannerManager.performScan(inputStream);;
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
