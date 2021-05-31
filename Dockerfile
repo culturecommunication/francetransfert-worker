@@ -9,8 +9,8 @@ RUN mkdir /run/clamav && chown clamav:clamav /run/clamav
 RUN groupadd virusgroup
 COPY etc/clamav /etc/clamav/
 # start clam service itself and the updater in background as daemon
-freshclam -d &
-clamd &
+RUN freshclam -d &
+RUN clamd &
 
 EXPOSE 8080
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/francetransfert-worker-api.jar"]
