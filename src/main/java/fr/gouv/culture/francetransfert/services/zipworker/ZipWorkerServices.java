@@ -268,7 +268,11 @@ public class ZipWorkerServices {
                 if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
 
                     try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
-                        String status = clamAVScannerManager.performScan(inputStream);
+
+                        LOGGER.info("--------- S3Object  inputStream [{}] ", inputStream);
+
+
+                        String status = "clamAVScannerManager.performScan(inputStream);";
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
