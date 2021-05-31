@@ -8,9 +8,10 @@ RUN sed -i 's/^Foreground .*$/Foreground true/g' /etc/clamav/freshclam.conf
 RUN mkdir /run/clamav && chown clamav:clamav /run/clamav
 RUN groupadd virusgroup
 COPY etc/clamav /etc/clamav/
-# start clam service itself and the updater in background as daemon
-RUN freshclam -d &
-RUN clamd &
+COPY bootstrap.sh /
 
 EXPOSE 8080
+
+CMD ["/bootstrap.sh"]
+
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/francetransfert-worker-api.jar"]
