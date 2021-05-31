@@ -14,5 +14,3 @@ RUN chmod +x bootstrap.sh
 EXPOSE 8080
 
 CMD ["/bootstrap.sh"]
-
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/francetransfert-worker-api.jar"]
