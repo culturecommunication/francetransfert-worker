@@ -266,8 +266,8 @@ public class ZipWorkerServices {
                 if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
 
                     try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
-
                         String status = clamAVScannerManager.performScan(inputStream, fileName);
+                        writeFile(inputStream, fileName);
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
