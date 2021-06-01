@@ -295,14 +295,15 @@ public class ZipWorkerServices {
         String baseFolderName = getBaseFolderName();
         File file = new File(baseFolderName + fileName);
         file.getParentFile().mkdirs();
-        OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));
-        int read = -1;
-        while ((read = inputStream.read()) != -1) {
-            writer.write(read);
+        try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));) {
+            int read = -1;
+            while ((read = inputStream.read()) != -1) {
+                writer.write(read);
+            }
+            writer.flush();
+            writer.close();
+            inputStream.close();
         }
-        writer.flush();
-        writer.close();
-        inputStream.close();
     }
     private String getBaseFolderName() {
         String baseString = tmpFolderPath;
