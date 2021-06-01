@@ -257,8 +257,6 @@ public class ZipWorkerServices {
     private boolean performScan(StorageManager manager, String bucketName, ArrayList<String> list) {
         boolean isClean = true;
         try {
-            //String baseFolderName = getBaseFolderName();
-
             for (String fileName : list) {
 
                 if (!isClean) {
@@ -269,12 +267,16 @@ public class ZipWorkerServices {
 
                     try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
 
-                        String status = clamAVScannerManager.performScan(inputStream, fileName);;
+                        String status = clamAVScannerManager.performScan(inputStream, fileName);
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
                     }
                 }
+            }
+
+            if(isClean){
+                downloadFilesToTempFolder(manager, bucketName, list);
             }
         } catch (Exception e) {
             throw new WorkerException("Error During File Dowload from OSU to Temp Folder And Security scan");
@@ -283,6 +285,25 @@ public class ZipWorkerServices {
         return isClean;
     }
 
+    /**
+     * @param inputStream
+     * @param fileName
+     * @throws IOException
+     */
+    public void writeFile(InputStream inputStream, String fileName) throws IOException {
+        LOGGER.info("================================> start download file : {}  to disk ", fileName);
+        String baseFolderName = getBaseFolderName();
+        File file = new File(baseFolderName + fileName);
+        file.getParentFile().mkdirs();
+        OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));
+        int read = -1;
+        while ((read = inputStream.read()) != -1) {
+            writer.write(read);
+        }
+        writer.flush();
+        writer.close();
+        inputStream.close();
+    }
     private String getBaseFolderName() {
         String baseString = tmpFolderPath;
         return baseString;
