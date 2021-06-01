@@ -68,6 +68,7 @@ public class ZipWorkerServices {
         try {
             Enclosure enclosure = Enclosure.build(prefix, redisManager);
             LOGGER.info("================================> start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
+            downloadFilesToTempFolder(manager, bucketName, list);
             boolean isClean = performScan(manager, bucketName, list);
 
             if (isClean) {
@@ -267,16 +268,11 @@ public class ZipWorkerServices {
 
                     try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
                         String status = clamAVScannerManager.performScan(inputStream, fileName);
-                        writeFile(inputStream, fileName);
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
                     }
                 }
-            }
-
-            if(isClean){
-                downloadFilesToTempFolder(manager, bucketName, list);
             }
         } catch (Exception e) {
             throw new WorkerException("Error During File Dowload from OSU to Temp Folder And Security scan");
