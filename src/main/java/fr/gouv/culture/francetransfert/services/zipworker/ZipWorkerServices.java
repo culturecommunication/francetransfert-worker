@@ -19,10 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.*;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -233,18 +231,18 @@ public class ZipWorkerServices {
      */
     public void writeFile(S3Object object, String fileName) throws IOException {
         LOGGER.info("================================> start download file : {}  to disk ", fileName);
-        InputStream reader = new BufferedInputStream(object.getObjectContent());
-        String baseFolderName = getBaseFolderName();
-        File file = new File(baseFolderName + fileName);
-        file.getParentFile().mkdirs();
-        OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));
-        int read = -1;
-        while ((read = reader.read()) != -1) {
-            writer.write(read);
+        try (InputStream reader = new BufferedInputStream(object.getObjectContent());) {
+            String baseFolderName = getBaseFolderName();
+            File file = new File(baseFolderName + fileName);
+            file.getParentFile().mkdirs();
+            try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));) {
+                int read = -1;
+                while ((read = reader.read()) != -1) {
+                    writer.write(read);
+                }
+                writer.flush();
+            }
         }
-        writer.flush();
-        writer.close();
-        reader.close();
     }
 
     /**
@@ -263,10 +261,11 @@ public class ZipWorkerServices {
                 if (!isClean) {
                     break;
                 }
-                S3Object object = manager.getObjectByName(bucketName, fileName);
-                if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
 
-                    try (InputStream inputStream = new BufferedInputStream(object.getObjectContent());) {
+                if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
+                    String baseFolderName = getBaseFolderName();
+                    try (InputStream inputStream = new DataInputStream(new FileInputStream(baseFolderName + fileName));) {
+
                         String status = clamAVScannerManager.performScan(inputStream, fileName);
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
@@ -301,6 +300,7 @@ public class ZipWorkerServices {
             inputStream.close();
         }
     }
+
     private String getBaseFolderName() {
         String baseString = tmpFolderPath;
         return baseString;
