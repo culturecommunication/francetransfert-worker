@@ -22,6 +22,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
@@ -67,7 +69,13 @@ public class ZipWorkerServices {
             Enclosure enclosure = Enclosure.build(prefix, redisManager);
             LOGGER.info("================================> start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
             downloadFilesToTempFolder(manager, bucketName, list);
+            LOGGER.info("================================> Start scanning files {} with ClamaV", list);
+            LocalDateTime beginDate = LocalDateTime.now();
             boolean isClean = performScan(manager, bucketName, list);
+            if(!isClean){
+                LOGGER.error("=====================================> Virus found in bucketName [{}] files {} ", bucketName, list);
+            }
+            LOGGER.info("================================> End scanning file {} with ClamaV. Duration(s) = [{}]", list, Duration.between(beginDate, LocalDateTime.now()).getSeconds());
 
             if (isClean) {
 
@@ -87,10 +95,8 @@ public class ZipWorkerServices {
                 deleteFilesFromOSU(manager, bucketName, prefix);
                 notifyEmailWorker(prefix);
             } else {
-                LOGGER.error("================================> Virus found in uploaded files And process clean up {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
-
                 /** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
-
+                LOGGER.info("================================> Processing clean up {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
                 LOGGER.info("================================> clean up OSU");
                 deleteFilesFromOSU(manager, bucketName, prefix);
 
@@ -266,7 +272,7 @@ public class ZipWorkerServices {
                     String baseFolderName = getBaseFolderName();
                     try (InputStream inputStream = new DataInputStream(new FileInputStream(baseFolderName + fileName));) {
 
-                        String status = clamAVScannerManager.performScan(inputStream, fileName);
+                        String status = clamAVScannerManager.performScan(inputStream);
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
