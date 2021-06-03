@@ -25,7 +25,6 @@ RUN mkdir /var/run/clamav && \
 
 # Install Clamav
 RUN sed -i 's/^Foreground .*$/Foreground true/g' /etc/clamav/freshclam.conf
-RUN mkdir /run/clamav && chown clamav:clamav /run/clamav
 RUN groupadd virusgroup
 COPY etc/clamav /etc/clamav/
 COPY bootstrap.sh /
