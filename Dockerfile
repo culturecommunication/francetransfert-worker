@@ -1,9 +1,9 @@
-FROM openjdk:11.0.4-jre-stretch
+FROM openjdk:11.0.4-jre-slim-buster
 VOLUME /tmp
 ADD target/*.jar francetransfert-worker-api.jar
 
 # Debian Base to use
-ENV DEBIAN_VERSION stretch
+ENV DEBIAN_VERSION buster
 
 # initial install of av daemon
 RUN echo "deb http://http.debian.net/debian/ $DEBIAN_VERSION main contrib non-free" > /etc/apt/sources.list && \
@@ -14,6 +14,8 @@ RUN echo "deb http://http.debian.net/debian/ $DEBIAN_VERSION main contrib non-fr
         clamav-daemon \
         clamav-freshclam \
         libclamunrar9 \
+        ca-certificates \
+        netcat-openbsd \
         wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
