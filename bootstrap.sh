@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # start clam service itself and the updater in background as daemon
-freshclam -d &
-sleep 3
+freshclam &
+sleep 5
 clamd &
 
 # start Worker

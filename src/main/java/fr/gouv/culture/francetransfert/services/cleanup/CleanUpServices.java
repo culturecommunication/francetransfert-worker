@@ -243,13 +243,13 @@ public class CleanUpServices {
     /**
      * Delete directory from uri
      *
-     * @param uri
+     * @param path
      */
-    public void deleteUploadDirectory(String uri) {
-        LOGGER.info("================================> clean up Upload directory {} ", uri);
+    public void deleteEnclosureTempDirectory(String path) {
+        LOGGER.info("================================> clean up Enclosure temp directory {} ", path);
         try {
 
-            Path pathToBeDeleted = Paths.get(uri);
+            Path pathToBeDeleted = Paths.get(path);
             try (Stream<Path> walk = Files.walk(pathToBeDeleted)) {
                 walk
                         .sorted(Comparator.reverseOrder())
@@ -258,7 +258,7 @@ public class CleanUpServices {
             };
             //LOGGER.debug("================================> Directory still exists {} ", Files.exists(pathToBeDeleted));
         } catch (IOException e) {
-            LOGGER.error("unable to delete directory [{}] / {} ", uri, e.getMessage());
+            LOGGER.error("unable to delete Enclosure temp directory [{}] / {} ", path, e.getMessage());
         }
     }
 }

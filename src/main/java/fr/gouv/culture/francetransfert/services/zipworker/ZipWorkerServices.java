@@ -71,8 +71,8 @@ public class ZipWorkerServices {
             downloadFilesToTempFolder(manager, bucketName, list);
             LOGGER.info("================================> Start scanning files {} with ClamaV", list);
             LocalDateTime beginDate = LocalDateTime.now();
-            boolean isClean = performScan(manager, bucketName, list);
-            if(!isClean){
+            boolean isClean = performScan(list);
+            if (!isClean) {
                 LOGGER.error("=====================================> Virus found in bucketName [{}] files {} ", bucketName, list);
             }
             LOGGER.info("================================> End scanning file {} with ClamaV. Duration(s) = [{}]", list, Duration.between(beginDate, LocalDateTime.now()).getSeconds());
@@ -109,8 +109,7 @@ public class ZipWorkerServices {
                 cleanUpServices.cleanUpEnclosureCoreInRedis(redisManager, prefix);
 
                 // clean up for Upload directory
-                cleanUpServices.deleteUploadDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
-
+                cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
                 //Notify sender
                 mailVirusFoundServices.sendToSender(enclosure);
 
@@ -254,12 +253,10 @@ public class ZipWorkerServices {
     /**
      * Writing files into temp directory and scanning for vulnerabilities
      *
-     * @param manager
-     * @param bucketName
      * @param list
      * @return
      */
-    private boolean performScan(StorageManager manager, String bucketName, ArrayList<String> list) {
+    private boolean performScan(ArrayList<String> list) {
         boolean isClean = true;
         try {
             for (String fileName : list) {
