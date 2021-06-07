@@ -268,14 +268,15 @@ public class ZipWorkerServices {
 
                 if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
                     String baseFolderName = getBaseFolderName();
-                    FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);
-                    FileChannel fileChannel = fileInputStream.getChannel();
-                    if(fileChannel.size() <= scanMaxFileSize){
-                        String status = clamAVScannerManager.performScan(fileChannel);
-                        if (!Objects.equals("OK", status)) {
-                            isClean = false;
+                    try (FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);) {
+
+                        FileChannel fileChannel = fileInputStream.getChannel();
+                        if (fileChannel.size() <= scanMaxFileSize) {
+                            String status = clamAVScannerManager.performScan(fileChannel);
+                            if (!Objects.equals("OK", status)) {
+                                isClean = false;
+                            }
                         }
-                    }
                     /*try (InputStream inputStream = new DataInputStream(fileInputStream);) {
 
                         String status = clamAVScannerManager.performScan(inputStream);
@@ -283,6 +284,7 @@ public class ZipWorkerServices {
                             isClean = false;
                         }
                     }*/
+                    }
                 }
             }
         } catch (Exception e) {
