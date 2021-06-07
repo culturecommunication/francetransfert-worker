@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
@@ -51,8 +52,8 @@ public class ZipWorkerServices {
     @Value("${bucket.prefix}")
     private String bucketPrefix;
 
-    @Value("${scan.clamav.file.limitSize}")
-    private long scanLimitSize;
+    @Value("${scan.clamav.maxFileSize}")
+    private long scanMaxFileSize;
 
     @Autowired
     MailVirusFoundServices mailVirusFoundServices;
@@ -267,13 +268,21 @@ public class ZipWorkerServices {
 
                 if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
                     String baseFolderName = getBaseFolderName();
-                    try (InputStream inputStream = new DataInputStream(new FileInputStream(baseFolderName + fileName));) {
+                    FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);
+                    FileChannel fileChannel = fileInputStream.getChannel();
+                    if(fileChannel.size() <= scanMaxFileSize){
+                        String status = clamAVScannerManager.performScan(fileChannel);
+                        if (!Objects.equals("OK", status)) {
+                            isClean = false;
+                        }
+                    }
+                    /*try (InputStream inputStream = new DataInputStream(fileInputStream);) {
 
                         String status = clamAVScannerManager.performScan(inputStream);
                         if (!Objects.equals("OK", status)) {
                             isClean = false;
                         }
-                    }
+                    }*/
                 }
             }
         } catch (Exception e) {
