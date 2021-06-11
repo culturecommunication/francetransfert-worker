@@ -36,8 +36,9 @@
         <jjwt.version>0.10.6</jjwt.version>
 
         <ft.dependencie.stats.version>1.0.1-SNAPSHOT</ft.dependencie.stats.version>
+        <ft.dependencie.virusscanner.version>0.1.0-SNAPSHOT</ft.dependencie.virusscanner.version>
     </properties>
-  
+
   <repositories>
     <repository>
       <id>gitlab-nexus</id>
@@ -135,6 +136,16 @@
           <version>${jjwt.version}</version>
       </dependency>
       <dependency>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+          <version>1.2.3</version>
+      </dependency>
+      <dependency>
+          <groupId>net.logstash.logback</groupId>
+          <artifactId>logstash-logback-encoder</artifactId>
+          <version>6.4</version>
+      </dependency>
+      <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-metaload-api</artifactId>
           <version>1.0.1-SNAPSHOT</version>
@@ -148,6 +159,11 @@
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-stats-api</artifactId>
           <version>${ft.dependencie.stats.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>fr.gouv.culture.francetransfert</groupId>
+          <artifactId>FTR-virusscanner-api</artifactId>
+          <version>${ft.dependencie.virusscanner.version}</version>
       </dependency>
   </dependencies>
     <!--  Profile  -->
