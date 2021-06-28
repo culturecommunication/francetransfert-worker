@@ -51,10 +51,10 @@ node {
         stage('Deploy'){
             pom = readMavenPom file: 'pom.xml'
             if(env.BRANCH_NAME.startsWith('develop')){
-                version.updateVersionGit('app_worker_version',jsonObject["version"],'recette')
+                version.updateVersionGit('app_worker_version',pom.version,'recette')
             }
             if(env.BRANCH_NAME.startsWith('master')){
-                version.updateVersionGit('app_worker_version',jsonObject["version"],'production')
+                version.updateVersionGit('app_worker_version',pom.version,'production')
             }
         }
 
