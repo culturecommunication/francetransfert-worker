@@ -1,6 +1,6 @@
 properties([gitLabConnection('GitLab')])
 import Version
-def Version = new Version()
+def version = new Version()
 
 node {
 
