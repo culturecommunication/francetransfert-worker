@@ -26,20 +26,7 @@ public class IgnimissionErrorHandler implements ResponseErrorHandler {
             LOGGER.error("============> Ignimission ERROR {}", response.getStatusCode());
 
         } else if (response.getStatusCode().series() == HttpStatus.Series.CLIENT_ERROR) {
-            // handle 4xx errors
-            // raw http status code e.g `404`
-            // LOGGER.error("============> Ignimission ERROR {}",response.getRawStatusCode());
-
-            // http status code e.g. `404 NOT_FOUND`
             LOGGER.error("============> Ignimission ERROR {}", response.getStatusCode());
-
-           /* // get response body
-            LOGGER.error("============> Ignimission ERROR {}",response.getBody());
-
-            // get http headers
-            HttpHeaders headers = response.getHeaders();
-            LOGGER.error("============> Ignimission ERROR {}",headers.get("Content-Type"));
-            LOGGER.error("============> Ignimission ERROR {}",headers.get("Server"));*/
         }
     }
 }

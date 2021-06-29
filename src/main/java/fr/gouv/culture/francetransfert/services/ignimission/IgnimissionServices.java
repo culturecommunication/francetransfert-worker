@@ -77,8 +77,6 @@ public class IgnimissionServices {
                     LOGGER.debug("================================> worker Ignimission domains size {} ", ignimissionDomainResponse.getNbItems());
 
                     if (ignimissionDomainResponse.getNbItems() > 0 && !CollectionUtils.isEmpty(ignimissionDomainResponse.getDomainsAsList())) {
-                        // LOGGER.debug("================================> worker Ignimission domains  sanitize size {}", ignimissionDomainResponse.getDomainsAsList());
-
                         ignimissionDomainResponse.getDomainsAsList().forEach(domain -> {
                             redisManager.saddString(RedisKeysEnum.FT_DOMAINS_MAILS_TMP.getKey(""), domain);
                         });

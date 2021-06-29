@@ -50,7 +50,6 @@ public class RestClientUtils {
 
             ResponseEntity<IgnimissionAuthenticationResponse> response = restTemplate.exchange
                     (requestUri, httpMethod, getHttpEntity(parameter), IgnimissionAuthenticationResponse.class);
-            // LOGGER.debug("================================> Ignimission authentication response : {}", response.getBody());
             return response.getBody();
 
         } catch (HttpMessageNotReadableException e) {
@@ -86,9 +85,6 @@ public class RestClientUtils {
 
             response = restTemplate.exchange
                     (requestUri, httpMethod, getHttpEntityWithCredentials(ignimissionDomainParameter, token), IgnimissionDomainResponse[].class);
-
-            //LOGGER.debug("================================> worker Ignimission domain update export ID {} ", Arrays.stream(response.getBody()).findFirst().get().getExportId());
-
         } catch (HttpMessageNotReadableException e) {
             LOGGER.error("================================> worker Ignimission domain update ERROR {} ", e.getMessage());
         }
