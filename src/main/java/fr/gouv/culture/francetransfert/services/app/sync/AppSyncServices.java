@@ -36,6 +36,14 @@ public class AppSyncServices {
 		}
 	}
 
+	public void appSyncIgnimissionDomain() {
+		try {
+			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_IGNIMISSION_DOMAIN.getKey());
+		} catch (Exception e) {
+			throw new WorkerException(e.getMessage());
+		}
+	}
+
 	public boolean shouldRelaunch() {
 //		RedisManager redisManager;
 		boolean shouldRelaunch = false;
@@ -64,6 +72,20 @@ public class AppSyncServices {
 			throw new WorkerException(e.getMessage());
 		}
 		return shouldCleanup;
+	}
+
+	public boolean shouldUpdateIgnimissionDomain() {
+		boolean shouldUpdateDomain = false;
+		try {
+			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_IGNIMISSION_DOMAIN.getKey());
+			LOGGER.info("================================> worker : start Application ignimission incrementedAppSyncCounter {} ", incrementedAppSyncCounter);
+			if(incrementedAppSyncCounter == 1) {
+				shouldUpdateDomain = true;
+			}
+		} catch (Exception e) {
+			throw new WorkerException(e.getMessage());
+		}
+		return shouldUpdateDomain;
 	}
 
 }
