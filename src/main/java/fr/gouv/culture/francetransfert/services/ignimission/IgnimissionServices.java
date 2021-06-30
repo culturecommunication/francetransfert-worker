@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -56,6 +57,7 @@ public class IgnimissionServices {
     @Autowired
     private RedisManager redisManager;
 
+    private final String CLEANUP_PATTERN = "(?m)^\\s*\\r?\\n|\\r?\\n\\s*(?!.*\\r?\\n)";
 
     /**
      * Update FT email domains from Ignimission ws
@@ -78,7 +80,11 @@ public class IgnimissionServices {
 
                     if (ignimissionDomainResponse.getNbItems() > 0 && !CollectionUtils.isEmpty(ignimissionDomainResponse.getDomainsAsList())) {
                         ignimissionDomainResponse.getDomainsAsList().forEach(domain -> {
-                            redisManager.saddString(RedisKeysEnum.FT_DOMAINS_MAILS_TMP.getKey(""), domain);
+                            String ext = (!StringUtils.isEmpty(domain)) ? domain.trim().replaceAll(CLEANUP_PATTERN, "") : null;
+
+                            if(Objects.nonNull(ext)) {
+                                redisManager.saddString(RedisKeysEnum.FT_DOMAINS_MAILS_TMP.getKey(""), ext);
+                            }
                         });
 
                         // Domains update from TMP list
@@ -92,7 +98,8 @@ public class IgnimissionServices {
 
             }
         } catch (Exception ex) {
-            LOGGER.error("================================> worker Ignimission domain update error {} ", ex.getMessage());
+            ex.printStackTrace();
+            LOGGER.error("================================> worker Ignimission domain update error {} ", ex);
         }
     }
 
