@@ -81,9 +81,8 @@ public class IgnimissionServices {
                     if (ignimissionDomainResponse.getNbItems() > 0 && !CollectionUtils.isEmpty(ignimissionDomainResponse.getDomainsAsList())) {
                         ignimissionDomainResponse.getDomainsAsList().forEach(domain -> {
                             String ext = (!StringUtils.isEmpty(domain)) ? domain.trim().replaceAll(CLEANUP_PATTERN, "") : null;
-
                             if(Objects.nonNull(ext)) {
-                                redisManager.saddString(RedisKeysEnum.FT_DOMAINS_MAILS_TMP.getKey(""), ext);
+                                redisManager.saddString(RedisKeysEnum.FT_DOMAINS_MAILS_TMP.getKey(""), ext.toLowerCase());
                             }
                         });
 
@@ -98,8 +97,7 @@ public class IgnimissionServices {
 
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
-            LOGGER.error("================================> worker Ignimission domain update error {} ", ex);
+            LOGGER.error("================================> worker Ignimission domain update error {} ", ex.getMessage());
         }
     }
 
