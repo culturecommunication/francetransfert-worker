@@ -288,8 +288,7 @@ public class ZipWorkerServices {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("================================> Error During File scanning");
-            //throw new WorkerException("Error During File Dowload from OSU to Temp Folder And Security scan");
+            LOGGER.error("================================> Error During File scanning {} ", e.getMessage());
         }
 
         return isClean;
