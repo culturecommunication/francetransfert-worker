@@ -69,8 +69,6 @@ docker-build:
   stage: docker-build
   only:
     - develop
-    - sp4d
-    - feat/files-security-scan
   services:
     - docker:18-dind
   script:
