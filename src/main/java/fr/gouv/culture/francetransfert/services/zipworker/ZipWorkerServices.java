@@ -10,6 +10,7 @@ import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailVirusFoundServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,12 @@ public class ZipWorkerServices {
     @Value("${scan.clamav.maxFileSize}")
     private long scanMaxFileSize;
 
+    @Value("${subject.virus.sender}")
+    private String subjectVirusFound;
+
+    @Value("${subject.virus.error.sender}")
+    private String subjectVirusError;
+
     @Autowired
     MailVirusFoundServices mailVirusFoundServices;
 
@@ -72,7 +79,7 @@ public class ZipWorkerServices {
             downloadFilesToTempFolder(manager, bucketName, list);
             LOGGER.info("================================> Start scanning files {} with ClamaV", list);
             LocalDateTime beginDate = LocalDateTime.now();
-            boolean isClean = performScan(list);
+            boolean isClean = performScan(list,bucketName, prefix, enclosure);
             if (!isClean) {
                 LOGGER.error("=====================================> Virus found in bucketName [{}] files {} ", bucketName, list);
             }
@@ -96,24 +103,7 @@ public class ZipWorkerServices {
                 deleteFilesFromOSU(manager, bucketName, prefix);
                 notifyEmailWorker(prefix);
             } else {
-                /** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
-                LOGGER.info("================================> Processing clean up {} / {} - {} ++ {} ", bucketName, list, prefix, bucketPrefix);
-                LOGGER.info("================================> clean up OSU");
-                deleteFilesFromOSU(manager, bucketName, prefix);
-
-                //clean temp data in REDIS for Enclosure
-                LOGGER.info("================================> clean up REDIS temp data");
-                cleanUpServices.cleanUpEnclosureTempDataInRedis(redisManager, prefix);
-
-                // clean enclosure Core in REDIS : delete files, root-files, root-dirs, recipients, sender and enclosure
-                LOGGER.info("================================> clean up REDIS");
-                cleanUpServices.cleanUpEnclosureCoreInRedis(redisManager, prefix);
-
-                // clean up for Upload directory
-                cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
-                //Notify sender
-                mailVirusFoundServices.sendToSender(enclosure);
-
+                cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
@@ -255,17 +245,21 @@ public class ZipWorkerServices {
      * Writing files into temp directory and scanning for vulnerabilities
      *
      * @param list
+     * @param bucketName
+     * @param prefix
+     * @param enclosure
      * @return
      */
-    private boolean performScan(ArrayList<String> list) {
+    private boolean performScan(ArrayList<String> list, String bucketName, String prefix, Enclosure enclosure) {
         boolean isClean = true;
+        String currentFileName = null;
         try {
             for (String fileName : list) {
 
                 if (!isClean) {
                     break;
                 }
-
+                currentFileName = fileName;
                 if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
                     String baseFolderName = getBaseFolderName();
                     try (FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);) {
@@ -277,22 +271,45 @@ public class ZipWorkerServices {
                                 isClean = false;
                             }
                         }
-                    /*try (InputStream inputStream = new DataInputStream(fileInputStream);) {
-
-                        String status = clamAVScannerManager.performScan(inputStream);
-                        if (!Objects.equals("OK", status)) {
-                            isClean = false;
-                        }
-                    }*/
                     }
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("================================> Error During File scanning");
-            //throw new WorkerException("Error During File Dowload from OSU to Temp Folder And Security scan");
+            cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(), subjectVirusError);
+            LOGGER.error("Error lors du traitement du fichier {} : {}  ", currentFileName, e.getMessage(), e);
+            throw new WorkerException("Error During File scanning [" + currentFileName + "]");
         }
 
         return isClean;
+    }
+
+    /**
+     *
+     * @param bucketName
+     * @param prefix
+     */
+    private void cleanUpEnclosure(String bucketName, String prefix, Enclosure enclosure, String emailTemplateName, String emailSubject) {
+        try {
+            /** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
+            LOGGER.info("================================> Processing clean up {} / {} - {} ", bucketName, prefix, bucketPrefix);
+            LOGGER.info("================================> clean up OSU");
+            deleteFilesFromOSU(manager, bucketName, prefix);
+
+            //clean temp data in REDIS for Enclosure
+            LOGGER.info("================================> clean up REDIS temp data");
+            cleanUpServices.cleanUpEnclosureTempDataInRedis(redisManager, prefix);
+
+            // clean enclosure Core in REDIS : delete files, root-files, root-dirs, recipients, sender and enclosure
+            LOGGER.info("================================> clean up REDIS");
+            cleanUpServices.cleanUpEnclosureCoreInRedis(redisManager, prefix);
+
+            // clean up for Upload directory
+            cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
+            //Notify sender
+            mailVirusFoundServices.sendToSender(enclosure, emailTemplateName, emailSubject);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
     }
 
     /**

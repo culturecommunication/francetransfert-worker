@@ -18,17 +18,15 @@ public class MailVirusFoundServices {
     @Autowired
     MailNotificationServices mailNotificationServices;
 
-    @Value("${subject.virus.sender}")
-    private String subjectVirusRecipient;
 
     // Send mail to sender
-    public void sendToSender(Enclosure enclosure){
+    public void sendToSender(Enclosure enclosure, String templateName, String subject){
         LOGGER.info("================================>send email notification virus to sender: {}", enclosure.getSender());
         mailNotificationServices.prepareAndSend(
                 enclosure.getSender(),
-                subjectVirusRecipient,
+                subject,
                 enclosure,
-                NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue()
+                templateName
         );
     }
 }
