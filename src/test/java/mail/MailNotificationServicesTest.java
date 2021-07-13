@@ -123,9 +123,10 @@ public class MailNotificationServicesTest {
     public void sendMailToSenderMailVirusFoundServicesTest() throws Exception {
         //given
         String message = "Test message content";
+        String subject = "Virus found subject";
         enclosure.setUrlDownload("download_url");
         //when
-        mailVirusFoundServices.sendToSender(enclosure);
+        mailVirusFoundServices.sendToSender(enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subject);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);

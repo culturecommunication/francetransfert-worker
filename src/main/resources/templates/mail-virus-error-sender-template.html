@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>FranceTransfert : fichiers supprimés</title>
+    <title>FranceTransfert : vos fichiers n’ont pas été envoyés</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
 
@@ -285,7 +285,7 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC"
                       >
                         <strong>
                           <!-- th:text="${enclosure.get('sender').getAsString()}" -->
-                          <span>Vos fichiers sont infectés par un virus et ont été supprimés de notre système.</span>
+                          <span>Un problème a eu lieu lors de l’analyse antivirus, vos fichiers n’ont pas été envoyés.</span>
                         </strong>
                       </p>
                       <p
@@ -293,7 +293,7 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC"
                         style="margin: 13px 0px 13px 0px;"
                       >
                         <strong>
-                          <!-- th:text="${enclosure.get('countElements')}" -->
+                          Référence de l'envoi : <span th:text="${enclosure.get('guid').getAsString()}"></span>
                           <span><a th:text="${enclosure.get('countElements')}"></a></span> élément(s),
                           <!-- th:text="${enclosure.get('totalSize').getAsString()} -->
                           <span><a th:text="${enclosure.get('totalSize').getAsString()}"></a></span> au total
@@ -355,6 +355,7 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC"
                       valign="top"
                       style="padding: 5px 25px 40px 25px; text-align: left; color: #414856; font-size: 13px;"
                     >
+
                       <table
                         align="center"
                         border="0"
