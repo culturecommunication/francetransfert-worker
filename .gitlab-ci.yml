@@ -26,6 +26,8 @@ sbapi:build:
   script:
     - sed -i "s/storage.access.key=~/storage.access.key=${OSU_ACCESS_KEY}/g" src/main/resources/application-dev.properties
     - sed -i "s/storage.secret.key=~/storage.secret.key=${OSU_SECRET_KEY}/g" src/main/resources/application-dev.properties
+    - sed -i "s/ignimission.client.id=~/ignimission.client.id=${IGNIMISSION_CLIENT_ID}/g" src/main/resources/application-dev.properties
+    - sed -i "s/ignimission.client.secret=~/ignimission.client.secret=${IGNIMISSION_CLIENT_SECRET}/g" src/main/resources/application-dev.properties
     - sed -i "s|https://recette.francetransfert.culture.gouv.fr|${DEVIC_PROTOCOL}://${DEVIC_URL}|g" src/main/resources/application-dev.properties
     - sh ./mvnw $MAVEN_CLI_OPTS -U package
   stage: build
