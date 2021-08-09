@@ -35,8 +35,8 @@
         <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
         <jjwt.version>0.10.6</jjwt.version>
 
-        <ft.dependencie.stats.version>1.0.1</ft.dependencie.stats.version>
-        <ft.dependencie.virusscanner.version>0.1.0</ft.dependencie.virusscanner.version>
+        <ft.dependencie.stats.version>1.2.0</ft.dependencie.stats.version>
+        <ft.dependencie.virusscanner.version>1.2.0</ft.dependencie.virusscanner.version>
     </properties>
 
   <repositories>
@@ -153,7 +153,7 @@
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
           <artifactId>FTR-storage-api</artifactId>
-          <version>1.0.1</version>
+          <version>1.0.3</version>
       </dependency>
       <dependency>
           <groupId>fr.gouv.culture.francetransfert</groupId>
