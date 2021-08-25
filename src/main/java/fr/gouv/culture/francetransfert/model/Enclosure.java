@@ -45,11 +45,13 @@ public class Enclosure {
 
     private String urlDownload;
 
-    private String recipientDownloadInProgress;
+    private List<String> recipientDownloadInProgress;
+    
+    private String password;
     
 
     public static Enclosure build(String enclosureId, RedisManager redisManager) throws Exception {
-//        RedisManager redisManager = RedisManager.getInstance();
+
         List<RootData> filesOfEnclosure = new ArrayList<>();
         for (Map.Entry<String, Long> rootFile: RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
             filesOfEnclosure.add(RootData.builder().name(rootFile.getKey()).extension(WorkerUtils.getExtension(rootFile.getKey())).size(WorkerUtils.getFormattedFileSize(rootFile.getValue())).nameWithoutExtension(FilenameUtils.removeExtension(rootFile.getKey())).build());

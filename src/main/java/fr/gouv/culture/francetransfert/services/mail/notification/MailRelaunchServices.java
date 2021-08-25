@@ -25,51 +25,58 @@ import java.util.Map;
 @Service
 public class MailRelaunchServices {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailRelaunchServices.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MailRelaunchServices.class);
 
-    @Value("${relaunch.mail.days}")
-    private int relaunchDays;
+	@Value("${relaunch.mail.days}")
+	private int relaunchDays;
 
-    @Value("${subject.relaunch.recipient}")
-    private String subjectRelaunchRecipient;
+	@Value("${subject.relaunch.recipient}")
+	private String subjectRelaunchRecipient;
 
-    @Autowired
-    MailNotificationServices mailNotificationServices;
-    
-    @Autowired
-    RedisManager redisManager;
+	@Autowired
+	MailNotificationServices mailNotificationServices;
 
+	@Autowired
+	RedisManager redisManager;
 
-    public void sendMailsRelaunch() throws Exception {
-        redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
-            redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
-                try {
-                    LocalDateTime exipireEnclosureDate = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
-                    if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
-                        Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
-                        LOGGER.info("================================> send relaunch mail for enclosure N° {}", enclosureId );
-                        sendToRecipientsAndSenderRelaunch(redisManager, enclosure, NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
-                    }
-                } catch (Exception e) {
-                    throw new WorkerException("Enclosure build error");
-                }
-            });
-        });
-    }
+	public void sendMailsRelaunch() throws Exception {
+		redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
+			redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
+				try {
+					LocalDateTime exipireEnclosureDate = DateUtils.convertStringToLocalDateTime(
+							redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId),
+									EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
+					if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
+						Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
+						LOGGER.info("================================> send relaunch mail for enclosure N° {}",
+								enclosureId);
+						sendToRecipientsAndSenderRelaunch(redisManager, enclosure,
+								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
+					}
+				} catch (Exception e) {
+					throw new WorkerException("Enclosure build error");
+				}
+			});
+		});
+	}
 
-    // Send mails Relaunch to recipients
-    private void sendToRecipientsAndSenderRelaunch(RedisManager redisManager, Enclosure enclosure, String templateName) throws Exception {
-        List<Recipient> recipients = enclosure.getRecipients();
-        if (!CollectionUtils.isEmpty(recipients)) {
-            for (Recipient recipient: recipients) {
-                Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());
-                boolean isFileDownloaded = (!CollectionUtils.isEmpty(recipientMap) && 0 == Integer.parseInt(recipientMap.get(RecipientKeysEnum.NB_DL.getKey())));
-                if (isFileDownloaded) {
-                    enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(), recipient.getMail(), recipient.getId()));
-                    LOGGER.info("================================> send relaunch mail to {} ", recipient.getMail());
-                    mailNotificationServices.prepareAndSend(recipient.getMail(), subjectRelaunchRecipient + enclosure.getSender(), enclosure, templateName);
-                }
-            }
-        }
-    }
+	// Send mails Relaunch to recipients
+	private void sendToRecipientsAndSenderRelaunch(RedisManager redisManager, Enclosure enclosure, String templateName)
+			throws Exception {
+		List<Recipient> recipients = enclosure.getRecipients();
+		if (!CollectionUtils.isEmpty(recipients)) {
+			for (Recipient recipient : recipients) {
+				Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());
+				boolean isFileDownloaded = (!CollectionUtils.isEmpty(recipientMap)
+						&& 0 == Integer.parseInt(recipientMap.get(RecipientKeysEnum.NB_DL.getKey())));
+				if (isFileDownloaded) {
+					enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
+							recipient.getMail(), recipient.getId()));
+					LOGGER.info("================================> send relaunch mail to {} ", recipient.getMail());
+					mailNotificationServices.prepareAndSend(recipient.getMail(),
+							subjectRelaunchRecipient + enclosure.getSender(), enclosure, templateName);
+				}
+			}
+		}
+	}
 }

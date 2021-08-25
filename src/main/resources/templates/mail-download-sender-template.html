@@ -288,9 +288,9 @@ OP0/EcGF66+uP/74P/Dje5NOViZcAAAAAElFTkSuQmCC"
                           <span>Vos fichiers ont été téléchargés par :</span>
                         </strong>
                       </p>
-                      <p style="color: #0269CC;">
+                      <p style="color: #0269CC;" th:each="recipientDl : ${enclosure.get('recipientDownloadInProgress')}">
                         <strong>
-                          <a th:text="${#strings.toLowerCase(enclosure.get('recipientDownloadInProgress').getAsString())}" 
+                          <a th:text="${#strings.toLowerCase(recipientDl.getAsString())}" 
                             style="text-decoration: none;color:#0269CC;font-weight: bold;"
                             ></a
                           ></strong
