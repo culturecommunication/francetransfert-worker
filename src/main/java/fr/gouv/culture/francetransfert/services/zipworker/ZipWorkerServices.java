@@ -27,7 +27,6 @@ import org.springframework.util.CollectionUtils;
 
 import com.amazonaws.services.s3.model.S3Object;
 
-import fr.gouv.culture.francetransfert.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
@@ -35,6 +34,7 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisU
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
+import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailVirusFoundServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
