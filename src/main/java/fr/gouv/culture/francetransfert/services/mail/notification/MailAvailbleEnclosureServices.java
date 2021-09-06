@@ -1,7 +1,9 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.util.List;
+import java.util.Map;
 
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +27,10 @@ public class MailAvailbleEnclosureServices {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MailAvailbleEnclosureServices.class);
 
 	@Autowired
-	MailNotificationServices mailNotificationServices;
+	private MailNotificationServices mailNotificationServices;
 
 	@Autowired
-	RedisManager redisManager;
+	private RedisManager redisManager;
 
 	@Value("${subject.sender}")
 	private String subjectSender;
@@ -51,12 +53,17 @@ public class MailAvailbleEnclosureServices {
 				enclosure.getSender());
 		String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 				EnclosureKeysEnum.PASSWORD.getKey());
+		boolean publicLink = mailNotificationServices.getPublicLink(enclosure.getGuid());
 		String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
 		enclosure.setPassword(passwordUnHashed);
+		enclosure.setPublicLink(publicLink);
+		enclosure.setUrlAdmin(mailNotificationServices.generateUrlAdmin(enclosure.getGuid()));
+		if(publicLink) enclosure.setUrlDownload(mailNotificationServices.generateUrlPublicForDownload(enclosure.getGuid()));
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSender, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassword, enclosure,
 				NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue());
+		if(!publicLink)
 		sendToRecipients(enclosure, subjectRecipient, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
 	}
 
@@ -78,4 +85,8 @@ public class MailAvailbleEnclosureServices {
 
 		}
 	}
+
+
+
+
 }

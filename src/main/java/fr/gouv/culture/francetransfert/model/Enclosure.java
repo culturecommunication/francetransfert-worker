@@ -2,6 +2,7 @@ package fr.gouv.culture.francetransfert.model;
 
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
@@ -48,6 +49,10 @@ public class Enclosure {
     private List<String> recipientDownloadInProgress;
     
     private String password;
+
+    private String urlAdmin;
+
+    private boolean publicLink;
     
 
     public static Enclosure build(String enclosureId, RedisManager redisManager) throws Exception {
