@@ -2,10 +2,14 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +34,8 @@ public class MailNotificationServices {
 
 	@Value("${url.download.api}")
 	private String urlDownloadApi;
+	@Value("${url.admin.page}")
+	private String urlAdminPage;
 
 	@Autowired
 	private JavaMailSender emailSender;
@@ -39,6 +45,9 @@ public class MailNotificationServices {
 
 	@Autowired
 	Base64CryptoService base64CryptoService;
+
+	@Autowired
+	private RedisManager redisManager;
 
 	public void prepareAndSend(String to, String subject, Object object, String templateName) {
 		try {
@@ -85,6 +94,20 @@ public class MailNotificationServices {
 		} catch (UnsupportedEncodingException e) {
 			throw new WorkerException("Download url error");
 		}
+	}
+
+	public String generateUrlPublicForDownload(String enclosureId) {
+		return urlDownloadApi + "/download-info-public?enclosure=" + enclosureId;
+	}
+
+	public boolean getPublicLink(String enclosureId){
+		Map<String, String> enclosureMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+		return Boolean.parseBoolean(enclosureMap.get(EnclosureKeysEnum.PUBLIC_LINK.getKey()));
+	}
+
+	public String generateUrlAdmin(String enclosureId){
+		Map<String, String> tokenMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
+		return urlAdminPage + "?token=" + tokenMap.get(EnclosureKeysEnum.TOKEN.getKey());
 	}
 
 }
