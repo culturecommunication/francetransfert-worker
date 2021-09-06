@@ -7,9 +7,6 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +16,9 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
@@ -97,17 +97,17 @@ public class MailNotificationServices {
 	}
 
 	public String generateUrlPublicForDownload(String enclosureId) {
-		return urlDownloadApi + "/download-info-public?enclosure=" + enclosureId;
+		return urlDownloadApi + "download-info-public?enclosure=" + enclosureId;
 	}
 
-	public boolean getPublicLink(String enclosureId){
+	public boolean getPublicLink(String enclosureId) {
 		Map<String, String> enclosureMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 		return Boolean.parseBoolean(enclosureMap.get(EnclosureKeysEnum.PUBLIC_LINK.getKey()));
 	}
 
-	public String generateUrlAdmin(String enclosureId){
+	public String generateUrlAdmin(String enclosureId) {
 		Map<String, String> tokenMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
-		return urlAdminPage + "?token=" + tokenMap.get(EnclosureKeysEnum.TOKEN.getKey());
+		return urlAdminPage + "?token=" + tokenMap.get(EnclosureKeysEnum.TOKEN.getKey()) + "&enclosure=" + enclosureId;
 	}
 
 }
