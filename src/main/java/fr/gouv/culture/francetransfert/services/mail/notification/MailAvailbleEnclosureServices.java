@@ -56,9 +56,7 @@ public class MailAvailbleEnclosureServices {
 		enclosure.setPassword(passwordUnHashed);
 		enclosure.setPublicLink(publicLink);
 		enclosure.setUrlAdmin(mailNotificationServices.generateUrlAdmin(enclosure.getGuid()));
-		if (publicLink) {
-			enclosure.setUrlDownload(mailNotificationServices.generateUrlPublicForDownload(enclosure.getGuid()));
-		}
+		enclosure.setUrlDownload(mailNotificationServices.generateUrlPublicForDownload(enclosure.getGuid()));
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSender, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassword, enclosure,
