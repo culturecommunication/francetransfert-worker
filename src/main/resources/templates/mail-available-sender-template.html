@@ -553,17 +553,17 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg=="
                           </td>
                         </tr>
                         <tr>
-                          <td>
+                          <td colspan="2">
                             <a th:href="${enclosure.get('urlAdmin').getAsString()}">Lien d'administration du pli</a>
                           </td>
                         </tr>
-                        <tr th:if="${enclosure.isPublicLink()}">
-                          <td>
+                        <tr th:if="${enclosure.get('publicLink') == true and enclosure.get('urlDownload') != null}">
+                          <td colspan="2">
                             <a th:href="${enclosure.get('urlDownload').getAsString()}">Lien de téléchargement public</a>
                           </td>
                         </tr>
                         <tr>
-                          <td>
+                          <td colspan="2">
                             <p style="margin: 0px 0px 0px 0px;">
                               <em>
                                 Si le lien d'administration ne fonctionne pas dans votre messagerie,
@@ -573,8 +573,8 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg=="
                             </p>
                           </td>
                         </tr>
-                        <tr th:if="${enclosure.get('publicLink')}">
-                          <td>
+                        <tr th:if="${enclosure.get('publicLink') == true and enclosure.get('urlDownload') != null}">
+                          <td colspan="2">
                             <p style="margin: 0px 0px 0px 0px;">
                               <em>
                                 Si le lien de téléchargement ne fonctionne pas dans votre messagerie,
