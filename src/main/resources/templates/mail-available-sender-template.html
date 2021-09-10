@@ -557,7 +557,7 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg=="
                             <a th:href="${enclosure.get('urlAdmin').getAsString()}">Lien d'administration du pli</a>
                           </td>
                         </tr>
-                        <tr th:if="${enclosure.get('publicLink')}">
+                        <tr th:if="${enclosure.isPublicLink()}">
                           <td>
                             <a th:href="${enclosure.get('urlDownload').getAsString()}">Lien de téléchargement public</a>
                           </td>
