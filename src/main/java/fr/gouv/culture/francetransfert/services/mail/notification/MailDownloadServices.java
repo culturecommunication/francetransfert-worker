@@ -39,14 +39,14 @@ public class MailDownloadServices {
 		recipList.addAll(enclosure.getRecipients().stream().filter(c -> recipientId.contains(c.getId()))
 				.map(x -> x.getMail()).collect(Collectors.toList()));
 		enclosure.setRecipientDownloadInProgress(recipList);
-		LOGGER.info("================================> send email notification download in progress to sender:  {}",
+		LOGGER.info("Send email notification download in progress to sender:  {}",
 				enclosure.getSender());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownloadProgress, enclosure,
 				NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
 	}
 
 	public void sendMailsDownload() {
-
+		LOGGER.info("STEP SEND MAIL DOWNLOAD");
 		List<String> downloadList = redisManager.lrange(RedisQueueEnum.DOWNLOAD_QUEUE.getValue(), 0, -1);
 		redisManager.deleteKey(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
 		Map<String, Set<String>> encloRecipMap = new HashMap<String, Set<String>>();
@@ -68,6 +68,5 @@ public class MailDownloadServices {
 				LOGGER.error("Error sending download Mail : " + e.getMessage(), e);
 			}
 		});
-
 	}
 }

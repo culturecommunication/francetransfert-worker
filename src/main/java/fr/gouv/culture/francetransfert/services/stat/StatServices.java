@@ -37,6 +37,7 @@ public class StatServices {
 
 	public boolean saveData(String enclosureId) throws WorkerException {
 		try {
+			LOGGER.info("STEP SAVE STATS");
 			boolean isSaved = true;
 
 			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
@@ -67,7 +68,7 @@ public class StatServices {
 			Files.writeString(filePath, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 			return isSaved;
 		} catch (Exception e) {
-			LOGGER.error("=================== error save data in CSV UPLOAD");
+			LOGGER.error("Error save data in CSV UPLOAD : " + e.getMessage(), e);
 			throw new WorkerException("error save data in CSV UPLOAD");
 		}
 	}

@@ -23,10 +23,11 @@ public class MailConfirmationCodeServices {
     private String subjectConfirmationCode;
 
     public void sendConfirmationCode(String mailCode) throws Exception {
+    	LOGGER.info("STEP SEND MAIL");
         String senderMail = extractSenderMail(mailCode);
         String code = extractConfirmationCode(mailCode);
         ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail).build();
-        LOGGER.info("================================> send email confirmation code to sender:  {}", senderMail);
+        LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
         mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode, NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue());
     }
 
@@ -44,7 +45,7 @@ public class MailConfirmationCodeServices {
             result =items[part];
 
         } else {
-            LOGGER.error("=======================> error extract mail and code");
+            LOGGER.error("Error extract mail and code");
             throw new WorkerException("error extract mail and code");
         }
         return result;
