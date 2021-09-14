@@ -63,6 +63,7 @@ public class ClamAVScannerManager {
 	 * @throws ClamAVException
 	 */
 	public String performScan(FileChannel fileChannel) throws IOException, ClamAVException {
+		LOGGER.info("STEP VIRUS SCAN");
 		return scan(fileChannel, getAddress(), timeout);
 	}
 
@@ -75,6 +76,7 @@ public class ClamAVScannerManager {
 	 * @throws ClamAVException
 	 */
 	public String performScan(InputStream inputStream) throws IOException, ClamAVException {
+		LOGGER.info("STEP VIRUS SCAN");
 		return scan(inputStream, getAddress(), timeout);
 	}
 

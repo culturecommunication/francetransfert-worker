@@ -27,7 +27,7 @@ public class SendEmailConfirmationCodeTask implements Runnable {
 	@Override
 	public void run() {
     	try {
-    		LOGGER.info("================================> start send confirmation code", mailCode);
+    		LOGGER.info("[Worker] Start send confirmation code", mailCode);
             mailConfirmationCodeServices.sendConfirmationCode(mailCode);
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());

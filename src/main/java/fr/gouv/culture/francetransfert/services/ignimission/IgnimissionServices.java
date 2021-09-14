@@ -133,14 +133,13 @@ public class IgnimissionServices {
 
 						file.delete();
 					} catch (Exception ex) {
-						LOGGER.error("================================> worker Ignimission stat error {} ",
+						LOGGER.error("Worker Ignimission stat error {} ",
 								ex.getMessage(), ex);
 					}
 				});
 			}
 		} catch (Exception ex) {
-			LOGGER.error("================================> worker Ignimission stat update error {} ", ex.getMessage(),
-					ex);
+			LOGGER.error("Worker Ignimission stat update error {} ", ex.getMessage(), ex);
 		}
 	}
 

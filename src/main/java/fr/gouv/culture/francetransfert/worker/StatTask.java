@@ -31,11 +31,11 @@ public class StatTask implements Runnable {
 
 	@Override
 	public void run() {
-		LOGGER.info("================================> worker : start zip  process for enclosur N°  {}", enclosureId);
+		LOGGER.info("[Worker] : start stat process for enclosur N°  {}", enclosureId);
 		try {
-			System.out.println("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
+			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
-			LOGGER.info("================================> start save data in csv", enclosureId);
+			LOGGER.info("start save data in csv", enclosureId);
 			statServices.saveData(enclosureId);
 			redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
 		} catch (Exception e) {

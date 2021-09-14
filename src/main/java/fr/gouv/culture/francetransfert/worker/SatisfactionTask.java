@@ -28,10 +28,9 @@ public class SatisfactionTask implements Runnable {
 	@Override
 	public void run() {
 		try {
-			System.out.println("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
+			LOGGER.info("[Worker] Save satisfaction data");
+			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
-			LOGGER.info("================================> convert json in string to object rate");
-			LOGGER.info("================================> start save satisfaction data in csv");
 			satisfactionService.saveData(rate);
 
 		} catch (Exception e) {

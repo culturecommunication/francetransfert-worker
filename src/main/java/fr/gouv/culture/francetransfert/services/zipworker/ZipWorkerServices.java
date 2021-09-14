@@ -90,48 +90,50 @@ public class ZipWorkerServices {
 		manager.getZippedEnclosureName(prefix);
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
-		LOGGER.info("================================> SIZE " + list.size() + " LIST ===> " + list.toString());
+		LOGGER.info(" STEP STATE ZIP ");
+		LOGGER.info(" SIZE " + list.size() + " LIST ===> " + list.toString());
 		try {
 			Enclosure enclosure = Enclosure.build(prefix, redisManager);
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
 			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
 			LOGGER.info(
-					"================================> start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ",
+					" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ",
 					bucketName, list, prefix, bucketPrefix);
 			downloadFilesToTempFolder(manager, bucketName, list);
-			LOGGER.info("================================> Start scanning files {} with ClamaV", list);
+			LOGGER.info(" Start scanning files {} with ClamaV", list);
 			LocalDateTime beginDate = LocalDateTime.now();
 			boolean isClean = performScan(list, bucketName, prefix, enclosure);
 			if (!isClean) {
-				LOGGER.error("=====================================> Virus found in bucketName [{}] files {} ",
+				LOGGER.error("Virus found in bucketName [{}] files {} ",
 						bucketName, list);
 			}
-			LOGGER.info("================================> End scanning file {} with ClamaV. Duration(s) = [{}]", list,
+			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
 
 			if (isClean) {
 
-				LOGGER.info("================================> start zip files temp to disk");
+				LOGGER.info(" start zip files temp to disk");
 				zipDownloadedContent(prefix, passwordUnHashed);
 
-				LOGGER.info("================================> start upload zip file temp to OSU");
+				LOGGER.info(" start upload zip file temp to OSU");
 				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix) + ".zip",
 						getBaseFolderNameWithZipPrefix(prefix));
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
-				LOGGER.info("================================> start delete zip file in local disk");
+				LOGGER.info(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
 				File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
 				if (!fileZip.delete()) {
 					throw new WorkerException("error delete zip file");
 				}
-				LOGGER.info("================================> start delete zip file in OSU");
+				LOGGER.info(" start delete zip file in OSU");
 				deleteFilesFromOSU(manager, bucketName, prefix);
 				notifyEmailWorker(prefix);
 			} else {
 				cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(),
 						subjectVirusFound);
 			}
+			LOGGER.info(" STEP STATE ZIP OK");
 		} catch (IOException e) {
 			LOGGER.error(e.getMessage(), e);
 		}
@@ -200,7 +202,7 @@ public class ZipWorkerServices {
 				}
 				File[] children = fileToZip.listFiles();
 				for (File childFile : children) {
-					LOGGER.info("================================> start zip file {} temp to disk",
+					LOGGER.info(" start zip file {} temp to disk",
 							childFile.getName());
 					zipFile(childFile, fileName + File.separator + childFile.getName(), zipOut);
 				}
@@ -251,7 +253,8 @@ public class ZipWorkerServices {
 				}
 			}
 		} catch (Exception e) {
-			throw new WorkerException("Error During File Dowload from OSU to Temp Folder");
+			LOGGER.error("Error During File Dowload from OSU to Temp Folder : " + e.getMessage(), e);
+			throw new WorkerException("Error During File Dowload from OSU to Temp Folder ");
 		}
 	}
 
@@ -261,7 +264,7 @@ public class ZipWorkerServices {
 	 * @throws IOException
 	 */
 	public void writeFile(S3Object object, String fileName) throws IOException {
-		LOGGER.info("================================> start download file : {}  to disk ", fileName);
+		LOGGER.info(" start download file : {}  to disk ", fileName);
 		try (InputStream reader = new BufferedInputStream(object.getObjectContent());) {
 			String baseFolderName = getBaseFolderName();
 			File file = new File(baseFolderName + fileName);
@@ -328,18 +331,18 @@ public class ZipWorkerServices {
 			String emailSubject) {
 		try {
 			/** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
-			LOGGER.info("================================> Processing clean up {} / {} - {} ", bucketName, prefix,
+			LOGGER.info(" Processing clean up {} / {} - {} ", bucketName, prefix,
 					bucketPrefix);
-			LOGGER.info("================================> clean up OSU");
+			LOGGER.info(" clean up OSU");
 			deleteFilesFromOSU(manager, bucketName, prefix);
 
 			// clean temp data in REDIS for Enclosure
-			LOGGER.info("================================> clean up REDIS temp data");
+			LOGGER.info(" clean up REDIS temp data");
 			cleanUpServices.cleanUpEnclosureTempDataInRedis(redisManager, prefix);
 
 			// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 			// recipients, sender and enclosure
-			LOGGER.info("================================> clean up REDIS");
+			LOGGER.info(" clean up REDIS");
 			cleanUpServices.cleanUpEnclosureCoreInRedis(redisManager, prefix);
 
 			// clean up for Upload directory
@@ -347,7 +350,7 @@ public class ZipWorkerServices {
 			// Notify sender
 			mailVirusFoundServices.sendToSender(enclosure, emailTemplateName, emailSubject);
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			LOGGER.error("Error while cleaning up Enclosure : "+ e.getMessage(), e);
 		}
 	}
 
@@ -357,7 +360,7 @@ public class ZipWorkerServices {
 	 * @throws IOException
 	 */
 	public void writeFile(InputStream inputStream, String fileName) throws IOException {
-		LOGGER.info("================================> start download file : {}  to disk ", fileName);
+		LOGGER.info(" start download file : {}  to disk ", fileName);
 		String baseFolderName = getBaseFolderName();
 		File file = new File(baseFolderName + fileName);
 		file.getParentFile().mkdirs();

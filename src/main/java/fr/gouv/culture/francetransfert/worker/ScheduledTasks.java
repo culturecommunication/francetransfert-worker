@@ -99,9 +99,9 @@ public class ScheduledTasks {
 
 	@Scheduled(cron = "${scheduled.relaunch.mail}")
 	public void relaunchMail() throws Exception {
-		LOGGER.info("================================> worker : start relaunch for download Check");
+		LOGGER.info("Worker : start relaunch for download Check");
 		if (appSyncServices.shouldRelaunch()) {
-			LOGGER.info("================================> worker : start relaunch for download Checked and Started");
+			LOGGER.info("Worker : start relaunch for download Checked and Started");
 			mailRelaunchServices.sendMailsRelaunch();
 			mailDownloadServices.sendMailsDownload();
 		}
@@ -109,23 +109,23 @@ public class ScheduledTasks {
 
 	@Scheduled(cron = "${scheduled.clean.up}")
 	public void cleanUp() throws Exception {
-		LOGGER.info("================================> worker : start clean-up expired enclosure Check");
+		LOGGER.info("Worker : start clean-up expired enclosure Check");
 		if (appSyncServices.shouldCleanup()) {
 			LOGGER.info(
-					"================================> worker : start clean-up expired enclosure Checked and Started");
+					"Worker : start clean-up expired enclosure Checked and Started");
 			cleanUpServices.cleanUp();
 		}
 	}
 
 	@Scheduled(cron = "${scheduled.app.sync.cleanup}")
 	public void appSyncCleanup() throws Exception {
-		LOGGER.info("================================> worker : start Application synchronization cleanup");
+		LOGGER.info("Worker : start Application synchronization cleanup");
 		appSyncServices.appSyncCleanup();
 	}
 
 	@Scheduled(cron = "${scheduled.app.sync.relaunch}")
 	public void appSyncRelaunch() throws Exception {
-		LOGGER.info("================================> worker : start Application synchronization relaunch");
+		LOGGER.info("Worker : start Application synchronization relaunch");
 		appSyncServices.appSyncRelaunch();
 	}
 
@@ -133,20 +133,20 @@ public class ScheduledTasks {
 	public void ignimissionDomainUpdate() throws Exception {
 		if (appSyncServices.shouldUpdateIgnimissionDomain()) {
 			LOGGER.info(
-					"================================> worker : start Application ignimission domain extension update");
+					"Worker : start Application ignimission domain extension update");
 			ignimissionServices.updateDomains();
 		}
 	}
 
 	@Scheduled(cron = "${scheduled.send.stat}")
 	public void ignimissionSendStat() throws Exception {
-		LOGGER.info("================================> worker : start Application ignimission domain extension update");
+		LOGGER.info("Worker : start Application ignimission domain extension update");
 		ignimissionServices.sendStats();
 	}
 
 	@Scheduled(cron = "${scheduled.app.sync.ignimission.domain}")
 	public void appSyncIgnimissionDomain() {
-		LOGGER.info("================================> worker : start Application synchronization ignimission domain");
+		LOGGER.info("Worker : start Application synchronization ignimission domain");
 		appSyncServices.appSyncIgnimissionDomain();
 	}
 
