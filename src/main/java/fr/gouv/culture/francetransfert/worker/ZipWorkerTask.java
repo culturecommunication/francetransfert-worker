@@ -32,7 +32,7 @@ public class ZipWorkerTask implements Runnable {
     		LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId());
 			zipWorkerServices.startZip(enclosureId);
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			LOGGER.error("[Worker] Zip worker error : " + e.getMessage(), e);
 		}
     	LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId() + " IS DEAD");
     }

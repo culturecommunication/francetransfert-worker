@@ -38,7 +38,7 @@ public class SendEmailNotificationUploadDownloadTask implements Runnable {
             redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), enclosureId);
     		
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
+			LOGGER.error("[Worker] email notification error : " + e.getMessage(), e);
 		}
     }
 }

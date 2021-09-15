@@ -60,20 +60,20 @@ public class CleanUpServices {
 					if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) { // expire date + 1
 						mailEnclosureNoLongerAvailbleServices
 								.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager));
-						LOGGER.info("================================> clean up for enclosure N° {}", enclosureId);
+						LOGGER.info(" clean up for enclosure N° {}", enclosureId);
 						String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 
 						// clean temp data in REDIS for Enclosure
 						cleanUpEnclosureTempDataInRedis(redisManager, enclosureId);
-						LOGGER.info("================================> clean up REDIS temp data");
+						LOGGER.info(" clean up REDIS temp data");
 
 						// clean enclosure in OSU : delete enclosure
-						LOGGER.info("================================> clean up OSU");
+						LOGGER.info(" clean up OSU");
 						cleanUpOSU(bucketName, enclosureId);
 
 						// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 						// recipients, sender and enclosure
-						LOGGER.info("================================> clean up REDIS");
+						LOGGER.info(" clean up REDIS");
 						cleanUpEnclosureCoreInRedis(redisManager, enclosureId);
 
 						// clean enclosure date : delete list enclosureId and date expired
@@ -164,7 +164,7 @@ public class CleanUpServices {
 		// list files
 		List<String> listFileIds = redisManager.lrange(keyFiles, 0, -1);
 		// delete Hash files info
-		LOGGER.debug("=========== clean up files: {}", RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId));
+		LOGGER.debug("clean up files: {}", RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId));
 		for (String fileId : listFileIds) {
 //            redisManager.hmgetAllString(RedisKeysEnum.FT_FILE.getKey(fileId))
 			redisManager.deleteKey(RedisKeysEnum.FT_FILE.getKey(fileId));
@@ -179,7 +179,7 @@ public class CleanUpServices {
 		// list root-files
 		List<String> listRootFileIds = redisManager.lrange(keyRootFiles, 0, -1);
 		// delete Hash root-files info
-		LOGGER.debug("=========== clean up root-files: {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
+		LOGGER.debug("clean up root-files: {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
 		for (String rootFileId : listRootFileIds) {
 //            redisManager.hmgetAllString(RedisKeysEnum.FT_ROOT_FILE.getKey(RedisUtils.generateHashsha1(enclosureId + ":" + rootFileId)))
 			redisManager.deleteKey(
@@ -195,7 +195,7 @@ public class CleanUpServices {
 		// list root-dirs
 		List<String> listRootDirIds = redisManager.lrange(keyrootDirs, 0, -1);
 		// delete Hash root-dirs info
-		LOGGER.debug("=========== clean up root-dirs: {}", RedisKeysEnum.FT_ROOT_DIRS.getKey(enclosureId));
+		LOGGER.debug("clean up root-dirs: {}", RedisKeysEnum.FT_ROOT_DIRS.getKey(enclosureId));
 		for (String rootDirId : listRootDirIds) {
 //            redisManager.hmgetAllString(RedisKeysEnum.FT_ROOT_DIR.getKey(RedisUtils.generateHashsha1(enclosureId + ":" + rootDirId)))
 			redisManager.deleteKey(
@@ -253,7 +253,7 @@ public class CleanUpServices {
 	 * @param path
 	 */
 	public void deleteEnclosureTempDirectory(String path) {
-		LOGGER.info("================================> clean up Enclosure temp directory {} ", path);
+		LOGGER.info(" clean up Enclosure temp directory {} ", path);
 		try {
 
 			Path pathToBeDeleted = Paths.get(path);
@@ -261,10 +261,8 @@ public class CleanUpServices {
 				walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
 			}
 			;
-			// LOGGER.debug("================================> Directory still exists {} ",
-			// Files.exists(pathToBeDeleted));
 		} catch (IOException e) {
-			LOGGER.error("unable to delete Enclosure temp directory [{}] / {} ", path, e.getMessage());
+			LOGGER.error("unable to delete Enclosure temp directory [{}] / {} ", path, e.getMessage(), e);
 		}
 	}
 }

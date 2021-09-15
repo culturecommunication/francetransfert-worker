@@ -33,12 +33,12 @@ public class TempDataCleanupTask implements Runnable {
 	@Override
 	public void run() {
     	try {
-    		System.out.println("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId());
-    		LOGGER.info("================================> start temp data cleanup process for enclosure N: {}" , enclosureId);
+    		LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId());
+    		LOGGER.info(" start temp data cleanup process for enclosure N: {}" , enclosureId);
             cleanUpServices.cleanUpEnclosureTempDataInRedis(redisManager, enclosureId);
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
+			LOGGER.error("[Worker] temp data cleanup error : "  + e.getMessage(), e);
 		}
-    	System.out.println("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId() + " IS DEAD");
+    	LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId() + " IS DEAD");
     }
 }
