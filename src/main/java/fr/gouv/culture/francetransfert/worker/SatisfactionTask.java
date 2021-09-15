@@ -34,7 +34,7 @@ public class SatisfactionTask implements Runnable {
 			satisfactionService.saveData(rate);
 
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			LOGGER.error("[Worker] satisfaction error : " + e.getMessage(), e);
 		}
 	}
 }

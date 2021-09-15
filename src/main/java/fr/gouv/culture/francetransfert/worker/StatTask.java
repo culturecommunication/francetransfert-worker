@@ -39,7 +39,7 @@ public class StatTask implements Runnable {
 			statServices.saveData(enclosureId);
 			redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
+			LOGGER.error("[Worker] stat error : " + e.getMessage(), e);
 		}
 	}
 }

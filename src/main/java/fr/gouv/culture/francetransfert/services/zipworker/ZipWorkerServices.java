@@ -135,7 +135,7 @@ public class ZipWorkerServices {
 			}
 			LOGGER.info(" STEP STATE ZIP OK");
 		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
+			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 		}
 	}
 

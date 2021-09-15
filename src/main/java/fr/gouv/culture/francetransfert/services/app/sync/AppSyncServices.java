@@ -78,7 +78,7 @@ public class AppSyncServices {
 		boolean shouldUpdateDomain = false;
 		try {
 			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_IGNIMISSION_DOMAIN.getKey());
-			LOGGER.info("================================> worker : start Application ignimission incrementedAppSyncCounter {} ", incrementedAppSyncCounter);
+			LOGGER.info(" worker : start Application ignimission incrementedAppSyncCounter {} ", incrementedAppSyncCounter);
 			if(incrementedAppSyncCounter == 1) {
 				shouldUpdateDomain = true;
 			}

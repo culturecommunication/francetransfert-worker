@@ -47,7 +47,7 @@ public class MailAvailbleEnclosureServices {
 
 	// Send Mails to snder and recipients
 	public void sendMailsAvailableEnclosure(Enclosure enclosure) throws Exception {
-		LOGGER.info("================================>send email notification availble to sender: {}",
+		LOGGER.info("send email notification availble to sender: {}",
 				enclosure.getSender());
 		String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 				EnclosureKeysEnum.PASSWORD.getKey());
@@ -74,7 +74,7 @@ public class MailAvailbleEnclosureServices {
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			for (Recipient recipient : recipients) {
-				LOGGER.info("================================>send email notification availble to recipient: {}",
+				LOGGER.info("send email notification availble to recipient: {}",
 						recipient.getMail());
 				enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 						recipient.getMail(), recipient.getId()));

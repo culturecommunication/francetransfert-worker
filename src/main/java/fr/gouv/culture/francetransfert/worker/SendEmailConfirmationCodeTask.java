@@ -30,7 +30,7 @@ public class SendEmailConfirmationCodeTask implements Runnable {
     		LOGGER.info("[Worker] Start send confirmation code", mailCode);
             mailConfirmationCodeServices.sendConfirmationCode(mailCode);
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
+			LOGGER.error("[Worker] Send mail confirmation code error : " + e.getMessage(), e);
 		}
     }
 }

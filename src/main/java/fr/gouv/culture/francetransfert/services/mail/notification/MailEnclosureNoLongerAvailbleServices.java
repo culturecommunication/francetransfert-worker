@@ -46,14 +46,14 @@ public class MailEnclosureNoLongerAvailbleServices {
                 if (isFileDownloaded) {
                     recipientsDoNotDownloadedEnclosure.add(recipient);
                     mailNotificationServices.prepareAndSend(recipient.getMail(), subjectNoAvailbleEnclosureRecipient, enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue());
-                    LOGGER.info("================================>send email notification enclosure not availble to recipient: {}", recipient.getMail());
+                    LOGGER.info("send email notification enclosure not availble to recipient: {}", recipient.getMail());
                 }
             }
             // Send email to the sender of enclosure is no longer available for download to recipients who have not removed it in time
             if (!CollectionUtils.isEmpty(recipientsDoNotDownloadedEnclosure)) {
                 enclosure.setRecipients(recipientsDoNotDownloadedEnclosure);
                 mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectNoAvailbleEnclosureSender, enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue());
-                LOGGER.info("================================>send email notification enclosure not availble to sender: {}", enclosure.getSender());
+                LOGGER.info("send email notification enclosure not availble to sender: {}", enclosure.getSender());
             }
         }
     }

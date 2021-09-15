@@ -161,7 +161,7 @@ public class ScheduledTasks {
 	}
 
 	private void initStatWorker() {
-		System.out.println("initStatWorker");
+		LOGGER.info("initStatWorker");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
@@ -179,7 +179,7 @@ public class ScheduledTasks {
 	}
 
 	private void initTempDataCleanupWorkers() {
-		System.out.println("initTempDataCleanupWorkers");
+		LOGGER.info("initTempDataCleanupWorkers");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
@@ -198,7 +198,7 @@ public class ScheduledTasks {
 	}
 
 	private void initSendEmailConfirmationCodeWorkers() {
-		System.out.println("initSendEmailConfirmationCodeWorkers");
+		LOGGER.info("initSendEmailConfirmationCodeWorkers");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
@@ -218,7 +218,7 @@ public class ScheduledTasks {
 	}
 
 //    private void initSendEmailDownloadInProgressWorkers() {
-//        System.out.println("initSendEmailDownloadInProgressWorkers");
+//        LOGGER.info("initSendEmailDownloadInProgressWorkers");
 //        Executors.newSingleThreadExecutor().execute(new Runnable() {
 //            @Override
 //            public void run() {
@@ -239,7 +239,7 @@ public class ScheduledTasks {
 //    }
 
 	private void initSendEmailNotificationUploadDownloadWorkers() {
-		System.out.println("initSendEmailNotificationUploadDownloadWorkers");
+		LOGGER.info("initSendEmailNotificationUploadDownloadWorkers");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
 			@Override
 			public void run() {

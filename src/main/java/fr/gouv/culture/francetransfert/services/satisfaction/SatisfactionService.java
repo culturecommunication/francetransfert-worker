@@ -35,7 +35,7 @@ public class SatisfactionService {
 			Files.writeString(filePath, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 			return true;
 		} catch (Exception e) {
-			LOGGER.error("=================== error save data in CsvFile", e);
+			LOGGER.error("error save data in CsvFile", e);
 			throw new WorkerException("error save data in CsvFile");
 		}
 	}
