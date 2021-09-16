@@ -554,12 +554,9 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg=="
                         </tr>
                         <tr>
                           <td colspan="2">
+                          <strong>
                             <a th:href="${enclosure.get('urlAdmin').getAsString()}">Lien d'administration du pli</a>
-                          </td>
-                        </tr>
-                        <tr th:if="${enclosure.get('publicLink') == true and enclosure.get('urlDownload') != null}">
-                          <td colspan="2">
-                            <a th:href="${enclosure.get('urlDownload').getAsString()}">Lien de téléchargement public</a>
+                            </strong>
                           </td>
                         </tr>
                         <tr>
@@ -573,7 +570,15 @@ MsEB/TqDyIA63dz//wF5tolND39WHAAAAABJRU5ErkJggg=="
                             </p>
                           </td>
                         </tr>
-                        <tr th:if="${enclosure.get('publicLink') == true and enclosure.get('urlDownload') != null}">
+                        <tr></tr>
+                        <tr th:if="${enclosure.get('publicLink').getAsString().equals('true')}">
+                          <td colspan="2">
+                          <strong>
+                            <a th:href="${enclosure.get('urlDownload').getAsString()}">Lien de téléchargement public</a>
+                            </strong>
+                          </td>
+                        </tr>
+                        <tr th:if="${enclosure.get('publicLink').getAsString().equals('true')}">
                           <td colspan="2">
                             <p style="margin: 0px 0px 0px 0px;">
                               <em>
