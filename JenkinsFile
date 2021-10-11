@@ -31,6 +31,16 @@ node {
         }
     }
     
+    gitlabCommitStatus('Quality')
+    {
+    	stage('SonarQube analysis') {
+		    def scannerHome = tool 'SonarScanner';
+		    withSonarQubeEnv('SonarCulture') {
+		      sh "${scannerHome}/bin/sonar-scanner"
+		    }
+	    }
+    }
+    
     // = Package
     gitlabCommitStatus('Package')
     {
