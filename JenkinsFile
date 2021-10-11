@@ -35,7 +35,7 @@ node {
     {
     	stage('SonarQube') {
 		    withSonarQubeEnv() {
-		    	sh "mvn sonar:sonar"
+		    	sh "mvn -X -e sonar:sonar"
 		    }
 	    }
     }
