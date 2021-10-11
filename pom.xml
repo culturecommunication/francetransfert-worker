@@ -35,6 +35,7 @@
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
 		<jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
 		<jjwt.version>0.10.6</jjwt.version>
+		<sonar.projectKey>francetransfert_appli_francetransfert-download-api_AXxv3-nQPbhXNGiHXwZ2</sonar.projectKey>
 
 	</properties>
 
