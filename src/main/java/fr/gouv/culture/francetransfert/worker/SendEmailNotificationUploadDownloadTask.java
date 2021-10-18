@@ -33,12 +33,12 @@ public class SendEmailNotificationUploadDownloadTask implements Runnable {
 	@Override
 	public void run() {
     	try {
-    		LOGGER.info("================================> worker : start send email notification availble enclosure to download for enclosure N° {}", enclosureId);
+    		LOGGER.info(" [Worker] Start send email notification availble enclosure to download for enclosure N° {}", enclosureId);
             mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager));
             redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), enclosureId);
     		
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
+			LOGGER.error("[Worker] email notification error : " + e.getMessage(), e);
 		}
     }
 }

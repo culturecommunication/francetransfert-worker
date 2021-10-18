@@ -12,11 +12,11 @@ import fr.gouv.culture.francetransfert.services.stat.StatServices;
 public class StatTask implements Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(StatTask.class);
-	
-    private StatServices statServices;
 
-    private RedisManager redisManager;
-	
+	private StatServices statServices;
+
+	private RedisManager redisManager;
+
 	private String enclosureId;
 
 	public StatTask(String enclosureId, RedisManager redisManager, StatServices statServices) {
@@ -24,21 +24,22 @@ public class StatTask implements Runnable {
 		this.redisManager = redisManager;
 		this.statServices = statServices;
 	}
-	
+
 	public StatTask() {
-		
+
 	}
 
 	@Override
 	public void run() {
-		LOGGER.info("================================> worker : start zip  process for enclosur N°  {}", enclosureId);
-    	try {
-    		System.out.println("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId());
-    		LOGGER.info("================================> start save data in mongoDb", enclosureId);
-            statServices.saveData(enclosureId);
-            redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
+		LOGGER.info("[Worker] : start stat process for enclosur N°  {}", enclosureId);
+		try {
+			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
+					+ Thread.currentThread().getId());
+			LOGGER.info("start save data in csv", enclosureId);
+			statServices.saveData(enclosureId);
+			redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
 		} catch (Exception e) {
-			LOGGER.error(e.getMessage());
+			LOGGER.error("[Worker] stat error : " + e.getMessage(), e);
 		}
-    }
+	}
 }

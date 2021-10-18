@@ -53,7 +53,7 @@ public class RestClientUtils {
             return response.getBody();
 
         } catch (HttpMessageNotReadableException e) {
-            LOGGER.error("================================> Ignimission AUth CALL ERROR {} ", e.getMessage());
+            LOGGER.error("Ignimission AUth CALL ERROR {} ", e.getMessage(), e);
         }
 
         return null;
@@ -86,7 +86,7 @@ public class RestClientUtils {
             response = restTemplate.exchange
                     (requestUri, httpMethod, getHttpEntityWithCredentials(ignimissionDomainParameter, token), IgnimissionDomainResponse[].class);
         } catch (HttpMessageNotReadableException e) {
-            LOGGER.error("================================> worker Ignimission domain update ERROR {} ", e.getMessage());
+            LOGGER.error("Worker Ignimission domain update ERROR {} ", e.getMessage(), e);
         }
 
         return Objects.nonNull(response) ? Arrays.stream(response.getBody()).findFirst().orElse(null) : null;

@@ -21,7 +21,7 @@ public class MailVirusFoundServices {
 
     // Send mail to sender
     public void sendToSender(Enclosure enclosure, String templateName, String subject){
-        LOGGER.info("================================>send email notification virus to sender: {}", enclosure.getSender());
+        LOGGER.info("send email notification virus to sender: {}", enclosure.getSender());
         mailNotificationServices.prepareAndSend(
                 enclosure.getSender(),
                 subject,
