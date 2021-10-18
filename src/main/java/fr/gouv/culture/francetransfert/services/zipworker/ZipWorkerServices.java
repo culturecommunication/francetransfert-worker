@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import org.springframework.util.CollectionUtils;
 
 import com.amazonaws.services.s3.model.S3Object;
 
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.MimeService;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
@@ -36,7 +38,7 @@ import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailVirusFoundServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +57,9 @@ public class ZipWorkerServices {
 
 	@Autowired
 	StorageManager manager;
+
+	@Autowired
+	MimeService mimeService;
 
 	@Autowired
 	RedisManager redisManager;
@@ -78,7 +83,7 @@ public class ZipWorkerServices {
 	private String subjectVirusError;
 
 	@Autowired
-	MailVirusFoundServices mailVirusFoundServices;
+	MailNotificationServices mailNotificationService;
 
 	@Autowired
 	CleanUpServices cleanUpServices;
@@ -92,21 +97,19 @@ public class ZipWorkerServices {
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
 		LOGGER.info(" STEP STATE ZIP ");
 		LOGGER.info(" SIZE " + list.size() + " LIST ===> " + list.toString());
+		Enclosure enclosure = Enclosure.build(prefix, redisManager);
 		try {
-			Enclosure enclosure = Enclosure.build(prefix, redisManager);
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
 			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
-			LOGGER.info(
-					" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ",
-					bucketName, list, prefix, bucketPrefix);
+			LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName,
+					list, prefix, bucketPrefix);
 			downloadFilesToTempFolder(manager, bucketName, list);
 			LOGGER.info(" Start scanning files {} with ClamaV", list);
 			LocalDateTime beginDate = LocalDateTime.now();
 			boolean isClean = performScan(list, bucketName, prefix, enclosure);
 			if (!isClean) {
-				LOGGER.error("Virus found in bucketName [{}] files {} ",
-						bucketName, list);
+				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
 			}
 			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
@@ -134,8 +137,10 @@ public class ZipWorkerServices {
 						subjectVirusFound);
 			}
 			LOGGER.info(" STEP STATE ZIP OK");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
+			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(),
+					subjectVirusFound);
 		}
 	}
 
@@ -202,8 +207,7 @@ public class ZipWorkerServices {
 				}
 				File[] children = fileToZip.listFiles();
 				for (File childFile : children) {
-					LOGGER.info(" start zip file {} temp to disk",
-							childFile.getName());
+					LOGGER.info(" start zip file {} temp to disk", childFile.getName());
 					zipFile(childFile, fileName + File.separator + childFile.getName(), zipOut);
 				}
 				return;
@@ -289,6 +293,7 @@ public class ZipWorkerServices {
 	 * @return
 	 */
 	private boolean performScan(ArrayList<String> list, String bucketName, String prefix, Enclosure enclosure) {
+		Tika tika = new Tika();
 		boolean isClean = true;
 		String currentFileName = null;
 		try {
@@ -302,6 +307,11 @@ public class ZipWorkerServices {
 					String baseFolderName = getBaseFolderName();
 					try (FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);) {
 
+						if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
+							isClean = false;
+							return isClean;
+						}
+
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
 							String status = clamAVScannerManager.performScan(fileChannel);
@@ -313,6 +323,7 @@ public class ZipWorkerServices {
 				}
 			}
 		} catch (Exception e) {
+			// TODO FAIL ZIP CHANGE TEMPLATE
 			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
 					subjectVirusError);
 			LOGGER.error("Error lors du traitement du fichier {} : {}  ", currentFileName, e.getMessage(), e);
@@ -331,8 +342,7 @@ public class ZipWorkerServices {
 			String emailSubject) {
 		try {
 			/** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
-			LOGGER.info(" Processing clean up {} / {} - {} ", bucketName, prefix,
-					bucketPrefix);
+			LOGGER.info(" Processing clean up {} / {} - {} ", bucketName, prefix, bucketPrefix);
 			LOGGER.info(" clean up OSU");
 			deleteFilesFromOSU(manager, bucketName, prefix);
 
@@ -348,9 +358,9 @@ public class ZipWorkerServices {
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
 			// Notify sender
-			mailVirusFoundServices.sendToSender(enclosure, emailTemplateName, emailSubject);
+			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName);
 		} catch (Exception e) {
-			LOGGER.error("Error while cleaning up Enclosure : "+ e.getMessage(), e);
+			LOGGER.error("Error while cleaning up Enclosure : " + e.getMessage(), e);
 		}
 	}
 
