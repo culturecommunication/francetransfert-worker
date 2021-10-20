@@ -139,8 +139,8 @@ public class ZipWorkerServices {
 			LOGGER.info(" STEP STATE ZIP OK");
 		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
-			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(),
-					subjectVirusFound);
+			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
+					subjectVirusError);
 		}
 	}
 
@@ -323,9 +323,6 @@ public class ZipWorkerServices {
 				}
 			}
 		} catch (Exception e) {
-			// TODO FAIL ZIP CHANGE TEMPLATE
-			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
-					subjectVirusError);
 			LOGGER.error("Error lors du traitement du fichier {} : {}  ", currentFileName, e.getMessage(), e);
 			throw new WorkerException("Error During File scanning [" + currentFileName + "]");
 		}
