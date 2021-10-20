@@ -44,11 +44,9 @@ node {
     {
     	stage('SonarQube') {
 		    withSonarQubeEnv() {
-                if (env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'master') {
-                    sh "mvn sonar:sonar -Dsonar.branch.name=${env.BRANCH_NAME}"
-                } else {
-                    sh "mvn sonar:sonar -Dsonar.branch.name=${env.BRANCH_NAME}"
-                    sh "mvn sonar:sonar -Dsonar.pullrequest.branch=${env.BRANCH_NAME} -Dsonar.pullrequest.base=develop"
+                sh "mvn sonar:sonar -Dsonar.branch.name=${env.BRANCH_NAME}"
+                if (!(env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'demo')) {
+                    sh "mvn sonar:sonar -Dsonar.pullrequest.branch=${env.BRANCH_NAME} -Dsonar.pullrequest.base=demo"
                 }
 		    }
 	    }
