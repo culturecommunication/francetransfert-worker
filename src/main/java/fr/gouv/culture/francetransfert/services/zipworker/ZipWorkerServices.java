@@ -28,6 +28,7 @@ import org.springframework.util.CollectionUtils;
 
 import com.amazonaws.services.s3.model.S3Object;
 
+import fr.gouv.culture.francetransfert.exception.InvalidSizeTypeException;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.MimeService;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
@@ -35,7 +36,6 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQ
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.model.Enclosure;
-import fr.gouv.culture.francetransfert.security.InvalidSizeTypeException;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
@@ -146,8 +146,8 @@ public class ZipWorkerServices {
 			LOGGER.info(" STEP STATE ZIP OK");
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
-			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
-					subjectVirusError);
+			cleanUpEnclosure(bucketName, prefix, enclosure,
+					NotificationTemplateEnum.MAIL_INVALID_ENCLOSURE_SENDER.getValue(), subjectVirusError);
 		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
@@ -302,8 +302,10 @@ public class ZipWorkerServices {
 	 * @param prefix
 	 * @param enclosure
 	 * @return
+	 * @throws InvalidSizeTypeException
 	 */
-	private boolean performScan(ArrayList<String> list, String bucketName, String prefix, Enclosure enclosure) {
+	private boolean performScan(ArrayList<String> list, String bucketName, String prefix, Enclosure enclosure)
+			throws InvalidSizeTypeException {
 		Tika tika = new Tika();
 		boolean isClean = true;
 		String currentFileName = null;
@@ -327,13 +329,12 @@ public class ZipWorkerServices {
 
 						if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
 							isClean = false;
-							throw new InvalidSizeTypeException(
-									"File " + baseFolderName + fileName + " as invalid mimetype");
+							throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
 						}
 
 						if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
-							throw new InvalidSizeTypeException(
-									"File " + baseFolderName + fileName + " or enclose is too big");
+							isClean = false;
+							throw new InvalidSizeTypeException("File " + currentFileName + " or enclose is too big");
 						}
 
 						FileChannel fileChannel = fileInputStream.getChannel();
@@ -346,6 +347,8 @@ public class ZipWorkerServices {
 					}
 				}
 			}
+		} catch (InvalidSizeTypeException ex) {
+			throw ex;
 		} catch (Exception e) {
 			LOGGER.error("Error lors du traitement du fichier {} : {}  ", currentFileName, e.getMessage(), e);
 			throw new WorkerException("Error During File scanning [" + currentFileName + "]");

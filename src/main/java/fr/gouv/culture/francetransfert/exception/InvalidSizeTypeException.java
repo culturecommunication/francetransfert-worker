@@ -1,4 +1,4 @@
-package fr.gouv.culture.francetransfert.security;
+package fr.gouv.culture.francetransfert.exception;
 
 public class InvalidSizeTypeException extends Exception {
 
