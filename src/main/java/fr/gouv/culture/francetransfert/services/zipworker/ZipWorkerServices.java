@@ -35,6 +35,7 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQ
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.security.InvalidSizeTypeException;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
@@ -81,6 +82,12 @@ public class ZipWorkerServices {
 
 	@Value("${subject.virus.error.sender}")
 	private String subjectVirusError;
+
+	@Value("${upload.limit}")
+	private long maxEnclosureSize;
+
+	@Value("${upload.file.limit}")
+	private long maxFileSize;
 
 	@Autowired
 	MailNotificationServices mailNotificationService;
@@ -137,6 +144,10 @@ public class ZipWorkerServices {
 						subjectVirusFound);
 			}
 			LOGGER.info(" STEP STATE ZIP OK");
+		} catch (InvalidSizeTypeException sizeEx) {
+			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
+			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
+					subjectVirusError);
 		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
@@ -296,8 +307,11 @@ public class ZipWorkerServices {
 		Tika tika = new Tika();
 		boolean isClean = true;
 		String currentFileName = null;
+		long enclosureSize = 0;
 		try {
 			for (String fileName : list) {
+
+				long currentSize = 0;
 
 				if (!isClean) {
 					break;
@@ -307,9 +321,19 @@ public class ZipWorkerServices {
 					String baseFolderName = getBaseFolderName();
 					try (FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);) {
 
+						currentSize = fileInputStream.getChannel().size();
+
+						enclosureSize += currentSize;
+
 						if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
 							isClean = false;
-							return isClean;
+							throw new InvalidSizeTypeException(
+									"File " + baseFolderName + fileName + " as invalid mimetype");
+						}
+
+						if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
+							throw new InvalidSizeTypeException(
+									"File " + baseFolderName + fileName + " or enclose is too big");
 						}
 
 						FileChannel fileChannel = fileInputStream.getChannel();

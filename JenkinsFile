@@ -6,6 +6,7 @@ node {
 
     println "============================"
     println "Branche: " + env.BRANCH_NAME
+    println "gitlabActionType: " + env.gitlabActionType
     println "============================"
 
     // = Checkout
