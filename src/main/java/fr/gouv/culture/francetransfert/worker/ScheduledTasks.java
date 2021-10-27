@@ -19,10 +19,10 @@ import com.google.gson.Gson;
 
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
-import fr.gouv.culture.francetransfert.model.Enclosure;
-import fr.gouv.culture.francetransfert.model.Rate;
+import fr.gouv.culture.francetransfert.model.RateRepresentation;
 import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
+import fr.gouv.culture.francetransfert.services.ignimission.IgnimissionServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
@@ -30,308 +30,266 @@ import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchSe
 import fr.gouv.culture.francetransfert.services.satisfaction.SatisfactionService;
 import fr.gouv.culture.francetransfert.services.stat.StatServices;
 import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
-import fr.gouv.culture.francetransfert.utils.WorkerUtils;
-
 
 @Component
 public class ScheduledTasks {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
 
-    @Autowired
-    private MailAvailbleEnclosureServices mailAvailbleEnclosureServices;
+	@Autowired
+	private MailAvailbleEnclosureServices mailAvailbleEnclosureServices;
 
-    @Autowired
-    private MailRelaunchServices mailRelaunchServices;
-    
-    @Autowired
-    private AppSyncServices appSyncServices;
+	@Autowired
+	private MailRelaunchServices mailRelaunchServices;
 
-    @Autowired
-    private MailDownloadServices mailDownloadServices;
+	@Autowired
+	private AppSyncServices appSyncServices;
 
-    @Autowired
-    private MailConfirmationCodeServices mailConfirmationCodeServices;
+	@Autowired
+	private MailDownloadServices mailDownloadServices;
 
-    @Autowired
-    private CleanUpServices cleanUpServices;
-    
-    @Autowired
-    private ZipWorkerServices zipWorkerServices;
+	@Autowired
+	private MailConfirmationCodeServices mailConfirmationCodeServices;
 
-    @Autowired
-    private StatServices statServices;
+	@Autowired
+	private CleanUpServices cleanUpServices;
 
-    @Autowired
-    private SatisfactionService satisfactionService;
-    
-    @Autowired
-    private RedisManager redisManager;
+	@Autowired
+	private ZipWorkerServices zipWorkerServices;
 
-    @Autowired
-    @Qualifier("satisfactionWorkerExecutor") 
-    Executor satisfactionWorkerExecutorFromBean;
-    
-    @Autowired
-    @Qualifier("sendEmailConfirmationCodeWorkerExecutor") 
-    Executor sendEmailConfirmationCodeWorkerExecutorFromBean;
-    
-    @Autowired
-    @Qualifier("tempDataCleanUpWorkerExecutor") 
-    Executor tempDataCleanUpWorkerExecutorFromBean;
-    
-    @Autowired
-    @Qualifier("zipWorkerExecutor") 
-    Executor zipWorkerExecutorFromBean;
-    
-    @Autowired
-    @Qualifier("sendEmailDownloadInProgressWorkerExecutor") 
-    Executor sendEmailDownloadInProgressWorkerExecutorFromBean;
-    
-    @Autowired
-    @Qualifier("sendEmailNotificationUploadDownloadWorkerExecutor") 
-    Executor sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
-    
-    @Autowired
-    @Qualifier("statWorkerExecutor") 
-    Executor statWorkerExecutorFromBean;
-    
+	@Autowired
+	private StatServices statServices;
 
-    @Scheduled(cron = "${scheduled.relaunch.mail}")
-    public void relaunchMail() throws Exception{
-    	LOGGER.info("================================> worker : start relaunch for download Check");
-    	if(appSyncServices.shouldRelaunch()) {
-    		LOGGER.info("================================> worker : start relaunch for download Checked and Started");
-    		mailRelaunchServices.sendMailsRelaunch();
-    	}
-    }
+	@Autowired
+	private SatisfactionService satisfactionService;
 
-    @Scheduled(cron = "${scheduled.clean.up}")
-    public void cleanUp() throws Exception {
-    	LOGGER.info("================================> worker : start clean-up expired enclosure Check");
-    	if(appSyncServices.shouldCleanup()) {
-    		LOGGER.info("================================> worker : start clean-up expired enclosure Checked and Started");
-    		cleanUpServices.cleanUp();
-    	}
-    }
-    
-    @Scheduled(cron = "${scheduled.app.sync.cleanup}")
-    public void appSyncCleanup() throws Exception {
-        LOGGER.info("================================> worker : start Application synchronization cleanup");
-        appSyncServices.appSyncCleanup();
-    }
-    
-    @Scheduled(cron = "${scheduled.app.sync.relaunch}")
-    public void appSyncRelaunch() throws Exception {
-        LOGGER.info("================================> worker : start Application synchronization relaunch");
-        appSyncServices.appSyncRelaunch();
-    }
+	@Autowired
+	private IgnimissionServices ignimissionServices;
 
-//    public void sendEmailNotificationUploadDownload() throws Exception {
-//        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
-//        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//            String enclosureId = returnedBLPOPList.get(1);
-//            LOGGER.info("================================> worker : start send email notification availble enclosure to download for enclosure N° {}", enclosureId);
-//            mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager));
-//            redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), enclosureId);
-//        }
-//    }
+	@Autowired
+	private RedisManager redisManager;
 
-//    public void sendEmailDownloadInProgress() throws Exception {
-//    	List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
-//        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//            String downloadQueueValue = returnedBLPOPList.get(1);
-//            String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
-//            LOGGER.info("================================> worker : start send email notification download in progress for enclosur N°  {}", enclosureId);
-//            String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
-//            mailDownloadServices.sendDownloadEnclosure(Enclosure.build(enclosureId, redisManager), recipientId);
-//        }
-//    }
+	@Autowired
+	@Qualifier("satisfactionWorkerExecutor")
+	Executor satisfactionWorkerExecutorFromBean;
 
-//    public void zipWorker() throws Exception {
-//        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
-//        if(!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//        	String enclosureId = returnedBLPOPList.get(1);
-//            LOGGER.info("================================> worker : start zip  process for enclosur N°  {}", enclosureId);
-//        	zipWorkerServices.startZip(enclosureId);
-//        }
-//    }
-    
-//    public void tempDataCleanUp() throws Exception {
-//    	List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
-//        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//            String enclosureId = returnedBLPOPList.get(1);
-//
-//            LOGGER.info("================================> start temp data cleanup process for enclosure N: {}" , enclosureId);
-//            cleanUpServices.cleanUpEnclosureTempDataInRedis(redisManager, enclosureId);
-//        }
-//    }
-    
-//    public void sendEmailConfirmationCode() throws Exception {
-//        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
-//        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//            String mailCode = returnedBLPOPList.get(1);
-//            LOGGER.info("================================> start send confirmation code", mailCode);
-//            mailConfirmationCodeServices.sendConfirmationCode(mailCode);
-//        }
-//    }
+	@Autowired
+	@Qualifier("sendEmailConfirmationCodeWorkerExecutor")
+	Executor sendEmailConfirmationCodeWorkerExecutorFromBean;
 
-//    public void satisfactionWorker() throws Exception{
-//        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
-//        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//            Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
-//            LOGGER.info("================================> convert json in string to object rate");
-//            LOGGER.info("================================> start save satisfaction data in mongoDb");
-//            satisfactionService.saveData(rate);
-//        }
-//    }
-    
-//    public void statWorker() throws Exception {
-//    	System.out.println("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId());
-//    	List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.STAT_QUEUE.getValue());
-//        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//            String enclosureId = returnedBLPOPList.get(1);
-//            LOGGER.info("================================> start save data in mongoDb", enclosureId);
-//            statServices.saveData(enclosureId);
-//            redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
-//        }
-//    }
-    
-    @PostConstruct
-    public void initWorkers() throws Exception {
-    	initZipWorkers();
-    	initSendEmailNotificationUploadDownloadWorkers();
-    	initSendEmailDownloadInProgressWorkers();
-    	initSendEmailConfirmationCodeWorkers();
-    	initTempDataCleanupWorkers();
-    	initSatisfactionWorkers();
-    	initStatWorker();
-    }
-    
+	@Autowired
+	@Qualifier("tempDataCleanUpWorkerExecutor")
+	Executor tempDataCleanUpWorkerExecutorFromBean;
+
+	@Autowired
+	@Qualifier("zipWorkerExecutor")
+	Executor zipWorkerExecutorFromBean;
+
+	@Autowired
+	@Qualifier("sendEmailDownloadInProgressWorkerExecutor")
+	Executor sendEmailDownloadInProgressWorkerExecutorFromBean;
+
+	@Autowired
+	@Qualifier("sendEmailNotificationUploadDownloadWorkerExecutor")
+	Executor sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
+
+	@Autowired
+	@Qualifier("statWorkerExecutor")
+	Executor statWorkerExecutorFromBean;
+
+	@Scheduled(cron = "${scheduled.relaunch.mail}")
+	public void relaunchMail() throws Exception {
+		LOGGER.info("Worker : start relaunch for download Check");
+		if (appSyncServices.shouldRelaunch()) {
+			LOGGER.info("Worker : start relaunch for download Checked and Started");
+			mailRelaunchServices.sendMailsRelaunch();
+			mailDownloadServices.sendMailsDownload();
+		}
+	}
+
+	@Scheduled(cron = "${scheduled.clean.up}")
+	public void cleanUp() throws Exception {
+		LOGGER.info("Worker : start clean-up expired enclosure Check");
+		if (appSyncServices.shouldCleanup()) {
+			LOGGER.info(
+					"Worker : start clean-up expired enclosure Checked and Started");
+			cleanUpServices.cleanUp();
+		}
+	}
+
+	@Scheduled(cron = "${scheduled.app.sync.cleanup}")
+	public void appSyncCleanup() throws Exception {
+		LOGGER.info("Worker : start Application synchronization cleanup");
+		appSyncServices.appSyncCleanup();
+	}
+
+	@Scheduled(cron = "${scheduled.app.sync.relaunch}")
+	public void appSyncRelaunch() throws Exception {
+		LOGGER.info("Worker : start Application synchronization relaunch");
+		appSyncServices.appSyncRelaunch();
+	}
+
+	@Scheduled(cron = "${scheduled.ignimission.domain}")
+	public void ignimissionDomainUpdate() throws Exception {
+		if (appSyncServices.shouldUpdateIgnimissionDomain()) {
+			LOGGER.info(
+					"Worker : start Application ignimission domain extension update");
+			ignimissionServices.updateDomains();
+		}
+	}
+
+	@Scheduled(cron = "${scheduled.send.stat}")
+	public void ignimissionSendStat() throws Exception {
+		LOGGER.info("Worker : start Application ignimission domain extension update");
+		ignimissionServices.sendStats();
+	}
+
+	@Scheduled(cron = "${scheduled.app.sync.ignimission.domain}")
+	public void appSyncIgnimissionDomain() {
+		LOGGER.info("Worker : start Application synchronization ignimission domain");
+		appSyncServices.appSyncIgnimissionDomain();
+	}
+
+	@PostConstruct
+	public void initWorkers() throws Exception {
+		initZipWorkers();
+		initSendEmailNotificationUploadDownloadWorkers();
+		initSendEmailConfirmationCodeWorkers();
+		initTempDataCleanupWorkers();
+		initSatisfactionWorkers();
+		initStatWorker();
+	}
+
 	private void initStatWorker() {
-		System.out.println("initStatWorker");
+		LOGGER.info("initStatWorker");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
-		    @Override
-		    public void run() {
-		    	ThreadPoolTaskExecutor statWorkerExecutor = (ThreadPoolTaskExecutor) statWorkerExecutorFromBean;
-		    	while (true) {
-		    		List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.STAT_QUEUE.getValue());
-		            if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-		                String enclosureId = returnedBLPOPList.get(1);
-		                StatTask task = new StatTask(enclosureId, redisManager, statServices);
-		                statWorkerExecutor.execute(task);
-		    		}
-		    	}
-		    }
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor statWorkerExecutor = (ThreadPoolTaskExecutor) statWorkerExecutorFromBean;
+				while (true) {
+					List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.STAT_QUEUE.getValue());
+					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+						String enclosureId = returnedBLPOPList.get(1);
+						StatTask task = new StatTask(enclosureId, redisManager, statServices);
+						statWorkerExecutor.execute(task);
+					}
+				}
+			}
 		});
 	}
 
 	private void initTempDataCleanupWorkers() {
-		System.out.println("initTempDataCleanupWorkers");
+		LOGGER.info("initTempDataCleanupWorkers");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
-		    @Override
-		    public void run() {
-		    	ThreadPoolTaskExecutor TempDataCleanupWorkerExecutor = (ThreadPoolTaskExecutor) tempDataCleanUpWorkerExecutorFromBean;
-		    	while (true) {
-		    		List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
-			        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-			            String enclosureId = returnedBLPOPList.get(1);
-		    			TempDataCleanupTask task = new TempDataCleanupTask(enclosureId, redisManager, cleanUpServices);
-		    			TempDataCleanupWorkerExecutor.execute(task);
-		    		}
-		    	}
-		    }
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor TempDataCleanupWorkerExecutor = (ThreadPoolTaskExecutor) tempDataCleanUpWorkerExecutorFromBean;
+				while (true) {
+					List<String> returnedBLPOPList = redisManager
+							.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
+					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+						String enclosureId = returnedBLPOPList.get(1);
+						TempDataCleanupTask task = new TempDataCleanupTask(enclosureId, redisManager, cleanUpServices);
+						TempDataCleanupWorkerExecutor.execute(task);
+					}
+				}
+			}
 		});
 	}
-    
+
 	private void initSendEmailConfirmationCodeWorkers() {
-		System.out.println("initSendEmailConfirmationCodeWorkers");
+		LOGGER.info("initSendEmailConfirmationCodeWorkers");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
-		    @Override
-		    public void run() {
-		    	ThreadPoolTaskExecutor SendEmailConfirmationCodeWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailConfirmationCodeWorkerExecutorFromBean;
-		    	while (true) {
-		    		List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
-			        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-			            String mailCode = returnedBLPOPList.get(1);
-		    			SendEmailConfirmationCodeTask task = new SendEmailConfirmationCodeTask(mailCode, mailConfirmationCodeServices);
-		    			SendEmailConfirmationCodeWorkerExecutor.execute(task);
-		    		}
-		    	}
-		    }
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor SendEmailConfirmationCodeWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailConfirmationCodeWorkerExecutorFromBean;
+				while (true) {
+					List<String> returnedBLPOPList = redisManager
+							.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
+					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+						String mailCode = returnedBLPOPList.get(1);
+						SendEmailConfirmationCodeTask task = new SendEmailConfirmationCodeTask(mailCode,
+								mailConfirmationCodeServices);
+						SendEmailConfirmationCodeWorkerExecutor.execute(task);
+					}
+				}
+			}
 		});
 	}
-    
-	private void initSendEmailDownloadInProgressWorkers() {
-		System.out.println("initSendEmailDownloadInProgressWorkers");
-		Executors.newSingleThreadExecutor().execute(new Runnable() {
-		    @Override
-		    public void run() {
-		    	ThreadPoolTaskExecutor SendEmailDownloadInProgressWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailDownloadInProgressWorkerExecutorFromBean;
-		    	while (true) {
-		    		List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
-			        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-			            String downloadQueueValue = returnedBLPOPList.get(1);
-			            String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
-			            LOGGER.info("================================> worker : start send email notification download in progress for enclosur N°  {}", enclosureId);
-			            String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
-		    			SendEmailDownloadInProgressTask task = new SendEmailDownloadInProgressTask(enclosureId, recipientId, redisManager, mailDownloadServices);
-		    			SendEmailDownloadInProgressWorkerExecutor.execute(task);
-		    		}
-		    	}
-		    }
-		});
-	}
-	
+
+//    private void initSendEmailDownloadInProgressWorkers() {
+//        LOGGER.info("initSendEmailDownloadInProgressWorkers");
+//        Executors.newSingleThreadExecutor().execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                ThreadPoolTaskExecutor SendEmailDownloadInProgressWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailDownloadInProgressWorkerExecutorFromBean;
+//                while (true) {
+//                    List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
+//                    if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+//                        String downloadQueueValue = returnedBLPOPList.get(1);
+//                        String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
+//                        LOGGER.info("================================> worker : start send email notification download in progress for enclosur N°  {}", enclosureId);
+//                        String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
+//                        SendEmailDownloadInProgressTask task = new SendEmailDownloadInProgressTask(enclosureId, recipientId, redisManager, mailDownloadServices);
+//                        SendEmailDownloadInProgressWorkerExecutor.execute(task);
+//                    }
+//                }
+//            }
+//        });
+//    }
+
 	private void initSendEmailNotificationUploadDownloadWorkers() {
-		System.out.println("initSendEmailNotificationUploadDownloadWorkers");
+		LOGGER.info("initSendEmailNotificationUploadDownloadWorkers");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
-		    @Override
-		    public void run() {
-		    	ThreadPoolTaskExecutor SendEmailNotificationUploadDownloadWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
-		    	while (true) {
-		    		List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
-			        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-			            String enclosureId = returnedBLPOPList.get(1);
-		    			SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(enclosureId, redisManager, mailAvailbleEnclosureServices);
-		    			SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
-		    		}
-		    	}
-		    }
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor SendEmailNotificationUploadDownloadWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
+				while (true) {
+					List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
+					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+						String enclosureId = returnedBLPOPList.get(1);
+						SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
+								enclosureId, redisManager, mailAvailbleEnclosureServices);
+						SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
+					}
+				}
+			}
 		});
 	}
-	
+
 	private void initZipWorkers() {
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
-		    @Override
-		    public void run() {
-		    	ThreadPoolTaskExecutor zipWorkerExecutor = (ThreadPoolTaskExecutor) zipWorkerExecutorFromBean;
-		    	while (true) {
-		    		List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
-		    		if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-		    			String enclosureId = returnedBLPOPList.get(1);
-		    			ZipWorkerTask task = new ZipWorkerTask(enclosureId, zipWorkerServices);
-		    			zipWorkerExecutor.execute(task);
-		    		}
-		    	}
-		    }
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor zipWorkerExecutor = (ThreadPoolTaskExecutor) zipWorkerExecutorFromBean;
+				while (true) {
+					List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
+					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+						String enclosureId = returnedBLPOPList.get(1);
+						ZipWorkerTask task = new ZipWorkerTask(enclosureId, zipWorkerServices);
+						zipWorkerExecutor.execute(task);
+					}
+				}
+			}
 		});
 	}
-	
+
 	private void initSatisfactionWorkers() {
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
-		    @Override
-		    public void run() {
-		    	ThreadPoolTaskExecutor satisfactionWorkerExecutor = (ThreadPoolTaskExecutor) satisfactionWorkerExecutorFromBean;
-		    	while (true) {
-		    		List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
-			        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-			            Rate rate = new Gson().fromJson(returnedBLPOPList.get(1), Rate.class);
-		    			SatisfactionTask task = new SatisfactionTask(rate, satisfactionService);
-		    			satisfactionWorkerExecutor.execute(task);
-		    		}
-		    	}
-		    }
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor satisfactionWorkerExecutor = (ThreadPoolTaskExecutor) satisfactionWorkerExecutorFromBean;
+				while (true) {
+					List<String> returnedBLPOPList = redisManager
+							.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
+					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+						RateRepresentation rate = new Gson().fromJson(returnedBLPOPList.get(1),
+								RateRepresentation.class);
+						SatisfactionTask task = new SatisfactionTask(rate, satisfactionService);
+						satisfactionWorkerExecutor.execute(task);
+					}
+				}
+			}
 		});
 	}
 }

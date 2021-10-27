@@ -6,10 +6,7 @@ import fr.gouv.culture.francetransfert.FranceTransfertWorkerStarter;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.model.RootData;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.*;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import org.junit.After;
@@ -45,6 +42,9 @@ public class MailNotificationServicesTest {
 
     @Autowired
     private MailEnclosureNoLongerAvailbleServices mailEnclosureNoLongerAvailbleServices;
+
+    @Autowired
+    private MailVirusFoundServices mailVirusFoundServices;
 
 
     private GreenMail smtpServer;
@@ -119,6 +119,18 @@ public class MailNotificationServicesTest {
         assertReceivedMessageContains(content);
     }
 
+    @Test
+    public void sendMailToSenderMailVirusFoundServicesTest() throws Exception {
+        //given
+        String message = "Test message content";
+        String subject = "Virus found subject";
+        enclosure.setUrlDownload("download_url");
+        //when
+        mailVirusFoundServices.sendToSender(enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subject);
+        //then
+        String content = message + "</span>";
+        assertReceivedMessageContains(content);
+    }
 
     private void assertReceivedMessageContains(String expected) throws IOException, MessagingException {
         MimeMessage[] receivedMessages = smtpServer.getReceivedMessages();
