@@ -35,6 +35,7 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.Enclos
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
+import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
@@ -148,7 +149,7 @@ public class ZipWorkerServices {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
 			cleanUpEnclosure(bucketName, prefix, enclosure,
 					NotificationTemplateEnum.MAIL_INVALID_ENCLOSURE_SENDER.getValue(), subjectVirusError);
-		} catch (Exception e) {
+		} catch (StorageException | Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
 					subjectVirusError);
@@ -179,7 +180,7 @@ public class ZipWorkerServices {
 	}
 
 	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, String fileZipPath)
-			throws Exception {
+			throws Exception, StorageException {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 //		manager.createFile(bucketName, fileToUpload, fileName);
 	}
