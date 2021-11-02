@@ -149,7 +149,7 @@ public class ZipWorkerServices {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
 			cleanUpEnclosure(bucketName, prefix, enclosure,
 					NotificationTemplateEnum.MAIL_INVALID_ENCLOSURE_SENDER.getValue(), subjectVirusError);
-		} catch (StorageException | Exception e) {
+		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
 					subjectVirusError);
