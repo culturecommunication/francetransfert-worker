@@ -35,7 +35,7 @@ public class StatTask implements Runnable {
 		try {
 			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
-			LOGGER.info("start save data in csv", enclosureId);
+			LOGGER.info("start save data in csv : " + enclosureId);
 			statServices.saveData(enclosureId);
 			redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
 		} catch (Exception e) {
