@@ -38,7 +38,6 @@ public class MailEnclosureNoLongerAvailbleServices {
 
 	public void sendEnclosureNotAvailble(Enclosure enclosure) throws MetaloadException {
 
-//        RedisManager redisManager = RedisManager.getInstance();
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			List<Recipient> recipientsDoNotDownloadedEnclosure = new ArrayList<>();

@@ -39,8 +39,7 @@ public class MailDownloadServices {
 		recipList.addAll(enclosure.getRecipients().stream().filter(c -> recipientId.contains(c.getId()))
 				.map(x -> x.getMail()).collect(Collectors.toList()));
 		enclosure.setRecipientDownloadInProgress(recipList);
-		LOGGER.info("Send email notification download in progress to sender:  {}",
-				enclosure.getSender());
+		LOGGER.info("Send email notification download in progress to sender:  {}", enclosure.getSender());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownloadProgress, enclosure,
 				NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
 	}
@@ -63,7 +62,7 @@ public class MailDownloadServices {
 		});
 		encloRecipMap.entrySet().forEach(x -> {
 			try {
-				sendDownloadEnclosure(Enclosure.build(x.getKey(), redisManager), new ArrayList(x.getValue()));
+				sendDownloadEnclosure(Enclosure.build(x.getKey(), redisManager), new ArrayList<String>(x.getValue()));
 			} catch (Exception e) {
 				LOGGER.error("Error sending download Mail : " + e.getMessage(), e);
 			}

@@ -9,22 +9,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 
-import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.amazonaws.services.s3.model.S3Object;
 
@@ -116,7 +110,7 @@ public class ZipWorkerServices {
 			downloadFilesToTempFolder(manager, bucketName, list);
 			LOGGER.info(" Start scanning files {} with ClamaV", list);
 			LocalDateTime beginDate = LocalDateTime.now();
-			boolean isClean = performScan(list, bucketName, prefix, enclosure);
+			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
 			}
@@ -183,7 +177,6 @@ public class ZipWorkerServices {
 	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, String fileZipPath)
 			throws StorageException {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
-//		manager.createFile(bucketName, fileToUpload, fileName);
 	}
 
 	private void zipDownloadedContent(String zippedFileName, String password) throws IOException {
@@ -240,24 +233,6 @@ public class ZipWorkerServices {
 		}
 	}
 
-	/**
-	 * Writing files into temp directory
-	 *
-	 * @param files
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 */
-	private void writeFile(Map<Path, InputStream> files) throws IOException {
-		if (!CollectionUtils.isEmpty(files)) {
-
-			for (Path pathKey : files.keySet()) {
-				Files.createDirectories(pathKey.getParent().resolve(pathKey.getParent()));
-				Files.write(pathKey, files.get(pathKey).readAllBytes());
-			}
-
-		}
-	}
-
 	private void downloadFilesToTempFolder(StorageManager manager, String bucketName, ArrayList<String> list) {
 		try {
 			for (String fileName : list) {
@@ -303,9 +278,7 @@ public class ZipWorkerServices {
 	 * @return
 	 * @throws InvalidSizeTypeException
 	 */
-	private boolean performScan(ArrayList<String> list, String bucketName, String prefix, Enclosure enclosure)
-			throws InvalidSizeTypeException {
-		Tika tika = new Tika();
+	private boolean performScan(ArrayList<String> list) throws InvalidSizeTypeException {
 		boolean isClean = true;
 		String currentFileName = null;
 		long enclosureSize = 0;
@@ -326,7 +299,7 @@ public class ZipWorkerServices {
 
 						enclosureSize += currentSize;
 
-						isClean = checkSizeAndMimeType(currentFileName, enclosureSize, currentSize, fileInputStream);
+						checkSizeAndMimeType(currentFileName, enclosureSize, currentSize, fileInputStream);
 
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
@@ -348,19 +321,15 @@ public class ZipWorkerServices {
 		return isClean;
 	}
 
-	private boolean checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
+	private void checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
 			FileInputStream fileInputStream) throws IOException, InvalidSizeTypeException {
-		boolean isClean = true;
 		if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
-			isClean = false;
 			throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
 		}
 
 		if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
-			isClean = false;
 			throw new InvalidSizeTypeException("File " + currentFileName + " or enclose is too big");
 		}
-		return isClean;
 	}
 
 	/**

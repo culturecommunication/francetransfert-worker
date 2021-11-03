@@ -221,7 +221,6 @@
 
 
 	<build>
-		<!-- <finalName>${project.artifactId.version}</finalName> -->
 		<plugins>
 			<plugin>
 				<groupId>external.atlassian.jgitflow</groupId>

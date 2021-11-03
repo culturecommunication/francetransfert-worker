@@ -66,15 +66,20 @@ public class CleanUpServices {
 
 						// clean temp data in REDIS for Enclosure
 						cleanUpEnclosureTempDataInRedis(enclosureId);
-						LOGGER.info(" clean up REDIS temp data");
+						LOGGER.info("Clean up REDIS temp data");
 
 						// clean enclosure in OSU : delete enclosure
-						LOGGER.info(" clean up OSU");
-						cleanUpOSU(bucketName, enclosureId);
+						LOGGER.info("Clean up OSU");
+
+						try {
+							cleanUpOSU(bucketName, enclosureId);
+						} catch (Exception ex) {
+							LOGGER.error("Cannot delete enclosure " + enclosureId);
+						}
 
 						// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 						// recipients, sender and enclosure
-						LOGGER.info(" clean up REDIS");
+						LOGGER.info("Clean up REDIS");
 						cleanUpEnclosureCoreInRedis(enclosureId);
 
 						// clean enclosure date : delete list enclosureId and date expired

@@ -49,7 +49,6 @@ public class ClamAVScannerManager {
 	public void init() {
 		this.address = new InetSocketAddress(host, port);
 		setAddress(this.address);
-		// ping();
 	}
 
 	/**

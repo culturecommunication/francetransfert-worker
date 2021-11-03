@@ -216,27 +216,6 @@ public class ScheduledTasks {
 		});
 	}
 
-//    private void initSendEmailDownloadInProgressWorkers() {
-//        LOGGER.info("initSendEmailDownloadInProgressWorkers");
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                ThreadPoolTaskExecutor SendEmailDownloadInProgressWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailDownloadInProgressWorkerExecutorFromBean;
-//                while (true) {
-//                    List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
-//                    if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//                        String downloadQueueValue = returnedBLPOPList.get(1);
-//                        String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
-//                        LOGGER.info("================================> worker : start send email notification download in progress for enclosur N°  {}", enclosureId);
-//                        String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
-//                        SendEmailDownloadInProgressTask task = new SendEmailDownloadInProgressTask(enclosureId, recipientId, redisManager, mailDownloadServices);
-//                        SendEmailDownloadInProgressWorkerExecutor.execute(task);
-//                    }
-//                }
-//            }
-//        });
-//    }
-
 	private void initSendEmailNotificationUploadDownloadWorkers() {
 		LOGGER.info("initSendEmailNotificationUploadDownloadWorkers");
 		Executors.newSingleThreadExecutor().execute(new Runnable() {
