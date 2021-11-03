@@ -1,15 +1,10 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RecipientKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
-import fr.gouv.culture.francetransfert.model.Enclosure;
-import fr.gouv.culture.francetransfert.model.Recipient;
-import fr.gouv.culture.francetransfert.security.WorkerException;
-import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +12,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RecipientKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
+import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.model.Recipient;
+import fr.gouv.culture.francetransfert.security.WorkerException;
+import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 
 @Service
 public class MailRelaunchServices {
@@ -39,7 +41,7 @@ public class MailRelaunchServices {
 	@Autowired
 	RedisManager redisManager;
 
-	public void sendMailsRelaunch() throws Exception {
+	public void sendMailsRelaunch() throws WorkerException {
 		redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
 			redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
 				try {
@@ -48,8 +50,7 @@ public class MailRelaunchServices {
 									EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
 					if (LocalDate.now().equals(exipireEnclosureDate.toLocalDate().minusDays(relaunchDays))) {
 						Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
-						LOGGER.info(" send relaunch mail for enclosure N° {}",
-								enclosureId);
+						LOGGER.info(" send relaunch mail for enclosure N° {}", enclosureId);
 						sendToRecipientsAndSenderRelaunch(enclosure,
 								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
 					}
@@ -62,7 +63,7 @@ public class MailRelaunchServices {
 
 	// Send mails Relaunch to recipients
 	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName)
-			throws Exception {
+			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			for (Recipient recipient : recipients) {

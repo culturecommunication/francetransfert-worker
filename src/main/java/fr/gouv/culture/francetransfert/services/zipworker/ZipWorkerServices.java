@@ -33,6 +33,7 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.MimeService;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
@@ -99,7 +100,7 @@ public class ZipWorkerServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
-	public void startZip(String prefix) throws Exception {
+	public void startZip(String prefix) throws MetaloadException, StorageException {
 		manager.getZippedEnclosureName(prefix);
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
@@ -156,11 +157,11 @@ public class ZipWorkerServices {
 		}
 	}
 
-	private void notifyEmailWorker(String prefix) throws Exception {
+	private void notifyEmailWorker(String prefix) {
 		redisManager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), prefix);
 	}
 
-	private void deleteFilesFromOSU(StorageManager manager, String bucketName, String prefix) throws Exception {
+	private void deleteFilesFromOSU(StorageManager manager, String bucketName, String prefix) throws StorageException {
 		manager.deleteFilesWithPrefix(bucketName, prefix);
 	}
 
@@ -180,7 +181,7 @@ public class ZipWorkerServices {
 	}
 
 	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, String fileZipPath)
-			throws Exception, StorageException {
+			throws StorageException {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 //		manager.createFile(bucketName, fileToUpload, fileName);
 	}
@@ -199,7 +200,6 @@ public class ZipWorkerServices {
 	}
 
 	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
-		FileInputStream fis = null;
 		try {
 			ZipParameters parameters = new ZipParameters();
 			parameters.setCompressionMethod(CompressionMethod.DEFLATE);
@@ -224,21 +224,19 @@ public class ZipWorkerServices {
 				}
 				return;
 			}
-			fis = new FileInputStream(fileToZip);
-			zipOut.putNextEntry(parameters);
-			byte[] bytes = new byte[1024];
-			int length;
-			while ((length = fis.read(bytes)) >= 0) {
-				zipOut.write(bytes, 0, length);
+			try (FileInputStream fis = new FileInputStream(fileToZip)) {
+				zipOut.putNextEntry(parameters);
+				byte[] bytes = new byte[1024];
+				int length;
+				while ((length = fis.read(bytes)) >= 0) {
+					zipOut.write(bytes, 0, length);
+				}
+				zipOut.closeEntry();
 			}
-			zipOut.closeEntry();
+
 		} catch (Exception e) {
 			log.error("Error During ZipFile", e);
 			throw new WorkerException("Error During ZipFile");
-		} finally {
-			if (fis != null) {
-				fis.close();
-			}
 		}
 	}
 
@@ -328,15 +326,7 @@ public class ZipWorkerServices {
 
 						enclosureSize += currentSize;
 
-						if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
-							isClean = false;
-							throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
-						}
-
-						if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
-							isClean = false;
-							throw new InvalidSizeTypeException("File " + currentFileName + " or enclose is too big");
-						}
+						isClean = checkSizeAndMimeType(currentFileName, enclosureSize, currentSize, fileInputStream);
 
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
@@ -355,6 +345,21 @@ public class ZipWorkerServices {
 			throw new WorkerException("Error During File scanning [" + currentFileName + "]");
 		}
 
+		return isClean;
+	}
+
+	private boolean checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
+			FileInputStream fileInputStream) throws IOException, InvalidSizeTypeException {
+		boolean isClean = true;
+		if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
+			isClean = false;
+			throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
+		}
+
+		if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
+			isClean = false;
+			throw new InvalidSizeTypeException("File " + currentFileName + " or enclose is too big");
+		}
 		return isClean;
 	}
 

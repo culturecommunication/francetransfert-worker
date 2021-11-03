@@ -22,7 +22,7 @@ public class MailConfirmationCodeServices {
     @Value("${subject.confirmation.code}")
     private String subjectConfirmationCode;
 
-    public void sendConfirmationCode(String mailCode) throws Exception {
+    public void sendConfirmationCode(String mailCode) {
     	LOGGER.info("STEP SEND MAIL");
         String senderMail = extractSenderMail(mailCode);
         String code = extractConfirmationCode(mailCode);

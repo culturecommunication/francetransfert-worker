@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import fr.gouv.culture.francetransfert.exception.StatException;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
@@ -46,9 +48,8 @@ public class MailAvailbleEnclosureServices {
 	Base64CryptoService base64CryptoService;
 
 	// Send Mails to snder and recipients
-	public void sendMailsAvailableEnclosure(Enclosure enclosure) throws Exception {
-		LOGGER.info("send email notification availble to sender: {}",
-				enclosure.getSender());
+	public void sendMailsAvailableEnclosure(Enclosure enclosure) throws MetaloadException, StatException {
+		LOGGER.info("send email notification availble to sender: {}", enclosure.getSender());
 		String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 				EnclosureKeysEnum.PASSWORD.getKey());
 		boolean publicLink = mailNotificationServices.getPublicLink(enclosure.getGuid());
@@ -68,14 +69,13 @@ public class MailAvailbleEnclosureServices {
 	}
 
 	// Send mails to recipients
-	public void sendToRecipients(Enclosure enclosure, String subject, String templateName) throws Exception {
+	public void sendToRecipients(Enclosure enclosure, String subject, String templateName) {
 		subject = enclosure.getSender() + " " + subject;
 		String subjectPassword = subjectRecipientPassword + " " + enclosure.getSender();
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			for (Recipient recipient : recipients) {
-				LOGGER.info("send email notification availble to recipient: {}",
-						recipient.getMail());
+				LOGGER.info("send email notification availble to recipient: {}", recipient.getMail());
 				enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 						recipient.getMail(), recipient.getId()));
 				mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName);

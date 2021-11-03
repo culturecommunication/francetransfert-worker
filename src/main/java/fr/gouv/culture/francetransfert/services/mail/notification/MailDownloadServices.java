@@ -34,7 +34,7 @@ public class MailDownloadServices {
 	@Autowired
 	private MailNotificationServices mailNotificationServices;
 
-	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) throws Exception {
+	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) {
 		ArrayList<String> recipList = new ArrayList<String>();
 		recipList.addAll(enclosure.getRecipients().stream().filter(c -> recipientId.contains(c.getId()))
 				.map(x -> x.getMail()).collect(Collectors.toList()));

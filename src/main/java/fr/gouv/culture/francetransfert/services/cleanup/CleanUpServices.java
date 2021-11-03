@@ -23,6 +23,7 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisK
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
+import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
@@ -47,9 +48,9 @@ public class CleanUpServices {
 	/**
 	 * clean all expired data in OSU and REDIS
 	 *
-	 * @throws Exception
+	 * @throws WorkerException
 	 */
-	public void cleanUp() throws Exception {
+	public void cleanUp() throws WorkerException {
 		redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
 			redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
 				try {
@@ -90,10 +91,9 @@ public class CleanUpServices {
 	 * clean all data expired in OSU
 	 *
 	 * @param enclosureId
-	 * @throws Exception
+	 * @throws StorageException
 	 */
-	private void cleanUpOSU(String bucketName, String enclosureId) throws Exception {
-//        StorageManager storageManager = StorageManager.getInstance();
+	private void cleanUpOSU(String bucketName, String enclosureId) throws StorageException {
 		storageManager.deleteFilesWithPrefix(bucketName, storageManager.getZippedEnclosureName(enclosureId) + ".zip");
 	}
 
@@ -227,7 +227,7 @@ public class CleanUpServices {
 	/**
 	 * @param redisManager
 	 * @param enclosureId
-	 * @throws Exception
+	 * @throws WorkerException
 	 */
 	private void deleteListAndHashRecipients(String enclosureId) throws WorkerException {
 		try {
@@ -241,7 +241,7 @@ public class CleanUpServices {
 			// delete Hash recipients info
 			redisManager.deleteKey(RedisKeysEnum.FT_RECIPIENTS.getKey(enclosureId));
 		} catch (Exception e) {
-			throw new WorkerException("");
+			throw new WorkerException(e);
 		}
 	}
 

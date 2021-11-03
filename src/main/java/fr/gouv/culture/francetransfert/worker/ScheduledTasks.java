@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.model.RateRepresentation;
+import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.ignimission.IgnimissionServices;
@@ -98,7 +99,7 @@ public class ScheduledTasks {
 	Executor statWorkerExecutorFromBean;
 
 	@Scheduled(cron = "${scheduled.relaunch.mail}")
-	public void relaunchMail() throws Exception {
+	public void relaunchMail() throws WorkerException {
 		LOGGER.info("Worker : start relaunch for download Check");
 		if (appSyncServices.shouldRelaunch()) {
 			LOGGER.info("Worker : start relaunch for download Checked and Started");
@@ -108,7 +109,7 @@ public class ScheduledTasks {
 	}
 
 	@Scheduled(cron = "${scheduled.clean.up}")
-	public void cleanUp() throws Exception {
+	public void cleanUp() throws WorkerException {
 		LOGGER.info("Worker : start clean-up expired enclosure Check");
 		if (appSyncServices.shouldCleanup()) {
 			LOGGER.info("Worker : start clean-up expired enclosure Checked and Started");
@@ -117,19 +118,19 @@ public class ScheduledTasks {
 	}
 
 	@Scheduled(cron = "${scheduled.app.sync.cleanup}")
-	public void appSyncCleanup() throws Exception {
+	public void appSyncCleanup() throws WorkerException {
 		LOGGER.info("Worker : start Application synchronization cleanup");
 		appSyncServices.appSyncCleanup();
 	}
 
 	@Scheduled(cron = "${scheduled.app.sync.relaunch}")
-	public void appSyncRelaunch() throws Exception {
+	public void appSyncRelaunch() throws WorkerException {
 		LOGGER.info("Worker : start Application synchronization relaunch");
 		appSyncServices.appSyncRelaunch();
 	}
 
 	@Scheduled(cron = "${scheduled.ignimission.domain}")
-	public void ignimissionDomainUpdate() throws Exception {
+	public void ignimissionDomainUpdate() throws WorkerException {
 		if (appSyncServices.shouldUpdateIgnimissionDomain()) {
 			LOGGER.info("Worker : start Application ignimission domain extension update");
 			ignimissionServices.updateDomains();
@@ -137,7 +138,7 @@ public class ScheduledTasks {
 	}
 
 	@Scheduled(cron = "${scheduled.send.stat}")
-	public void ignimissionSendStat() throws Exception {
+	public void ignimissionSendStat() throws WorkerException {
 		LOGGER.info("Worker : start Application ignimission domain extension update");
 		ignimissionServices.sendStats();
 	}
@@ -149,7 +150,7 @@ public class ScheduledTasks {
 	}
 
 	@PostConstruct
-	public void initWorkers() throws Exception {
+	public void initWorkers() throws WorkerException {
 		initZipWorkers();
 		initSendEmailNotificationUploadDownloadWorkers();
 		initSendEmailConfirmationCodeWorkers();
