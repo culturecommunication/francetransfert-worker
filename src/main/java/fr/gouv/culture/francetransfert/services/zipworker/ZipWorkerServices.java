@@ -373,12 +373,12 @@ public class ZipWorkerServices {
 
 			// clean temp data in REDIS for Enclosure
 			LOGGER.info(" clean up REDIS temp data");
-			cleanUpServices.cleanUpEnclosureTempDataInRedis(redisManager, prefix);
+			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix);
 
 			// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 			// recipients, sender and enclosure
 			LOGGER.info(" clean up REDIS");
-			cleanUpServices.cleanUpEnclosureCoreInRedis(redisManager, prefix);
+			cleanUpServices.cleanUpEnclosureCoreInRedis(prefix);
 
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));

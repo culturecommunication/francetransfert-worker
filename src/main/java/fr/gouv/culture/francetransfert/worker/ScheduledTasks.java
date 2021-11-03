@@ -111,8 +111,7 @@ public class ScheduledTasks {
 	public void cleanUp() throws Exception {
 		LOGGER.info("Worker : start clean-up expired enclosure Check");
 		if (appSyncServices.shouldCleanup()) {
-			LOGGER.info(
-					"Worker : start clean-up expired enclosure Checked and Started");
+			LOGGER.info("Worker : start clean-up expired enclosure Checked and Started");
 			cleanUpServices.cleanUp();
 		}
 	}
@@ -132,8 +131,7 @@ public class ScheduledTasks {
 	@Scheduled(cron = "${scheduled.ignimission.domain}")
 	public void ignimissionDomainUpdate() throws Exception {
 		if (appSyncServices.shouldUpdateIgnimissionDomain()) {
-			LOGGER.info(
-					"Worker : start Application ignimission domain extension update");
+			LOGGER.info("Worker : start Application ignimission domain extension update");
 			ignimissionServices.updateDomains();
 		}
 	}
@@ -189,7 +187,7 @@ public class ScheduledTasks {
 							.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
 					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
 						String enclosureId = returnedBLPOPList.get(1);
-						TempDataCleanupTask task = new TempDataCleanupTask(enclosureId, redisManager, cleanUpServices);
+						TempDataCleanupTask task = new TempDataCleanupTask(enclosureId, cleanUpServices);
 						TempDataCleanupWorkerExecutor.execute(task);
 					}
 				}

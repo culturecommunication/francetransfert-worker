@@ -50,7 +50,7 @@ public class MailRelaunchServices {
 						Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 						LOGGER.info(" send relaunch mail for enclosure N° {}",
 								enclosureId);
-						sendToRecipientsAndSenderRelaunch(redisManager, enclosure,
+						sendToRecipientsAndSenderRelaunch(enclosure,
 								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
 					}
 				} catch (Exception e) {
@@ -61,7 +61,7 @@ public class MailRelaunchServices {
 	}
 
 	// Send mails Relaunch to recipients
-	private void sendToRecipientsAndSenderRelaunch(RedisManager redisManager, Enclosure enclosure, String templateName)
+	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName)
 			throws Exception {
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {

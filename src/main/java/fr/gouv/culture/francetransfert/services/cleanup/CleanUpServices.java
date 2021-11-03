@@ -1,20 +1,5 @@
 package fr.gouv.culture.francetransfert.services.cleanup;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
-import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
-import fr.gouv.culture.francetransfert.model.Enclosure;
-import fr.gouv.culture.francetransfert.security.WorkerException;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,6 +10,22 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
+import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
+import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.security.WorkerException;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
 
 @Service
 public class CleanUpServices {
@@ -49,7 +50,6 @@ public class CleanUpServices {
 	 * @throws Exception
 	 */
 	public void cleanUp() throws Exception {
-//        RedisManager redisManager = RedisManager.getInstance();
 		redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
 			redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
 				try {
@@ -64,7 +64,7 @@ public class CleanUpServices {
 						String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 
 						// clean temp data in REDIS for Enclosure
-						cleanUpEnclosureTempDataInRedis(redisManager, enclosureId);
+						cleanUpEnclosureTempDataInRedis(enclosureId);
 						LOGGER.info(" clean up REDIS temp data");
 
 						// clean enclosure in OSU : delete enclosure
@@ -74,10 +74,10 @@ public class CleanUpServices {
 						// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 						// recipients, sender and enclosure
 						LOGGER.info(" clean up REDIS");
-						cleanUpEnclosureCoreInRedis(redisManager, enclosureId);
+						cleanUpEnclosureCoreInRedis(enclosureId);
 
 						// clean enclosure date : delete list enclosureId and date expired
-						cleanUpEnclosureDatesInRedis(redisManager, date);
+						cleanUpEnclosureDatesInRedis(date);
 					}
 				} catch (Exception e) {
 					throw new WorkerException("");
@@ -104,15 +104,15 @@ public class CleanUpServices {
 	 * @param enclosureId
 	 * @throws WorkerException
 	 */
-	public void cleanUpEnclosureCoreInRedis(RedisManager redisManager, String enclosureId) throws WorkerException {
+	public void cleanUpEnclosureCoreInRedis(String enclosureId) throws WorkerException {
 		// delete list and HASH root-files
-		deleteRootFiles(redisManager, enclosureId);
+		deleteRootFiles(enclosureId);
 		LOGGER.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
 		// delete list and HASH root-dirs
-		deleteRootDirs(redisManager, enclosureId);
+		deleteRootDirs(enclosureId);
 		LOGGER.debug("clean root-dirs {}", RedisKeysEnum.FT_ROOT_DIRS.getKey(enclosureId));
 		// delete list and HASH recipients
-		deleteListAndHashRecipients(redisManager, enclosureId);
+		deleteListAndHashRecipients(enclosureId);
 		LOGGER.debug("clean recipients {}", RedisKeysEnum.FT_RECIPIENTS.getKey(enclosureId));
 		// delete hash sender
 		redisManager.deleteKey(RedisKeysEnum.FT_SENDER.getKey(enclosureId));
@@ -129,13 +129,13 @@ public class CleanUpServices {
 	 * @param enclosureId
 	 * @throws WorkerException
 	 */
-	public void cleanUpEnclosureTempDataInRedis(RedisManager redisManager, String enclosureId) throws WorkerException {
+	public void cleanUpEnclosureTempDataInRedis(String enclosureId) throws WorkerException {
 		// delete part-etags
-		deleteListPartEtags(redisManager, enclosureId);
+		deleteListPartEtags(enclosureId);
 		// delete id container list
-		deleteListIdContainer(redisManager, enclosureId);
+		deleteListIdContainer(enclosureId);
 		// delete list and HASH files
-		deleteFiles(redisManager, enclosureId);
+		deleteFiles(enclosureId);
 	}
 
 	/**
@@ -145,7 +145,7 @@ public class CleanUpServices {
 	 * @param date
 	 * @throws WorkerException
 	 */
-	private void cleanUpEnclosureDatesInRedis(RedisManager redisManager, String date) throws WorkerException {
+	private void cleanUpEnclosureDatesInRedis(String date) throws WorkerException {
 		// delete list enclosureId of expired date
 		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date));
 		LOGGER.debug("clean list enclosure per date {}", RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date));
@@ -159,14 +159,13 @@ public class CleanUpServices {
 	 * @param redisManager
 	 * @param enclosureId
 	 */
-	private void deleteFiles(RedisManager redisManager, String enclosureId) {
+	private void deleteFiles(String enclosureId) {
 		String keyFiles = RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId);
 		// list files
 		List<String> listFileIds = redisManager.lrange(keyFiles, 0, -1);
 		// delete Hash files info
 		LOGGER.debug("clean up files: {}", RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId));
 		for (String fileId : listFileIds) {
-//            redisManager.hmgetAllString(RedisKeysEnum.FT_FILE.getKey(fileId))
 			redisManager.deleteKey(RedisKeysEnum.FT_FILE.getKey(fileId));
 			LOGGER.debug("clean up file: {}", RedisKeysEnum.FT_FILE.getKey(fileId));
 		}
@@ -174,14 +173,13 @@ public class CleanUpServices {
 		redisManager.deleteKey(keyFiles);
 	}
 
-	private void deleteRootFiles(RedisManager redisManager, String enclosureId) {
+	private void deleteRootFiles(String enclosureId) {
 		String keyRootFiles = RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId);
 		// list root-files
 		List<String> listRootFileIds = redisManager.lrange(keyRootFiles, 0, -1);
 		// delete Hash root-files info
 		LOGGER.debug("clean up root-files: {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
 		for (String rootFileId : listRootFileIds) {
-//            redisManager.hmgetAllString(RedisKeysEnum.FT_ROOT_FILE.getKey(RedisUtils.generateHashsha1(enclosureId + ":" + rootFileId)))
 			redisManager.deleteKey(
 					RedisKeysEnum.FT_ROOT_FILE.getKey(RedisUtils.generateHashsha1(enclosureId + ":" + rootFileId)));
 			LOGGER.debug("clean up root-file: {}", RedisKeysEnum.FT_ROOT_FILE.getKey(rootFileId));
@@ -190,7 +188,7 @@ public class CleanUpServices {
 		redisManager.deleteKey(keyRootFiles);
 	}
 
-	private void deleteRootDirs(RedisManager redisManager, String enclosureId) {
+	private void deleteRootDirs(String enclosureId) {
 		String keyrootDirs = RedisKeysEnum.FT_ROOT_DIRS.getKey(enclosureId);
 		// list root-dirs
 		List<String> listRootDirIds = redisManager.lrange(keyrootDirs, 0, -1);
@@ -206,7 +204,7 @@ public class CleanUpServices {
 		redisManager.deleteKey(keyrootDirs);
 	}
 
-	private void deleteListPartEtags(RedisManager redisManager, String enclosureId) {
+	private void deleteListPartEtags(String enclosureId) {
 		// list files
 		List<String> listFileIds = redisManager.lrange(RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId), 0, -1);
 		// delete list part-etags
@@ -216,7 +214,7 @@ public class CleanUpServices {
 		}
 	}
 
-	private void deleteListIdContainer(RedisManager redisManager, String enclosureId) {
+	private void deleteListIdContainer(String enclosureId) {
 		// list files
 		List<String> listFileIds = redisManager.lrange(RedisKeysEnum.FT_FILES_IDS.getKey(enclosureId), 0, -1);
 		// delete list id container
@@ -231,7 +229,7 @@ public class CleanUpServices {
 	 * @param enclosureId
 	 * @throws Exception
 	 */
-	private void deleteListAndHashRecipients(RedisManager redisManager, String enclosureId) throws WorkerException {
+	private void deleteListAndHashRecipients(String enclosureId) throws WorkerException {
 		try {
 			// Map recipients exemple : "charles.domenech@drac-idf.culture.gouv.fr":
 			// "93e86440-fc67-4d71-9f74-fe17325e946a",
