@@ -61,7 +61,7 @@ public class StatServices {
 			// PLIS,DATE,Expediteur,destinataire,poids,donnes_utilisation,type,poidslong
 			csvPrinter.printRecord(enclosureId, date.format(DateTimeFormatter.ISO_LOCAL_DATE), sender.split("@")[1],
 					recipientList, totalSizeEnclosure, base64CryptoService.encodedHash(sender),
-					TypeStat.UPLOAD.getValue(), plisSize);
+					TypeStat.UPLOAD.getValue());
 
 			csvPrinter.flush();
 			csvPrinter.close();
