@@ -43,8 +43,8 @@ public class StatServices {
 			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
-			String totalSizeEnclosure = FileUtils
-					.byteCountToDisplaySize(RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
+			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
+			String totalSizeEnclosure = FileUtils.byteCountToDisplaySize(plisSize);
 			Map<String, String> recipient = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
 
 			String recipientList = recipient.keySet().stream().map(x -> x.split("@")[1]).distinct()
@@ -58,10 +58,10 @@ public class StatServices {
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 
-			// PLIS,DATE,Expediteur,destinataire,poids,donnes_utilisation,type
+			// PLIS,DATE,Expediteur,destinataire,poids,donnes_utilisation,type,poidslong
 			csvPrinter.printRecord(enclosureId, date.format(DateTimeFormatter.ISO_LOCAL_DATE), sender.split("@")[1],
 					recipientList, totalSizeEnclosure, base64CryptoService.encodedHash(sender),
-					TypeStat.UPLOAD.getValue());
+					TypeStat.UPLOAD.getValue(), plisSize);
 
 			csvPrinter.flush();
 			csvPrinter.close();
