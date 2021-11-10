@@ -168,8 +168,8 @@ public class ScheduledTasks {
 				while (true) {
 					List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.STAT_QUEUE.getValue());
 					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-						String enclosureId = returnedBLPOPList.get(1);
-						StatTask task = new StatTask(enclosureId, redisManager, statServices);
+						String statMessage = returnedBLPOPList.get(1);
+						StatTask task = new StatTask(statMessage, redisManager, statServices);
 						statWorkerExecutor.execute(task);
 					}
 				}

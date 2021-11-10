@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import fr.gouv.culture.francetransfert.enums.TypeStat;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.services.stat.StatServices;
@@ -17,10 +18,10 @@ public class StatTask implements Runnable {
 
 	private RedisManager redisManager;
 
-	private String enclosureId;
+	private String statMessage;
 
-	public StatTask(String enclosureId, RedisManager redisManager, StatServices statServices) {
-		this.enclosureId = enclosureId;
+	public StatTask(String statMessage, RedisManager redisManager, StatServices statServices) {
+		this.statMessage = statMessage;
 		this.redisManager = redisManager;
 		this.statServices = statServices;
 	}
@@ -31,13 +32,24 @@ public class StatTask implements Runnable {
 
 	@Override
 	public void run() {
-		LOGGER.info("[Worker] : start stat process for enclosur N°  {}", enclosureId);
+		LOGGER.info("[Worker] : start stat process for message  {}", statMessage);
 		try {
 			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
-			LOGGER.info("start save data in csv : " + enclosureId);
-			statServices.saveData(enclosureId);
-			redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
+			String[] splittedMessage = statMessage.split(";");
+			TypeStat type = TypeStat.valueOf(splittedMessage[0]);
+			String enclosureId = splittedMessage[1];
+			String recipient = "";
+			if (splittedMessage.length > 2) {
+				recipient = splittedMessage[2];
+			}
+			LOGGER.info("start save data in csv : " + enclosureId + "and type " + type.name());
+			if (TypeStat.UPLOAD.equals(type)) {
+				statServices.saveDataUpload(enclosureId);
+				redisManager.publishFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue(), enclosureId);
+			} else if (TypeStat.DOWNLOAD.equals(type)) {
+				statServices.saveDataDownload(enclosureId, recipient);
+			}
 		} catch (Exception e) {
 			LOGGER.error("[Worker] stat error : " + e.getMessage(), e);
 		}
