@@ -12,6 +12,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,6 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.Enclos
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
-import net.logstash.logback.encoder.org.apache.commons.lang3.StringUtils;
 
 @Service
 public class StatServices {
