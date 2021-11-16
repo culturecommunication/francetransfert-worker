@@ -45,7 +45,7 @@ public class StatServices {
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
 			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
-			String totalSizeEnclosure = FileUtils.byteCountToDisplaySize(plisSize);
+			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
 			Map<String, String> recipient = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
 
 			String recipientList = recipient.keySet().stream().map(x -> x.split("@")[1]).distinct()
@@ -83,7 +83,7 @@ public class StatServices {
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
 			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
-			String totalSizeEnclosure = FileUtils.byteCountToDisplaySize(plisSize);
+			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
 
 			String recipientList = "";
 			String hashedMail = "";
@@ -113,6 +113,12 @@ public class StatServices {
 			LOGGER.error("Error save data in CSV DOWNLOAD : " + e.getMessage(), e);
 			throw new WorkerException("error save data in CSV DOWNLOAD");
 		}
+	}
+
+	private String byteCountToDisplaySize(long plisSize) {
+		String size = FileUtils.byteCountToDisplaySize(plisSize);
+		size = size.replace("bytes", "B");
+		return size;
 	}
 
 }
