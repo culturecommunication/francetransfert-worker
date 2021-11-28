@@ -12,6 +12,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,16 +36,16 @@ public class StatServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
-	public boolean saveData(String enclosureId) throws WorkerException {
+	public boolean saveDataUpload(String enclosureId) throws WorkerException {
 		try {
-			LOGGER.info("STEP SAVE STATS");
+			LOGGER.info("STEP SAVE UPLOAD STATS");
 			boolean isSaved = true;
 
 			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
-			String totalSizeEnclosure = FileUtils
-					.byteCountToDisplaySize(RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
+			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
+			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
 			Map<String, String> recipient = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
 
 			String recipientList = recipient.keySet().stream().map(x -> x.split("@")[1]).distinct()
@@ -58,7 +59,7 @@ public class StatServices {
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 
-			// PLIS,DATE,Expediteur,destinataire,poids,donnes_utilisation,type
+			// PLIS,DATE,Expediteur,destinataire,poids,hash_sender,type
 			csvPrinter.printRecord(enclosureId, date.format(DateTimeFormatter.ISO_LOCAL_DATE), sender.split("@")[1],
 					recipientList, totalSizeEnclosure, base64CryptoService.encodedHash(sender),
 					TypeStat.UPLOAD.getValue());
@@ -72,4 +73,52 @@ public class StatServices {
 			throw new WorkerException("error save data in CSV UPLOAD");
 		}
 	}
+
+	public boolean saveDataDownload(String enclosureId, String recipientMail) throws WorkerException {
+		try {
+			LOGGER.info("STEP SAVE STATS DOWNLOAD");
+			boolean isSaved = true;
+
+			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
+
+			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
+			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
+			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
+
+			String recipientList = "";
+			String hashedMail = "";
+			if (StringUtils.isNotBlank(recipientMail)) {
+				recipientList = recipientMail.split("@")[1];
+				hashedMail = base64CryptoService.encodedHash(recipientMail);
+			}
+
+			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
+
+			String fileName = date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + TypeStat.DOWNLOAD.getValue()
+					+ ".csv";
+			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
+			StringBuilder sb = new StringBuilder();
+			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
+			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
+
+			// PLIS,DATE,Expediteur,destinataire,poids,hash_reciever,type
+			csvPrinter.printRecord(enclosureId, date.format(DateTimeFormatter.ISO_LOCAL_DATE), sender.split("@")[1],
+					recipientList, totalSizeEnclosure, hashedMail, TypeStat.DOWNLOAD.getValue());
+
+			csvPrinter.flush();
+			csvPrinter.close();
+			Files.writeString(filePath, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+			return isSaved;
+		} catch (Exception e) {
+			LOGGER.error("Error save data in CSV DOWNLOAD : " + e.getMessage(), e);
+			throw new WorkerException("error save data in CSV DOWNLOAD");
+		}
+	}
+
+	private String byteCountToDisplaySize(long plisSize) {
+		String size = FileUtils.byteCountToDisplaySize(plisSize);
+		size = size.replace("bytes", "B");
+		return size;
+	}
+
 }

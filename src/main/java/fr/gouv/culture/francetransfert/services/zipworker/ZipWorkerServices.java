@@ -9,22 +9,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 
-import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.amazonaws.services.s3.model.S3Object;
 
@@ -33,8 +27,10 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.MimeService;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
+import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
@@ -98,7 +94,7 @@ public class ZipWorkerServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
-	public void startZip(String prefix) throws Exception {
+	public void startZip(String prefix) throws MetaloadException, StorageException {
 		manager.getZippedEnclosureName(prefix);
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
@@ -114,7 +110,7 @@ public class ZipWorkerServices {
 			downloadFilesToTempFolder(manager, bucketName, list);
 			LOGGER.info(" Start scanning files {} with ClamaV", list);
 			LocalDateTime beginDate = LocalDateTime.now();
-			boolean isClean = performScan(list, bucketName, prefix, enclosure);
+			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
 			}
@@ -155,11 +151,11 @@ public class ZipWorkerServices {
 		}
 	}
 
-	private void notifyEmailWorker(String prefix) throws Exception {
+	private void notifyEmailWorker(String prefix) {
 		redisManager.publishFT(RedisQueueEnum.MAIL_QUEUE.getValue(), prefix);
 	}
 
-	private void deleteFilesFromOSU(StorageManager manager, String bucketName, String prefix) throws Exception {
+	private void deleteFilesFromOSU(StorageManager manager, String bucketName, String prefix) throws StorageException {
 		manager.deleteFilesWithPrefix(bucketName, prefix);
 	}
 
@@ -179,9 +175,8 @@ public class ZipWorkerServices {
 	}
 
 	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, String fileZipPath)
-			throws Exception {
+			throws StorageException {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
-//		manager.createFile(bucketName, fileToUpload, fileName);
 	}
 
 	private void zipDownloadedContent(String zippedFileName, String password) throws IOException {
@@ -198,7 +193,6 @@ public class ZipWorkerServices {
 	}
 
 	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
-		FileInputStream fis = null;
 		try {
 			ZipParameters parameters = new ZipParameters();
 			parameters.setCompressionMethod(CompressionMethod.DEFLATE);
@@ -223,39 +217,19 @@ public class ZipWorkerServices {
 				}
 				return;
 			}
-			fis = new FileInputStream(fileToZip);
-			zipOut.putNextEntry(parameters);
-			byte[] bytes = new byte[1024];
-			int length;
-			while ((length = fis.read(bytes)) >= 0) {
-				zipOut.write(bytes, 0, length);
+			try (FileInputStream fis = new FileInputStream(fileToZip)) {
+				zipOut.putNextEntry(parameters);
+				byte[] bytes = new byte[1024];
+				int length;
+				while ((length = fis.read(bytes)) >= 0) {
+					zipOut.write(bytes, 0, length);
+				}
+				zipOut.closeEntry();
 			}
-			zipOut.closeEntry();
+
 		} catch (Exception e) {
 			log.error("Error During ZipFile", e);
 			throw new WorkerException("Error During ZipFile");
-		} finally {
-			if (fis != null) {
-				fis.close();
-			}
-		}
-	}
-
-	/**
-	 * Writing files into temp directory
-	 *
-	 * @param files
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 */
-	private void writeFile(Map<Path, InputStream> files) throws IOException {
-		if (!CollectionUtils.isEmpty(files)) {
-
-			for (Path pathKey : files.keySet()) {
-				Files.createDirectories(pathKey.getParent().resolve(pathKey.getParent()));
-				Files.write(pathKey, files.get(pathKey).readAllBytes());
-			}
-
 		}
 	}
 
@@ -304,9 +278,7 @@ public class ZipWorkerServices {
 	 * @return
 	 * @throws InvalidSizeTypeException
 	 */
-	private boolean performScan(ArrayList<String> list, String bucketName, String prefix, Enclosure enclosure)
-			throws InvalidSizeTypeException {
-		Tika tika = new Tika();
+	private boolean performScan(ArrayList<String> list) throws InvalidSizeTypeException {
 		boolean isClean = true;
 		String currentFileName = null;
 		long enclosureSize = 0;
@@ -327,15 +299,7 @@ public class ZipWorkerServices {
 
 						enclosureSize += currentSize;
 
-						if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
-							isClean = false;
-							throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
-						}
-
-						if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
-							isClean = false;
-							throw new InvalidSizeTypeException("File " + currentFileName + " or enclose is too big");
-						}
+						checkSizeAndMimeType(currentFileName, enclosureSize, currentSize, fileInputStream);
 
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
@@ -357,6 +321,17 @@ public class ZipWorkerServices {
 		return isClean;
 	}
 
+	private void checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
+			FileInputStream fileInputStream) throws IOException, InvalidSizeTypeException {
+		if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
+			throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
+		}
+
+		if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
+			throw new InvalidSizeTypeException("File " + currentFileName + " or enclose is too big");
+		}
+	}
+
 	/**
 	 *
 	 * @param bucketName
@@ -372,12 +347,12 @@ public class ZipWorkerServices {
 
 			// clean temp data in REDIS for Enclosure
 			LOGGER.info(" clean up REDIS temp data");
-			cleanUpServices.cleanUpEnclosureTempDataInRedis(redisManager, prefix);
+			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix);
 
 			// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 			// recipients, sender and enclosure
 			LOGGER.info(" clean up REDIS");
-			cleanUpServices.cleanUpEnclosureCoreInRedis(redisManager, prefix);
+			cleanUpServices.cleanUpEnclosureCoreInRedis(prefix);
 
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));

@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.model.RateRepresentation;
+import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.ignimission.IgnimissionServices;
@@ -98,7 +99,7 @@ public class ScheduledTasks {
 	Executor statWorkerExecutorFromBean;
 
 	@Scheduled(cron = "${scheduled.relaunch.mail}")
-	public void relaunchMail() throws Exception {
+	public void relaunchMail() throws WorkerException {
 		LOGGER.info("Worker : start relaunch for download Check");
 		if (appSyncServices.shouldRelaunch()) {
 			LOGGER.info("Worker : start relaunch for download Checked and Started");
@@ -108,38 +109,36 @@ public class ScheduledTasks {
 	}
 
 	@Scheduled(cron = "${scheduled.clean.up}")
-	public void cleanUp() throws Exception {
+	public void cleanUp() throws WorkerException {
 		LOGGER.info("Worker : start clean-up expired enclosure Check");
 		if (appSyncServices.shouldCleanup()) {
-			LOGGER.info(
-					"Worker : start clean-up expired enclosure Checked and Started");
+			LOGGER.info("Worker : start clean-up expired enclosure Checked and Started");
 			cleanUpServices.cleanUp();
 		}
 	}
 
 	@Scheduled(cron = "${scheduled.app.sync.cleanup}")
-	public void appSyncCleanup() throws Exception {
+	public void appSyncCleanup() throws WorkerException {
 		LOGGER.info("Worker : start Application synchronization cleanup");
 		appSyncServices.appSyncCleanup();
 	}
 
 	@Scheduled(cron = "${scheduled.app.sync.relaunch}")
-	public void appSyncRelaunch() throws Exception {
+	public void appSyncRelaunch() throws WorkerException {
 		LOGGER.info("Worker : start Application synchronization relaunch");
 		appSyncServices.appSyncRelaunch();
 	}
 
 	@Scheduled(cron = "${scheduled.ignimission.domain}")
-	public void ignimissionDomainUpdate() throws Exception {
+	public void ignimissionDomainUpdate() throws WorkerException {
 		if (appSyncServices.shouldUpdateIgnimissionDomain()) {
-			LOGGER.info(
-					"Worker : start Application ignimission domain extension update");
+			LOGGER.info("Worker : start Application ignimission domain extension update");
 			ignimissionServices.updateDomains();
 		}
 	}
 
 	@Scheduled(cron = "${scheduled.send.stat}")
-	public void ignimissionSendStat() throws Exception {
+	public void ignimissionSendStat() throws WorkerException {
 		LOGGER.info("Worker : start Application ignimission domain extension update");
 		ignimissionServices.sendStats();
 	}
@@ -151,7 +150,7 @@ public class ScheduledTasks {
 	}
 
 	@PostConstruct
-	public void initWorkers() throws Exception {
+	public void initWorkers() throws WorkerException {
 		initZipWorkers();
 		initSendEmailNotificationUploadDownloadWorkers();
 		initSendEmailConfirmationCodeWorkers();
@@ -167,11 +166,15 @@ public class ScheduledTasks {
 			public void run() {
 				ThreadPoolTaskExecutor statWorkerExecutor = (ThreadPoolTaskExecutor) statWorkerExecutorFromBean;
 				while (true) {
-					List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.STAT_QUEUE.getValue());
-					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-						String enclosureId = returnedBLPOPList.get(1);
-						StatTask task = new StatTask(enclosureId, redisManager, statServices);
-						statWorkerExecutor.execute(task);
+					try {
+						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.STAT_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String statMessage = returnedBLPOPList.get(1);
+							StatTask task = new StatTask(statMessage, redisManager, statServices);
+							statWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initStatWorker : " + e.getMessage(), e);
 					}
 				}
 			}
@@ -185,12 +188,16 @@ public class ScheduledTasks {
 			public void run() {
 				ThreadPoolTaskExecutor TempDataCleanupWorkerExecutor = (ThreadPoolTaskExecutor) tempDataCleanUpWorkerExecutorFromBean;
 				while (true) {
-					List<String> returnedBLPOPList = redisManager
-							.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
-					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-						String enclosureId = returnedBLPOPList.get(1);
-						TempDataCleanupTask task = new TempDataCleanupTask(enclosureId, redisManager, cleanUpServices);
-						TempDataCleanupWorkerExecutor.execute(task);
+					try {
+						List<String> returnedBLPOPList = redisManager
+								.subscribeFT(RedisQueueEnum.TEMP_DATA_CLEANUP_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String enclosureId = returnedBLPOPList.get(1);
+							TempDataCleanupTask task = new TempDataCleanupTask(enclosureId, cleanUpServices);
+							TempDataCleanupWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initTempDataCleanupWorkers : " + e.getMessage(), e);
 					}
 				}
 			}
@@ -204,39 +211,22 @@ public class ScheduledTasks {
 			public void run() {
 				ThreadPoolTaskExecutor SendEmailConfirmationCodeWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailConfirmationCodeWorkerExecutorFromBean;
 				while (true) {
-					List<String> returnedBLPOPList = redisManager
-							.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
-					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-						String mailCode = returnedBLPOPList.get(1);
-						SendEmailConfirmationCodeTask task = new SendEmailConfirmationCodeTask(mailCode,
-								mailConfirmationCodeServices);
-						SendEmailConfirmationCodeWorkerExecutor.execute(task);
+					try {
+						List<String> returnedBLPOPList = redisManager
+								.subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String mailCode = returnedBLPOPList.get(1);
+							SendEmailConfirmationCodeTask task = new SendEmailConfirmationCodeTask(mailCode,
+									mailConfirmationCodeServices);
+							SendEmailConfirmationCodeWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initSendEmailConfirmationCodeWorkers : " + e.getMessage(), e);
 					}
 				}
 			}
 		});
 	}
-
-//    private void initSendEmailDownloadInProgressWorkers() {
-//        LOGGER.info("initSendEmailDownloadInProgressWorkers");
-//        Executors.newSingleThreadExecutor().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                ThreadPoolTaskExecutor SendEmailDownloadInProgressWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailDownloadInProgressWorkerExecutorFromBean;
-//                while (true) {
-//                    List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
-//                    if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-//                        String downloadQueueValue = returnedBLPOPList.get(1);
-//                        String enclosureId = WorkerUtils.extractEnclosureIdFromDownloadQueueValue(downloadQueueValue);
-//                        LOGGER.info("================================> worker : start send email notification download in progress for enclosur N°  {}", enclosureId);
-//                        String recipientId = WorkerUtils.extractRecipientIdFromDownloadQueueValue(downloadQueueValue);
-//                        SendEmailDownloadInProgressTask task = new SendEmailDownloadInProgressTask(enclosureId, recipientId, redisManager, mailDownloadServices);
-//                        SendEmailDownloadInProgressWorkerExecutor.execute(task);
-//                    }
-//                }
-//            }
-//        });
-//    }
 
 	private void initSendEmailNotificationUploadDownloadWorkers() {
 		LOGGER.info("initSendEmailNotificationUploadDownloadWorkers");
@@ -245,12 +235,16 @@ public class ScheduledTasks {
 			public void run() {
 				ThreadPoolTaskExecutor SendEmailNotificationUploadDownloadWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
 				while (true) {
-					List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
-					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-						String enclosureId = returnedBLPOPList.get(1);
-						SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
-								enclosureId, redisManager, mailAvailbleEnclosureServices);
-						SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
+					try {
+						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String enclosureId = returnedBLPOPList.get(1);
+							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
+									enclosureId, redisManager, mailAvailbleEnclosureServices);
+							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initSendEmailNotificationUploadDownloadWorkers : " + e.getMessage(), e);
 					}
 				}
 			}
@@ -263,11 +257,15 @@ public class ScheduledTasks {
 			public void run() {
 				ThreadPoolTaskExecutor zipWorkerExecutor = (ThreadPoolTaskExecutor) zipWorkerExecutorFromBean;
 				while (true) {
-					List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
-					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-						String enclosureId = returnedBLPOPList.get(1);
-						ZipWorkerTask task = new ZipWorkerTask(enclosureId, zipWorkerServices);
-						zipWorkerExecutor.execute(task);
+					try {
+						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.ZIP_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String enclosureId = returnedBLPOPList.get(1);
+							ZipWorkerTask task = new ZipWorkerTask(enclosureId, zipWorkerServices);
+							zipWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initZipWorkers : " + e.getMessage(), e);
 					}
 				}
 			}
@@ -280,13 +278,17 @@ public class ScheduledTasks {
 			public void run() {
 				ThreadPoolTaskExecutor satisfactionWorkerExecutor = (ThreadPoolTaskExecutor) satisfactionWorkerExecutorFromBean;
 				while (true) {
-					List<String> returnedBLPOPList = redisManager
-							.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
-					if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-						RateRepresentation rate = new Gson().fromJson(returnedBLPOPList.get(1),
-								RateRepresentation.class);
-						SatisfactionTask task = new SatisfactionTask(rate, satisfactionService);
-						satisfactionWorkerExecutor.execute(task);
+					try {
+						List<String> returnedBLPOPList = redisManager
+								.subscribeFT(RedisQueueEnum.SATISFACTION_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							RateRepresentation rate = new Gson().fromJson(returnedBLPOPList.get(1),
+									RateRepresentation.class);
+							SatisfactionTask task = new SatisfactionTask(rate, satisfactionService);
+							satisfactionWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initSatisfactionWorkers : " + e.getMessage(), e);
 					}
 				}
 			}
