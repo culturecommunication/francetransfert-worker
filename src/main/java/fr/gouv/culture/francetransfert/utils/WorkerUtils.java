@@ -15,8 +15,6 @@ public class WorkerUtils {
 
 	public static String infinity_Date = "2000-12-31";
 
-	private final static String regex_gouv_email = "^\\w+([\\.-]\\w+)*(\\+\\w+)?@(\\w+([\\.-]\\w+)*\\.)?gouv\\.fr$";
-
 	public static LocalDateTime convertStringToLocalDateTime(String date) {
 		if (null == date) {
 			date = infinity_Date;
@@ -69,10 +67,6 @@ public class WorkerUtils {
 		tmpSize /= 100;
 
 		return tmpSize + " " + suffixes[i];
-	}
-
-	public static boolean isGouvEmail(String email) {
-		return isValidRegex(regex_gouv_email, email);
 	}
 
 	public static boolean isValidRegex(String p, String str) {

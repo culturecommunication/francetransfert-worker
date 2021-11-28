@@ -6,7 +6,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import fr.gouv.culture.francetransfert.exception.ClamAVClientNotAvailableException;
 import fr.gouv.culture.francetransfert.exception.ClamAVException;
-import fr.gouv.culture.francetransfert.exception.ClamAVSizeLimitException;
 import fr.gouv.culture.francetransfert.model.enums.ErrorEnum;
 
 @Service
@@ -51,7 +49,6 @@ public class ClamAVScannerManager {
 	public void init() {
 		this.address = new InetSocketAddress(host, port);
 		setAddress(this.address);
-		// ping();
 	}
 
 	/**
@@ -192,19 +189,6 @@ public class ClamAVScannerManager {
 			return "OK";
 		}
 		throw new ClamAVException(ErrorEnum.SCAN_ERROR.getValue() + " : " + status);
-	}
-
-	/**
-	 * Checking size limit exceeded
-	 *
-	 * @param reply
-	 * @return
-	 */
-	private byte[] assertSizeLimit(byte[] reply) {
-		String r = new String(reply, StandardCharsets.US_ASCII);
-		if (r.startsWith("INSTREAM size limit exceeded."))
-			throw new ClamAVSizeLimitException(ErrorEnum.LIMT_SIZE_ERROR.getValue() + " : " + r);
-		return reply;
 	}
 
 	/**

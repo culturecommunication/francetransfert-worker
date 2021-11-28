@@ -20,7 +20,6 @@ public class AppSyncServices {
 
 	public void appSyncCleanup() {
 		try {
-//			RedisManager redisManager = RedisManager.getInstance();
 			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CLEANUP.getKey());
 		} catch (Exception e) {
 			throw new WorkerException(e.getMessage());
@@ -29,7 +28,6 @@ public class AppSyncServices {
 	
 	public void appSyncRelaunch() {
 		try {
-//			RedisManager redisManager = RedisManager.getInstance();
 			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_RELAUNCH.getKey());
 		} catch (Exception e) {
 			throw new WorkerException(e.getMessage());
@@ -45,10 +43,8 @@ public class AppSyncServices {
 	}
 
 	public boolean shouldRelaunch() {
-//		RedisManager redisManager;
 		boolean shouldRelaunch = false;
 		try {
-//			redisManager = RedisManager.getInstance();
 			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_RELAUNCH.getKey());
 			if(incrementedAppSyncCounter == 1) {
 				shouldRelaunch = true;
@@ -60,10 +56,8 @@ public class AppSyncServices {
 	}
 
 	public boolean shouldCleanup() {
-//		RedisManager redisManager;
 		boolean shouldCleanup = false;
 		try {
-//			redisManager = RedisManager.getInstance();
 			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_CLEANUP.getKey());
 			if(incrementedAppSyncCounter == 1) {
 				shouldCleanup = true;
