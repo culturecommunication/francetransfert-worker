@@ -86,7 +86,7 @@ public class CleanUpServices {
 						cleanUpEnclosureDatesInRedis(date);
 					}
 				} catch (Exception e) {
-					throw new WorkerException("");
+					throw new WorkerException("Cannot clean enclosure : " + e.getMessage(), e);
 				}
 			});
 		});
