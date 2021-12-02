@@ -29,7 +29,7 @@ public class SatisfactionService {
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 			csvPrinter.printRecord(rate.getPlis(), rate.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
-					rate.getMessage(), rate.getSatisfaction(), rate.getType().getValue());
+					rate.getMessage(), rate.getSatisfaction(), rate.getType().getValue(), rate.getDomain());
 			csvPrinter.flush();
 			csvPrinter.close();
 			Files.writeString(filePath, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
