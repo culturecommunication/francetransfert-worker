@@ -104,6 +104,8 @@ public class ZipWorkerServices {
 		try {
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
+			String passwordGenerated = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
+					EnclosureKeysEnum.PASSWORD_GENERATED.getKey());
 			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
 			LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName,
 					list, prefix, bucketPrefix);
@@ -120,7 +122,7 @@ public class ZipWorkerServices {
 			if (isClean) {
 
 				LOGGER.info(" start zip files temp to disk");
-				zipDownloadedContent(prefix, passwordUnHashed);
+				zipDownloadedContent(prefix, passwordUnHashed, passwordGenerated);
 
 				LOGGER.info(" start upload zip file temp to OSU");
 				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix) + ".zip",
@@ -179,27 +181,50 @@ public class ZipWorkerServices {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 	}
 
-	private void zipDownloadedContent(String zippedFileName, String password) throws IOException {
+	private void zipDownloadedContent(String zippedFileName, String password, String passwordGenerated) throws IOException {
+		if(passwordGenerated.equalsIgnoreCase("false")){
 		String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
 		try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
-				ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());) {
+				ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());)
+		{
 			File fileToZip = new File(sourceFile);
 			for (File file : fileToZip.listFiles()) {
-				zipFile(file, file.getName(), zipOut);
+				zipFile(file, file.getName(), zipOut, true);
+			}
+			zipOut.flush();
+			fos.flush();
+		}
+		}else {
+			zipDownloadedContentWithoutPassword(zippedFileName);
+		}
+	}
+
+	private void zipDownloadedContentWithoutPassword(String zippedFileName) throws IOException {
+		String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
+		try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
+			 ZipOutputStream zipOut = new ZipOutputStream(fos);)
+		{
+			File fileToZip = new File(sourceFile);
+			for (File file : fileToZip.listFiles()) {
+				zipFile(file, file.getName(), zipOut, false);
 			}
 			zipOut.flush();
 			fos.flush();
 		}
 	}
 
-	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
+	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut, boolean crypted) throws IOException {
 		try {
 			ZipParameters parameters = new ZipParameters();
 			parameters.setCompressionMethod(CompressionMethod.DEFLATE);
 			parameters.setCompressionLevel(CompressionLevel.NORMAL);
+			if(crypted){
 			parameters.setEncryptFiles(true);
 			parameters.setEncryptionMethod(EncryptionMethod.AES);
 			parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+			}else {
+				parameters.setEncryptFiles(false);
+			}
 			parameters.setFileNameInZip(fileName);
 			if (fileToZip.isDirectory()) {
 				if (fileName.endsWith(File.separator)) {
@@ -213,7 +238,7 @@ public class ZipWorkerServices {
 				File[] children = fileToZip.listFiles();
 				for (File childFile : children) {
 					LOGGER.info(" start zip file {} temp to disk", childFile.getName());
-					zipFile(childFile, fileName + File.separator + childFile.getName(), zipOut);
+					zipFile(childFile, fileName + File.separator + childFile.getName(), zipOut, crypted);
 				}
 				return;
 			}
