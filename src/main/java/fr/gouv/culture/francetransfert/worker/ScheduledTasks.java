@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,9 @@ import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
 public class ScheduledTasks {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
+
+	@Value("${name.bucket.sequestre}")
+	private String sequestreBucket;
 
 	@Autowired
 	private MailAvailbleEnclosureServices mailAvailbleEnclosureServices;
@@ -97,6 +101,10 @@ public class ScheduledTasks {
 	@Autowired
 	@Qualifier("statWorkerExecutor")
 	Executor statWorkerExecutorFromBean;
+	
+	@Autowired
+	@Qualifier("sequestreWorkerExecutor")
+	Executor sequestreWorkerExecutorFromBean;
 
 	@Scheduled(cron = "${scheduled.relaunch.mail}")
 	public void relaunchMail() throws WorkerException {
@@ -157,6 +165,29 @@ public class ScheduledTasks {
 		initTempDataCleanupWorkers();
 		initSatisfactionWorkers();
 		initStatWorker();
+		initSequestre();
+	}
+
+	private void initSequestre() {
+		LOGGER.info("initSequestre");
+		Executors.newSingleThreadExecutor().execute(new Runnable() {
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor sequestreWorkerExecutor = (ThreadPoolTaskExecutor) sequestreWorkerExecutorFromBean;
+				while (true) {
+					try {
+						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.SEQUESTRE_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String enclosureId = returnedBLPOPList.get(1);
+							SequestreWorkerTask cleantask = new SequestreWorkerTask(enclosureId, sequestreBucket,cleanUpServices);
+							sequestreWorkerExecutor.execute(cleantask);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initStatWorker : " + e.getMessage(), e);
+					}
+				}
+			}
+		});
 	}
 
 	private void initStatWorker() {

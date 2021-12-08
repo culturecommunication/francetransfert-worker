@@ -5,12 +5,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import com.amazonaws.services.s3.AmazonS3;
+import fr.gouv.culture.francetransfert.exception.InvalidSizeTypeException;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
+import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
+import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +41,8 @@ public class CleanUpServices {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CleanUpServices.class);
 
+	private AmazonS3 conn;
+
 	@Value("${bucket.prefix}")
 	private String bucketPrefix;
 
@@ -44,6 +54,9 @@ public class CleanUpServices {
 
 	@Autowired
 	RedisManager redisManager;
+
+	@Autowired
+	Base64CryptoService base64CryptoService;
 
 	/**
 	 * clean all expired data in OSU and REDIS
@@ -105,7 +118,6 @@ public class CleanUpServices {
 	/**
 	 * clean expired data in REDIS: Enclosure core
 	 *
-	 * @param redisManager
 	 * @param enclosureId
 	 * @throws WorkerException
 	 */
@@ -266,6 +278,26 @@ public class CleanUpServices {
 			;
 		} catch (IOException e) {
 			LOGGER.error("unable to delete Enclosure temp directory [{}] / {} ", path, e.getMessage(), e);
+		}
+	}
+
+
+	public void createSequestre(String prefix) throws MetaloadException, StorageException {
+		try {
+			storageManager.generateBucketSequestre(prefix);
+		}catch (Exception e) {
+			LOGGER.error("Error in create bucket sequestre : " + e.getMessage(), e);
+		}
+	}
+
+	public void writeOnSequestre(String enclosureId){
+		try{
+			String nameBucketSource = RedisUtils.getBucketName(redisManager, enclosureId,bucketPrefix );
+			String fileName = storageManager.getZippedEnclosureName(enclosureId);
+			fileName = fileName + ".zip";
+			storageManager.moveOnSequestre(nameBucketSource,fileName);
+		}catch (Exception e){
+			LOGGER.error("Error while coping in sequestre : " + e.getMessage(), e);
 		}
 	}
 }
