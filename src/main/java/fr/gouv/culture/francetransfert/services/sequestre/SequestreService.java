@@ -2,7 +2,9 @@ package fr.gouv.culture.francetransfert.services.sequestre;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,8 @@ import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.Me
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
+import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 
 @Service
@@ -47,15 +51,23 @@ public class SequestreService {
 
 			String nameBucketSource = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 			String fileName = storageManager.getZippedEnclosureName(enclosureId);
-
+			Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosureId,
 					EnclosureKeysEnum.PASSWORD.getKey());
 			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
+			String destinataireList = "";
+			List<Recipient> recipients = enclosure.getRecipients();
+			if (CollectionUtils.isNotEmpty(recipients)) {
+				destinataireList = "{" + recipients.stream().map(x -> {
+					return x.getMail();
+				}).collect(Collectors.joining(" , ")) + "}";
+			}
 
 			// Log Sequestre
-			LOGGER.warn("[SEQUESTRE] - enclosure: {}, sender: {}, password: {}, fileName: {} - [SEQUESTRE]",
-					enclosureId, sender, passwordUnHashed, fileName);
+			LOGGER.warn(
+					"[SEQUESTRE] - enclosure: {} , sender: {} , password: {} , fileName: {} , recipients: {} - [SEQUESTRE]",
+					enclosureId, sender, passwordUnHashed, fileName, destinataireList);
 
 			storageManager.moveOnSequestre(nameBucketSource, fileName);
 		} catch (Exception e) {
