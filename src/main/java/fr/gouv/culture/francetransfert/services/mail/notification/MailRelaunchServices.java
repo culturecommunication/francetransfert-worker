@@ -55,7 +55,7 @@ public class MailRelaunchServices {
 								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
 					}
 				} catch (Exception e) {
-					throw new WorkerException("Enclosure build error");
+					LOGGER.error("Cannot send relaunch for enclosure {} :  {}", enclosureId, e.getMessage(), e);
 				}
 			});
 		});

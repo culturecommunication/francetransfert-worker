@@ -36,7 +36,7 @@ public class ScheduledTasks {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
 
-    @Value("${name.bucket.sequestre}")
+    @Value("${bucket.sequestre}")
     private String sequestreBucket;
 
     @Autowired
