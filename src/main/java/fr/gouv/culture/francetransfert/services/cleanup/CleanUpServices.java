@@ -27,6 +27,7 @@ import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.Sto
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
+import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 
 @Service
 public class CleanUpServices {
@@ -44,6 +45,9 @@ public class CleanUpServices {
 
 	@Autowired
 	RedisManager redisManager;
+
+	@Autowired
+	Base64CryptoService base64CryptoService;
 
 	/**
 	 * clean all expired data in OSU and REDIS
@@ -86,7 +90,7 @@ public class CleanUpServices {
 						cleanUpEnclosureDatesInRedis(date);
 					}
 				} catch (Exception e) {
-					throw new WorkerException("Cannot clean enclosure : " + e.getMessage(), e);
+					LOGGER.error("Cannot clean enclosure {} : " + e.getMessage(), enclosureId, e);
 				}
 			});
 		});
@@ -105,7 +109,6 @@ public class CleanUpServices {
 	/**
 	 * clean expired data in REDIS: Enclosure core
 	 *
-	 * @param redisManager
 	 * @param enclosureId
 	 * @throws WorkerException
 	 */
@@ -268,4 +271,5 @@ public class CleanUpServices {
 			LOGGER.error("unable to delete Enclosure temp directory [{}] / {} ", path, e.getMessage(), e);
 		}
 	}
+
 }
