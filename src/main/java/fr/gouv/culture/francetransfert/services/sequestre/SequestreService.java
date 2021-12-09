@@ -10,11 +10,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
+import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
 import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
+import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 
 @Service
 public class SequestreService {
@@ -29,6 +31,9 @@ public class SequestreService {
 	@Autowired
 	RedisManager redisManager;
 
+	@Autowired
+	Base64CryptoService base64CryptoService;
+
 	public void createSequestre(String prefix) throws MetaloadException, StorageException {
 		try {
 			storageManager.generateBucketSequestre(prefix);
@@ -39,8 +44,19 @@ public class SequestreService {
 
 	public void writeOnSequestre(String enclosureId) {
 		try {
+
 			String nameBucketSource = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 			String fileName = storageManager.getZippedEnclosureName(enclosureId);
+
+			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
+			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosureId,
+					EnclosureKeysEnum.PASSWORD.getKey());
+			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
+
+			// Log Sequestre
+			LOGGER.warn("[SEQUESTRE] - enclosure: {}, sender: {}, password: {}, fileName: {} - [SEQUESTRE]",
+					enclosureId, sender, passwordUnHashed, fileName);
+
 			storageManager.moveOnSequestre(nameBucketSource, fileName);
 		} catch (Exception e) {
 			LOGGER.error("Error while coping enclosudre {} in sequestre : {}", enclosureId, e.getMessage(), e);
