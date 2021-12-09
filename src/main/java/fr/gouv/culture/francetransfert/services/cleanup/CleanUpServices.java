@@ -99,7 +99,7 @@ public class CleanUpServices {
 	 * @throws StorageException
 	 */
 	private void cleanUpOSU(String bucketName, String enclosureId) throws StorageException {
-		storageManager.deleteFilesWithPrefix(bucketName, storageManager.getZippedEnclosureName(enclosureId) + ".zip");
+		storageManager.deleteFilesWithPrefix(bucketName, storageManager.getZippedEnclosureName(enclosureId));
 	}
 
 	/**

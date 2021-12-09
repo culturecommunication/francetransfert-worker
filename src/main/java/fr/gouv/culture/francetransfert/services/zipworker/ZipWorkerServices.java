@@ -95,7 +95,6 @@ public class ZipWorkerServices {
 	Base64CryptoService base64CryptoService;
 
 	public void startZip(String prefix) throws MetaloadException, StorageException {
-		manager.getZippedEnclosureName(prefix);
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
 		LOGGER.info(" STEP STATE ZIP ");
@@ -125,7 +124,7 @@ public class ZipWorkerServices {
 				zipDownloadedContent(prefix, passwordUnHashed, passwordGenerated);
 
 				LOGGER.info(" start upload zip file temp to OSU");
-				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix) + ".zip",
+				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
 						getBaseFolderNameWithZipPrefix(prefix));
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
 				LOGGER.info(" start delete zip file in local disk");
