@@ -40,7 +40,6 @@ public class SendEmailNotificationUploadDownloadTask implements Runnable {
 			mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager));
 			String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
 			redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
-
 		} catch (Exception e) {
 			LOGGER.error("[Worker] email notification error : " + e.getMessage(), e);
 		}

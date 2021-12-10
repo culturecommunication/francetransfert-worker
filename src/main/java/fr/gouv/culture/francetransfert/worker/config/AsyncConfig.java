@@ -40,6 +40,11 @@ public class AsyncConfig {
     
     @Value("${statWorkerExecutor.pool.size:10}")
     private int statWorkerExecutorPoolSize;
+
+    @Value("5")
+    private int sequestreWorkerExecutorPoolSize;
+
+
     
     @Bean(name = "satisfactionWorkerExecutor")
     public Executor satisfactionWorkerExecutor() {
@@ -74,6 +79,11 @@ public class AsyncConfig {
 	@Bean(name = "statWorkerExecutor")
     public Executor statWorkerExecutor() {
 		return generateThreadPoolTaskExecutor(statWorkerExecutorPoolSize);
+    }
+
+    @Bean(name = "sequestreWorkerExecutor")
+    public Executor sequestreWorkerExecutor() {
+        return generateThreadPoolTaskExecutor(sequestreWorkerExecutorPoolSize);
     }
 	
 	private Executor generateThreadPoolTaskExecutor(int maxPoolSize) {
