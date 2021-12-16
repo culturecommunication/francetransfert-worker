@@ -288,7 +288,7 @@ public class CleanUpServices {
 				LocalDate date = bucket.getCreationDate().toInstant()
 						.atZone(ZoneId.systemDefault())
 						.toLocalDate();;
-					if(date.plusDays(maxUpdateDate).isBefore( LocalDate.now())){
+					if(date.plusDays(maxUpdateDate).isBefore( LocalDate.now()) && bucket.getName().startsWith(bucketPrefix)){
 						try {
 							deletContentBucket(bucket.getName());
 						} catch (StorageException e) {
