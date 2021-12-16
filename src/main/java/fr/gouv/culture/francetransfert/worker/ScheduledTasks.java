@@ -1,8 +1,26 @@
 package fr.gouv.culture.francetransfert.worker;
 
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+import javax.annotation.PostConstruct;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
 import com.google.gson.Gson;
+
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
 import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
 import fr.gouv.culture.francetransfert.model.RateRepresentation;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
@@ -16,20 +34,6 @@ import fr.gouv.culture.francetransfert.services.satisfaction.SatisfactionService
 import fr.gouv.culture.francetransfert.services.sequestre.SequestreService;
 import fr.gouv.culture.francetransfert.services.stat.StatServices;
 import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 @Component
 public class ScheduledTasks {
@@ -119,11 +123,13 @@ public class ScheduledTasks {
 	}
 
 	@Scheduled(cron = "${scheduled.clean.up}")
-	public void cleanUp() throws WorkerException {
+	public void cleanUp() throws WorkerException, StorageException {
 		LOGGER.info("Worker : start clean-up expired enclosure Check");
 		if (appSyncServices.shouldCleanup()) {
 			LOGGER.info("Worker : start clean-up expired enclosure Checked and Started");
 			cleanUpServices.cleanUp();
+			LOGGER.info("Worker : start clean-up expired buckets");
+			cleanUpServices.deleteBucketOutOfTime();
 			LOGGER.info("Worker : finished clean-up expired enclosure");
 		}
 	}
