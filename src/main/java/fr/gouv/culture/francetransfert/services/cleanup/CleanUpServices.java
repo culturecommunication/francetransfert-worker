@@ -2,15 +2,21 @@ package fr.gouv.culture.francetransfert.services.cleanup;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.chrono.ChronoLocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import com.amazonaws.services.s3.model.Bucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +54,9 @@ public class CleanUpServices {
 
 	@Autowired
 	Base64CryptoService base64CryptoService;
+
+	@Value("${worker.expired.limit}")
+	private int maxUpdateDate;
 
 	/**
 	 * clean all expired data in OSU and REDIS
@@ -270,6 +279,41 @@ public class CleanUpServices {
 		} catch (IOException e) {
 			LOGGER.error("unable to delete Enclosure temp directory [{}] / {} ", path, e.getMessage(), e);
 		}
+	}
+
+	public void deleteBucketOutOfTime() throws StorageException{
+
+			List<Bucket> listeBucket = storageManager.listBuckets();
+			listeBucket.forEach(bucket->{
+				LocalDate date = bucket.getCreationDate().toInstant()
+						.atZone(ZoneId.systemDefault())
+						.toLocalDate();;
+					if(date.plusDays(maxUpdateDate).isBefore( LocalDate.now()) && bucket.getName().startsWith(bucketPrefix)){
+						try {
+							deletContentBucket(bucket.getName());
+						} catch (StorageException e) {
+							LOGGER.error("unable to delete content of bucket {} ", bucket.getName(), e.getMessage(), e);
+						}
+						try {
+							storageManager.deleteBucket(bucket.getName());
+						} catch (StorageException e) {
+							LOGGER.error("unable to delete bucket {} ", bucket.getName(), e.getMessage(), e);
+						}
+					}
+			});
+
+	}
+
+	public void deletContentBucket(String bucketName) throws StorageException {
+		ArrayList<String> objectListing = storageManager.listBucketContent(bucketName);
+
+			objectListing.forEach(file-> {
+				try {
+					storageManager.deleteFilesWithPrefix(bucketName,file);
+				} catch (StorageException e) {
+					LOGGER.error("unable to delete file {} ", file, e.getMessage(), e);
+				}
+			});
 	}
 
 }
