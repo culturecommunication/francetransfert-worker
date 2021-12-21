@@ -156,10 +156,10 @@ public class CleanUpServices {
 	private void cleanUpEnclosureDatesInRedis(String date) throws WorkerException {
 		// delete list enclosureId of expired date
 		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date));
-		LOGGER.debug("clean list enclosure per date {}", RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date));
+		LOGGER.info("clean list enclosure per date {}", RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date));
 		// delete date expired from the list of dates
 		redisManager.sremString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey(""), date);
-		LOGGER.debug("finish clean up list dates {} delete date : {} ", RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date),
+		LOGGER.info("finish clean up list dates {} delete date : {} ", RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date),
 				date);
 	}
 
