@@ -23,22 +23,22 @@ import org.springframework.stereotype.Service;
 
 import com.amazonaws.services.s3.model.S3Object;
 
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
+import fr.gouv.culture.francetransfert.core.exception.StorageException;
+import fr.gouv.culture.francetransfert.core.services.MimeService;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.services.StorageManager;
+import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.exception.InvalidSizeTypeException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.MimeService;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
-import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
-import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
-import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
@@ -181,20 +181,20 @@ public class ZipWorkerServices {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 	}
 
-	private void zipDownloadedContent(String zippedFileName, String password, String passwordGenerated) throws IOException {
-		if(passwordGenerated.equalsIgnoreCase("false")){
-		String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
-		try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
-				ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());)
-		{
-			File fileToZip = new File(sourceFile);
-			for (File file : fileToZip.listFiles()) {
-				zipFile(file, file.getName(), zipOut, true);
+	private void zipDownloadedContent(String zippedFileName, String password, String passwordGenerated)
+			throws IOException {
+		if (passwordGenerated.equalsIgnoreCase("false")) {
+			String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
+			try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
+					ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());) {
+				File fileToZip = new File(sourceFile);
+				for (File file : fileToZip.listFiles()) {
+					zipFile(file, file.getName(), zipOut, true);
+				}
+				zipOut.flush();
+				fos.flush();
 			}
-			zipOut.flush();
-			fos.flush();
-		}
-		}else {
+		} else {
 			zipDownloadedContentWithoutPassword(zippedFileName);
 		}
 	}
@@ -202,8 +202,7 @@ public class ZipWorkerServices {
 	private void zipDownloadedContentWithoutPassword(String zippedFileName) throws IOException {
 		String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
 		try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
-			 ZipOutputStream zipOut = new ZipOutputStream(fos);)
-		{
+				ZipOutputStream zipOut = new ZipOutputStream(fos);) {
 			File fileToZip = new File(sourceFile);
 			for (File file : fileToZip.listFiles()) {
 				zipFile(file, file.getName(), zipOut, false);
@@ -213,16 +212,17 @@ public class ZipWorkerServices {
 		}
 	}
 
-	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut, boolean crypted) throws IOException {
+	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut, boolean crypted)
+			throws IOException {
 		try {
 			ZipParameters parameters = new ZipParameters();
 			parameters.setCompressionMethod(CompressionMethod.DEFLATE);
 			parameters.setCompressionLevel(CompressionLevel.NORMAL);
-			if(crypted){
-			parameters.setEncryptFiles(true);
-			parameters.setEncryptionMethod(EncryptionMethod.AES);
-			parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-			}else {
+			if (crypted) {
+				parameters.setEncryptFiles(true);
+				parameters.setEncryptionMethod(EncryptionMethod.AES);
+				parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+			} else {
 				parameters.setEncryptFiles(false);
 			}
 			parameters.setFileNameInZip(fileName);
