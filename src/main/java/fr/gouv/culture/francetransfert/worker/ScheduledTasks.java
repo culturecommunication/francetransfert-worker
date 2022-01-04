@@ -1,10 +1,11 @@
 package fr.gouv.culture.francetransfert.worker;
 
 import com.google.gson.Gson;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
-import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
-import fr.gouv.culture.francetransfert.model.RateRepresentation;
+
+import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.exception.StorageException;
+import fr.gouv.culture.francetransfert.core.model.RateRepresentation;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;

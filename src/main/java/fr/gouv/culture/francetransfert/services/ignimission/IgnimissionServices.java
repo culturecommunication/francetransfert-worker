@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.model.IgnimissionAuthenticationResponse;
 import fr.gouv.culture.francetransfert.model.IgnimissionDomainDataParameter;
 import fr.gouv.culture.francetransfert.model.IgnimissionDomainParameter;
@@ -125,7 +125,7 @@ public class IgnimissionServices {
 							File file = x.toFile();
 							LOGGER.info(x.getFileName().toString());
 
-							restClientUtils.getAsamExtensions(null, null, null, null);
+							restClientUtils.sendIgniStat(ignimissionAuth.getAccessToken(), null, null, file);
 
 							file.delete();
 						} catch (Exception ex) {

@@ -8,7 +8,7 @@ import fr.gouv.culture.francetransfert.services.sequestre.SequestreService;
 
 @Component
 public class SequestreWorkerTask implements Runnable {
-	private static final Logger LOGGER = LoggerFactory.getLogger(TempDataCleanupTask.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SequestreWorkerTask.class);
 
 	private SequestreService sequestreService;
 
