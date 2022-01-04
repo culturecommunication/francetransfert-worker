@@ -71,8 +71,8 @@ public class MailAvailbleEnclosureServices {
 			subjectSender = subjectSenderLink;
 		}
 		if(StringUtils.isNotBlank(enclosure.getSubject())){
-			subjectSend = subjectSender.concat(" : <").concat(enclosure.getSubject()).concat(">");
-			subjectSenderPassw = subjectSenderPassword.concat(" : <").concat(enclosure.getSubject()).concat(">");
+			subjectSend = subjectSender.concat(" : ").concat(enclosure.getSubject());
+			subjectSenderPassw = subjectSenderPassword.concat(" : ").concat(enclosure.getSubject());
 		}
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
@@ -84,11 +84,11 @@ public class MailAvailbleEnclosureServices {
 
 	// Send mails to recipients
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName) {
-		subject = subject + " <" + enclosure.getSender() + " >" ;
+		subject = subject + " " + enclosure.getSender();
 		String subjectPassword = subjectRecipientPassword;
 
 		if(StringUtils.isNotBlank(enclosure.getSubject())){
-			subject = subject.concat(" : <").concat(enclosure.getSubject()).concat(">");
+			subject = subject.concat(" : ").concat(enclosure.getSubject());
 		}
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {

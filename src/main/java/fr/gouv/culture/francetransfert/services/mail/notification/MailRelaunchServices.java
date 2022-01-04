@@ -68,7 +68,7 @@ public class MailRelaunchServices {
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if(StringUtils.isNotBlank(enclosure.getSubject())){
-				subjectRelaunchRecipient = subjectRelaunchRecipient.concat(" : <").concat(enclosure.getSubject()).concat(">");
+				subjectRelaunchRecipient = subjectRelaunchRecipient.concat(" : ").concat(enclosure.getSubject());
 			}
 			for (Recipient recipient : recipients) {
 				Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());

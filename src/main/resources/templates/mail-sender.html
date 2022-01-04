@@ -8,10 +8,10 @@
 
     <div th:fragment="senderEmail" style="margin: 0rem 1rem 0.15rem 2rem;;color: #000000;">
         <p>
-            <strong>Expéditeur :  </strong> <
+            <strong>Expéditeur :  </strong>
 
                 <span style="color: #0269cc"><a th:text="${#strings.toLowerCase(enclosure.get('sender').getAsString())}"></a>
-                </span> >
+                </span>
 
         </p>
     </div>

@@ -41,7 +41,7 @@ public class MailDownloadServices {
 				.map(x -> x.getMail()).collect(Collectors.toList()));
 		enclosure.setRecipientDownloadInProgress(recipList);
 		if(StringUtils.isNotBlank(enclosure.getSubject())){
-			subjectDownloadProgress = subjectDownloadProgress.concat(" : <").concat(enclosure.getSubject()).concat(">");
+			subjectDownloadProgress = subjectDownloadProgress.concat(" : ").concat(enclosure.getSubject());
 		}
 		LOGGER.info("Send email notification download in progress to sender:  {}", enclosure.getSender());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownloadProgress, enclosure,

@@ -39,8 +39,8 @@ public class MailConfirmationCodeServices {
 	/**
 	 *
 	 * @param mailCode
-	 * @param part     : part = 1 -> sender email , part = 2 -> confirmation code ,
-	 *                 part = 3 -> ttl
+	 * @param part     : part = 0 -> sender email , part = 1 -> confirmation code ,
+	 *                 part = 2 -> ttl
 	 * @return
 	 */
 	private String extractSenderMailAndConfirmationCode(String mailCode, int part) {
@@ -66,7 +66,7 @@ public class MailConfirmationCodeServices {
 
 	private String extractHeureExpirationCode(String mailCode) {
 		String result = "";
-		String code = extractSenderMailAndConfirmationCode(mailCode, 3);
+		String code = extractSenderMailAndConfirmationCode(mailCode, 2);
 		if (StringUtils.isNotBlank(code)) {
 			result = code.substring(11, 19);
 		}

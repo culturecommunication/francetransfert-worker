@@ -42,8 +42,8 @@ public class MailEnclosureNoLongerAvailbleServices {
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if(StringUtils.isNotBlank(enclosure.getSubject())){
-				subjectNoAvailbleEnclosureRecipient = subjectNoAvailbleEnclosureRecipient.concat(" : <").concat(enclosure.getSubject()).concat(">");
-				subjectNoAvailbleEnclosureSender = subjectNoAvailbleEnclosureSender.concat(" : <").concat(enclosure.getSubject()).concat(">");
+				subjectNoAvailbleEnclosureRecipient = subjectNoAvailbleEnclosureRecipient.concat(" : ").concat(enclosure.getSubject());
+				subjectNoAvailbleEnclosureSender = subjectNoAvailbleEnclosureSender.concat(" : ").concat(enclosure.getSubject());
 			}
 			List<Recipient> recipientsDoNotDownloadedEnclosure = new ArrayList<>();
 			for (Recipient recipient : recipients) {

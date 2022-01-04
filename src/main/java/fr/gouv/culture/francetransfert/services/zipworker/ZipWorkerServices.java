@@ -383,7 +383,7 @@ public class ZipWorkerServices {
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
 			// Notify sender
 			if(StringUtils.isNotBlank(enclosure.getSubject())){
-				emailSubject = emailSubject.concat(" : <").concat(enclosure.getSubject()).concat(">");
+				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
 			}
 			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName);
 		} catch (Exception e) {
