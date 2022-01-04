@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,10 @@ public class MailNotificationServices {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 			helper.setFrom(franceTransfertMail);
 			helper.setTo(to);
-			helper.setSubject(subject);
+			if( StringUtils.isNotBlank(subject))
+			{
+				helper.setSubject(subject);
+			}
 			String htmlContent = htmlBuilder.build(object, templateName);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);

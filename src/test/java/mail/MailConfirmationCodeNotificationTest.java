@@ -69,8 +69,9 @@ public class MailConfirmationCodeNotificationTest {
             //given
             String message = "Test message content";
             String mailCode = "louay.haddad@gouv.fr:123476";
+            String ttlCode = LocalDateTime.now().toString();
             //when
-            mailConfirmationCodeServices.sendConfirmationCode(mailCode);
+            mailConfirmationCodeServices.sendConfirmationCode(mailCode, ttlCode);
             //then
             String content = message + "</span>";
             assertReceivedMessageContains(content);

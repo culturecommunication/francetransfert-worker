@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -381,6 +382,9 @@ public class ZipWorkerServices {
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
 			// Notify sender
+			if(StringUtils.isNotBlank(enclosure.getSubject())){
+				emailSubject = emailSubject.concat(" : <").concat(enclosure.getSubject()).concat(">");
+			}
 			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName);
 		} catch (Exception e) {
 			LOGGER.error("Error while cleaning up Enclosure : " + e.getMessage(), e);
