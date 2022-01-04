@@ -14,12 +14,10 @@ public class SendEmailConfirmationCodeTask implements Runnable {
 	MailConfirmationCodeServices mailConfirmationCodeServices;
 
 	private String mailCode;
-	private String ttl;
 
-	public SendEmailConfirmationCodeTask(String mailCode, String ttl,MailConfirmationCodeServices mailConfirmationCodeServices) {
+	public SendEmailConfirmationCodeTask(String mailCode, MailConfirmationCodeServices mailConfirmationCodeServices) {
 		this.mailCode = mailCode;
 		this.mailConfirmationCodeServices = mailConfirmationCodeServices;
-		this.ttl = ttl;
 	}
 
 	public SendEmailConfirmationCodeTask() {
@@ -30,7 +28,7 @@ public class SendEmailConfirmationCodeTask implements Runnable {
 	public void run() {
 		try {
 			LOGGER.info("[Worker] Start send confirmation code : " + mailCode);
-			mailConfirmationCodeServices.sendConfirmationCode(mailCode, ttl);
+			mailConfirmationCodeServices.sendConfirmationCode(mailCode);
 		} catch (Exception e) {
 			LOGGER.error("[Worker] Send mail confirmation code error : " + e.getMessage(), e);
 		}

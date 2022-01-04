@@ -258,10 +258,9 @@ public class ScheduledTasks {
                     try {
                         List<String> returnedBLPOPList = redisManager
                                 .subscribeFT(RedisQueueEnum.CONFIRMATION_CODE_MAIL_QUEUE.getValue());
-                        String ttlCodeConfirmation = redisManager.subscribeFT(RedisQueueEnum.TTL_CODE_CONFIRMATION.getValue()).get(1);
                         if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
                             String mailCode = returnedBLPOPList.get(1);
-                            SendEmailConfirmationCodeTask task = new SendEmailConfirmationCodeTask(mailCode,ttlCodeConfirmation,
+                            SendEmailConfirmationCodeTask task = new SendEmailConfirmationCodeTask(mailCode,
                                     mailConfirmationCodeServices);
                             SendEmailConfirmationCodeWorkerExecutor.execute(task);
                         }
