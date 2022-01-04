@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -60,9 +61,8 @@ public class MailNotificationServices {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 			helper.setFrom(franceTransfertMail);
 			helper.setTo(to);
-			if( StringUtils.isNotBlank(subject))
-			{
-				helper.setSubject(subject);
+			if (StringUtils.isNotBlank(subject)) {
+				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
 			}
 			String htmlContent = htmlBuilder.build(object, templateName);
 			helper.setText(htmlContent, true);
