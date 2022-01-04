@@ -41,6 +41,8 @@ public class Enclosure {
 
 	private String message;
 
+	private String subject;
+
 	private boolean withPassword;
 
 	private String urlDownload;
@@ -80,12 +82,13 @@ public class Enclosure {
 		String expireEnclosureDate = DateUtils
 				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
 		String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
+		String subject = enclosureRedis.get(EnclosureKeysEnum.SUBJECT.getKey());
 		String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
 		boolean withPassword = password != null && !password.isEmpty();
 
 		return Enclosure.builder().guid(enclosureId).rootFiles(filesOfEnclosure).rootDirs(dirsOfEnclosure)
 				.countElements(filesOfEnclosure.size() + dirsOfEnclosure.size()).totalSize(totalSize)
 				.expireDate(expireEnclosureDate).sender(senderEnclosure).recipients(recipientsEnclosure)
-				.message(message).withPassword(withPassword).build();
+				.message(message).subject(subject).withPassword(withPassword).build();
 	}
 }

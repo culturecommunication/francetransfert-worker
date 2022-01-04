@@ -14,4 +14,6 @@ public class ConfirmationCode {
     private String code;
 
     private String mail;
+
+    private String dateExpiration;
 }

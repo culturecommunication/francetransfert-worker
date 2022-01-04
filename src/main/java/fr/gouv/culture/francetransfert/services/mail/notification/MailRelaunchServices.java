@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,9 @@ public class MailRelaunchServices {
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
+			if(StringUtils.isNotBlank(enclosure.getSubject())){
+				subjectRelaunchRecipient = subjectRelaunchRecipient.concat(" : ").concat(enclosure.getSubject());
+			}
 			for (Recipient recipient : recipients) {
 				Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());
 				boolean isFileDownloaded = (!CollectionUtils.isEmpty(recipientMap)

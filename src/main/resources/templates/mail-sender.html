@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>expédititeur de l'email</title>
+</head>
+<body>
+
+    <div th:fragment="senderEmail" style="margin: 0rem 1rem 0.15rem 2rem;;color: #000000;">
+        <p>
+            <strong>Expéditeur :  </strong>
+
+                <span style="color: #0269cc"><a th:text="${#strings.toLowerCase(enclosure.get('sender').getAsString())}"></a>
+                </span>
+
+        </p>
+    </div>
+
+</body>
+</html>

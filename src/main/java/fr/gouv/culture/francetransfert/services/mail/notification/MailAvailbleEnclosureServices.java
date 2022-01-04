@@ -2,6 +2,7 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class MailAvailbleEnclosureServices {
 	@Value("${subject.sender}")
 	private String subjectSender;
 
+	@Value("${subject.sender.link}")
+	private String subjectSenderLink;
+
 	@Value("${subject.recipient}")
 	private String subjectRecipient;
 
@@ -47,6 +51,9 @@ public class MailAvailbleEnclosureServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
+	private String subjectSenderPassw;
+	private String subjectSend;
+
 	// Send Mails to snder and recipients
 	public void sendMailsAvailableEnclosure(Enclosure enclosure) throws MetaloadException, StatException {
 		LOGGER.info("send email notification availble to sender: {}", enclosure.getSender());
@@ -57,12 +64,19 @@ public class MailAvailbleEnclosureServices {
 		enclosure.setPassword(passwordUnHashed);
 		enclosure.setPublicLink(publicLink);
 		enclosure.setUrlAdmin(mailNotificationServices.generateUrlAdmin(enclosure.getGuid()));
+		subjectSend = subjectSender;
+		subjectSenderPassw = subjectSenderPassword;
 		if (publicLink) {
 			enclosure.setUrlDownload(mailNotificationServices.generateUrlPublicForDownload(enclosure.getGuid()));
+			subjectSender = subjectSenderLink;
 		}
-		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSender, enclosure,
+		if(StringUtils.isNotBlank(enclosure.getSubject())){
+			subjectSend = subjectSender.concat(" : ").concat(enclosure.getSubject());
+			subjectSenderPassw = subjectSenderPassword.concat(" : ").concat(enclosure.getSubject());
+		}
+		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
-		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassword, enclosure,
+		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassw, enclosure,
 				NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue());
 		if (!publicLink)
 			sendToRecipients(enclosure, subjectRecipient, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
@@ -70,8 +84,12 @@ public class MailAvailbleEnclosureServices {
 
 	// Send mails to recipients
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName) {
-		subject = enclosure.getSender() + " " + subject;
-		String subjectPassword = subjectRecipientPassword + " " + enclosure.getSender();
+		subject = subject + " " + enclosure.getSender();
+		String subjectPassword = subjectRecipientPassword;
+
+		if(StringUtils.isNotBlank(enclosure.getSubject())){
+			subject = subject.concat(" : ").concat(enclosure.getSubject());
+		}
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			for (Recipient recipient : recipients) {

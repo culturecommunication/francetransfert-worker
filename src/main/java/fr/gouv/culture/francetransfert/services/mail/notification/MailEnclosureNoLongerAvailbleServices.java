@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,10 @@ public class MailEnclosureNoLongerAvailbleServices {
 
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
+			if(StringUtils.isNotBlank(enclosure.getSubject())){
+				subjectNoAvailbleEnclosureRecipient = subjectNoAvailbleEnclosureRecipient.concat(" : ").concat(enclosure.getSubject());
+				subjectNoAvailbleEnclosureSender = subjectNoAvailbleEnclosureSender.concat(" : ").concat(enclosure.getSubject());
+			}
 			List<Recipient> recipientsDoNotDownloadedEnclosure = new ArrayList<>();
 			for (Recipient recipient : recipients) {
 				Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());
