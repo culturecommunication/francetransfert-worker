@@ -95,12 +95,25 @@ public class ZipWorkerServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
+	private String subjectVirusErr;
+
+	private String subjVirusFound;
+
 	public void startZip(String prefix) throws MetaloadException, StorageException {
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
 		LOGGER.info(" STEP STATE ZIP ");
 		LOGGER.info(" SIZE " + list.size() + " LIST ===> " + list.toString());
 		Enclosure enclosure = Enclosure.build(prefix, redisManager);
+
+		/*subjectVirusErr = subjectVirusError;
+		subjVirusFound = subjectVirusFound;
+
+		if(StringUtils.isNotBlank(enclosure.getSubject())){
+			subjectVirusErr = subjectVirusError.concat(" : ").concat(enclosure.getSubject());
+			subjVirusFound = subjectVirusFound.concat(" : ").concat(enclosure.getSubject());
+		}*/
+
 		try {
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());

@@ -23,6 +23,21 @@
                             <span style="font-size: 10px">&bull;&nbsp;</span>
                             <span><a th:text="${rootFile.get('size').getAsString()}"></a></span>
                         </p>
+
+
+            </div>
+            <div th:each="rootDir : ${enclosure.get('rootDirs')}" style="padding: 0px 0.5px 0px 3rem;">
+
+                        <p style="margin-block-start: 0.25em;margin-block-end: 0.25em;">
+                            <strong>&bull;&nbsp;
+                                <span ><a th:text="${rootDir.get('name').getAsString()}"></a></span>
+                            </strong>
+                            <span style="font-size: 10px">&bull;&nbsp;</span>
+                            <span >Dossier </span>
+                            <span style="font-size: 10px">&bull;&nbsp;</span>
+                            <span><a th:text="${rootDir.get('size').getAsString()}"></a></span>
+                        </p>
+
             </div>
 
         </div>
