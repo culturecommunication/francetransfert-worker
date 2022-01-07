@@ -23,10 +23,10 @@ public class SatisfactionService {
 
 	public boolean saveData(RateRepresentation rate) throws WorkerException {
 		try {
-			String hostname = InetAddress.getLocalHost().getHostName();
-			LOGGER.info("Hostname: " + hostname);
-			String fileName = rate.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + rate.getType().getValue()
-					+ ".csv";
+			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
+			LOGGER.debug("Hostname: " + hostname);
+			String fileName = hostname + "_" + rate.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
+					+ rate.getType().getValue() + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();

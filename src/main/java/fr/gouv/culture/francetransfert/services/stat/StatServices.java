@@ -53,9 +53,10 @@ public class StatServices {
 					.collect(Collectors.joining("|"));
 
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
-			String hostname = InetAddress.getLocalHost().getHostName();
-			LOGGER.info("Hostname: " + hostname);
-			String fileName = date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + TypeStat.UPLOAD.getValue() + ".csv";
+			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
+			LOGGER.debug("Hostname: " + hostname);
+			String fileName = hostname + "_" + date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
+					+ TypeStat.UPLOAD.getValue() + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
@@ -95,10 +96,10 @@ public class StatServices {
 			}
 
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
-			String hostname = InetAddress.getLocalHost().getHostName();
-			LOGGER.info("Hostname: " + hostname);
-			String fileName = date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + TypeStat.DOWNLOAD.getValue()
-					+ ".csv";
+			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
+			LOGGER.debug("Hostname: " + hostname);
+			String fileName = hostname + "_" + date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
+					+ TypeStat.DOWNLOAD.getValue() + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
