@@ -125,6 +125,7 @@ public class RestClientUtils {
 
 			HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, headers);
 
+			LOGGER.info("Worker sendfile to ignimission : " + file);
 			response = restTemplate.exchange(requestUri, httpMethod, requestEntity, Object.class);
 			if (!response.getStatusCode().equals(HttpStatus.OK)) {
 				throw new WorkerException("Ignimission error while sending file" + response.toString());
