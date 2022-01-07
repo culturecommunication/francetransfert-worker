@@ -1,5 +1,6 @@
 package fr.gouv.culture.francetransfert.services.stat;
 
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -52,7 +53,8 @@ public class StatServices {
 					.collect(Collectors.joining("|"));
 
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
-
+			String hostname = InetAddress.getLocalHost().getHostName();
+			LOGGER.info("Hostname: " + hostname);
 			String fileName = date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + TypeStat.UPLOAD.getValue() + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
@@ -93,7 +95,8 @@ public class StatServices {
 			}
 
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
-
+			String hostname = InetAddress.getLocalHost().getHostName();
+			LOGGER.info("Hostname: " + hostname);
 			String fileName = date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + TypeStat.DOWNLOAD.getValue()
 					+ ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);

@@ -1,5 +1,6 @@
 package fr.gouv.culture.francetransfert.services.satisfaction;
 
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -22,6 +23,8 @@ public class SatisfactionService {
 
 	public boolean saveData(RateRepresentation rate) throws WorkerException {
 		try {
+			String hostname = InetAddress.getLocalHost().getHostName();
+			LOGGER.info("Hostname: " + hostname);
 			String fileName = rate.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + rate.getType().getValue()
 					+ ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
