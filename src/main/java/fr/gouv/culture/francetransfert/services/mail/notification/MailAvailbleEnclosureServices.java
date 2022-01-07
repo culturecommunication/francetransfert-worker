@@ -89,6 +89,8 @@ public class MailAvailbleEnclosureServices {
 
 		if(StringUtils.isNotBlank(enclosure.getSubject())){
 			subject = subject.concat(" : ").concat(enclosure.getSubject());
+			subjectPassword  = subjectPassword.concat(" : ").concat(enclosure.getSubject());
+
 		}
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
