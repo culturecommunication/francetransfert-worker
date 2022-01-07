@@ -42,8 +42,9 @@
            th:insert="~{mail-message :: message}"></div>
       <div th:insert="~{mail-pli-content :: contentPli}"></div>
       <div th:insert="~{mail-validate-date :: validateDate}"></div>
-      <div th:insert="~{mail-administration-pli :: administrationPli}"></div>
       <div th:if="${enclosure.get('publicLink').getAsString().equals('true')}" th:insert="~{mail-lien-telechargement-public :: lienPublic}"></div>
+      <div th:insert="~{mail-administration-pli :: administrationPli}"></div>
+
 
     </div>
 
