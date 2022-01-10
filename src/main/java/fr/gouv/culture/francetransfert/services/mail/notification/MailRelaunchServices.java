@@ -66,9 +66,10 @@ public class MailRelaunchServices {
 	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName)
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
+		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
 		if (!CollectionUtils.isEmpty(recipients)) {
-			if(StringUtils.isNotBlank(enclosure.getSubject())){
-				subjectRelaunchRecipient = subjectRelaunchRecipient.concat(" : ").concat(enclosure.getSubject());
+			if (StringUtils.isNotBlank(enclosure.getSubject())) {
+				sendRelaunchRecipient = sendRelaunchRecipient.concat(" : ").concat(enclosure.getSubject());
 			}
 			for (Recipient recipient : recipients) {
 				Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());
@@ -79,7 +80,7 @@ public class MailRelaunchServices {
 							recipient.getMail(), recipient.getId()));
 					LOGGER.info(" send relaunch mail to {} ", recipient.getMail());
 					mailNotificationServices.prepareAndSend(recipient.getMail(),
-							subjectRelaunchRecipient + enclosure.getSender(), enclosure, templateName);
+							sendRelaunchRecipient + enclosure.getSender(), enclosure, templateName);
 				}
 			}
 		}

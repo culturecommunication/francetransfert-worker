@@ -40,10 +40,14 @@ public class MailEnclosureNoLongerAvailbleServices {
 	public void sendEnclosureNotAvailble(Enclosure enclosure) throws MetaloadException {
 
 		List<Recipient> recipients = enclosure.getRecipients();
+		String sendNoAvailbleEnclosureRecipient = new String(subjectNoAvailbleEnclosureRecipient);
+		String sendNoAvailbleEnclosureSender = new String(subjectNoAvailbleEnclosureSender);
 		if (!CollectionUtils.isEmpty(recipients)) {
-			if(StringUtils.isNotBlank(enclosure.getSubject())){
-				subjectNoAvailbleEnclosureRecipient = subjectNoAvailbleEnclosureRecipient.concat(" : ").concat(enclosure.getSubject());
-				subjectNoAvailbleEnclosureSender = subjectNoAvailbleEnclosureSender.concat(" : ").concat(enclosure.getSubject());
+			if (StringUtils.isNotBlank(enclosure.getSubject())) {
+				sendNoAvailbleEnclosureRecipient = sendNoAvailbleEnclosureRecipient.concat(" : ")
+						.concat(enclosure.getSubject());
+				sendNoAvailbleEnclosureSender = sendNoAvailbleEnclosureSender.concat(" : ")
+						.concat(enclosure.getSubject());
 			}
 			List<Recipient> recipientsDoNotDownloadedEnclosure = new ArrayList<>();
 			for (Recipient recipient : recipients) {
@@ -52,7 +56,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 						&& 0 == Integer.parseInt(recipientMap.get(RecipientKeysEnum.NB_DL.getKey())));
 				if (isFileDownloaded) {
 					recipientsDoNotDownloadedEnclosure.add(recipient);
-					mailNotificationServices.prepareAndSend(recipient.getMail(), subjectNoAvailbleEnclosureRecipient,
+					mailNotificationServices.prepareAndSend(recipient.getMail(), sendNoAvailbleEnclosureRecipient,
 							enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue());
 					LOGGER.info("send email notification enclosure not availble to recipient: {}", recipient.getMail());
 				}
@@ -61,8 +65,8 @@ public class MailEnclosureNoLongerAvailbleServices {
 			// recipients who have not removed it in time
 			if (!CollectionUtils.isEmpty(recipientsDoNotDownloadedEnclosure)) {
 				enclosure.setRecipients(recipientsDoNotDownloadedEnclosure);
-				mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectNoAvailbleEnclosureSender,
-						enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue());
+				mailNotificationServices.prepareAndSend(enclosure.getSender(), sendNoAvailbleEnclosureSender, enclosure,
+						NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue());
 				LOGGER.info("send email notification enclosure not availble to sender: {}", enclosure.getSender());
 			}
 		}

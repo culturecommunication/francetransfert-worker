@@ -37,14 +37,16 @@ public class MailDownloadServices {
 
 	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) {
 		ArrayList<String> recipList = new ArrayList<String>();
+		String sendObject = new String(subjectDownloadProgress);
+		if (StringUtils.isNotBlank(enclosure.getSubject())) {
+			sendObject = sendObject.concat(" : ").concat(enclosure.getSubject());
+		}
 		recipList.addAll(enclosure.getRecipients().stream().filter(c -> recipientId.contains(c.getId()))
 				.map(x -> x.getMail()).collect(Collectors.toList()));
 		enclosure.setRecipientDownloadInProgress(recipList);
-		if(StringUtils.isNotBlank(enclosure.getSubject())){
-			subjectDownloadProgress = subjectDownloadProgress.concat(" : ").concat(enclosure.getSubject());
-		}
+
 		LOGGER.info("Send email notification download in progress to sender:  {}", enclosure.getSender());
-		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectDownloadProgress, enclosure,
+		mailNotificationServices.prepareAndSend(enclosure.getSender(), sendObject, enclosure,
 				NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
 	}
 

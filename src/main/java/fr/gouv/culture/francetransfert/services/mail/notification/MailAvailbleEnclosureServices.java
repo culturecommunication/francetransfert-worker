@@ -51,9 +51,6 @@ public class MailAvailbleEnclosureServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
-	private String subjectSenderPassw;
-	private String subjectSend;
-
 	// Send Mails to snder and recipients
 	public void sendMailsAvailableEnclosure(Enclosure enclosure) throws MetaloadException, StatException {
 		LOGGER.info("send email notification availble to sender: {}", enclosure.getSender());
@@ -64,30 +61,31 @@ public class MailAvailbleEnclosureServices {
 		enclosure.setPassword(passwordUnHashed);
 		enclosure.setPublicLink(publicLink);
 		enclosure.setUrlAdmin(mailNotificationServices.generateUrlAdmin(enclosure.getGuid()));
-		subjectSend = subjectSender;
-		subjectSenderPassw = subjectSenderPassword;
+		String subjectSend = new String(subjectSender);
+		String subjectSenderPassw = new String(subjectSenderPassword);
 		if (publicLink) {
 			enclosure.setUrlDownload(mailNotificationServices.generateUrlPublicForDownload(enclosure.getGuid()));
-			subjectSender = subjectSenderLink;
+			subjectSend = subjectSenderLink;
 		}
-		if(StringUtils.isNotBlank(enclosure.getSubject())){
-			subjectSend = subjectSender.concat(" : ").concat(enclosure.getSubject());
-			subjectSenderPassw = subjectSenderPassword.concat(" : ").concat(enclosure.getSubject());
+		if (StringUtils.isNotBlank(enclosure.getSubject())) {
+			subjectSend = subjectSend.concat(" : ").concat(enclosure.getSubject());
+			subjectSenderPassw = subjectSenderPassw.concat(" : ").concat(enclosure.getSubject());
 		}
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassw, enclosure,
 				NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue());
 		if (!publicLink)
-			sendToRecipients(enclosure, subjectRecipient, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
+			sendToRecipients(enclosure, new String(subjectRecipient),
+					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
 	}
 
 	// Send mails to recipients
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName) {
 		subject = subject + " " + enclosure.getSender();
-		String subjectPassword = subjectRecipientPassword;
+		String subjectPassword = new String(subjectRecipientPassword);
 
-		if(StringUtils.isNotBlank(enclosure.getSubject())){
+		if (StringUtils.isNotBlank(enclosure.getSubject())) {
 			subject = subject.concat(" : ").concat(enclosure.getSubject());
 			subjectPassword  = subjectPassword.concat(" : ").concat(enclosure.getSubject());
 
