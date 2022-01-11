@@ -25,7 +25,7 @@
               <strong>Il reste disponible jusqu’au </strong>
               <strong><span style="color: #0269cc"><a th:text="${enclosure.get('expireDate').getAsString()}"></a></span>
               </strong>
-              <strong>, (au-delà il sera supprimé).</strong>
+              <strong> (au-delà il sera supprimé).</strong>
             </p>
           </div>
           <div th:insert="~{mail-sender :: senderEmail}"></div>
