@@ -22,7 +22,7 @@
           </div>
           <div >
             <p style="margin: 0rem 0rem 2.5rem 0rem;font-size: 16px;text-align: center;">
-              <strong>Il était disponible jusqu’au </strong>
+              <strong>Il reste disponible jusqu’au </strong>
               <strong><span style="color: #0269cc"><a th:text="${enclosure.get('expireDate').getAsString()}"></a></span>
               </strong>
               <strong>, (au-delà il sera supprimé).</strong>
@@ -33,6 +33,7 @@
                th:insert="~{mail-nom-pli :: nomPli}"></div>
           <div th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}"
                th:insert="~{mail-message :: message}"></div>
+          <div th:insert="~{mail-pli-content :: contentPli}"></div>
           <div th:insert="~{mail-button-acceder :: buttonAcceder}"></div>
           <hr style="margin-block-start: 0;margin-inline-start: 2rem;margin-inline-end: 2rem;">
       </div>

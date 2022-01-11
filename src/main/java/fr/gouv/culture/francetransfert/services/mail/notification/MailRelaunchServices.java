@@ -80,7 +80,7 @@ public class MailRelaunchServices {
 							recipient.getMail(), recipient.getId()));
 					LOGGER.info(" send relaunch mail to {} ", recipient.getMail());
 					mailNotificationServices.prepareAndSend(recipient.getMail(),
-							sendRelaunchRecipient + enclosure.getSender(), enclosure, templateName);
+							sendRelaunchRecipient, enclosure, templateName);
 				}
 			}
 		}
