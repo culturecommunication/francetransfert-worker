@@ -39,6 +39,8 @@ public class Enclosure {
 
 	private List<Recipient> recipients;
 
+	private List<Recipient> notDownloadRecipients;
+
 	private String message;
 
 	private String subject;

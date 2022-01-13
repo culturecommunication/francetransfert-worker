@@ -64,7 +64,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 			// Send email to the sender of enclosure is no longer available for download to
 			// recipients who have not removed it in time
 			if (!CollectionUtils.isEmpty(recipientsDoNotDownloadedEnclosure)) {
-				enclosure.setRecipients(recipientsDoNotDownloadedEnclosure);
+				enclosure.setNotDownloadRecipients(recipientsDoNotDownloadedEnclosure);
 				mailNotificationServices.prepareAndSend(enclosure.getSender(), sendNoAvailbleEnclosureSender, enclosure,
 						NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue());
 				LOGGER.info("send email notification enclosure not availble to sender: {}", enclosure.getSender());
