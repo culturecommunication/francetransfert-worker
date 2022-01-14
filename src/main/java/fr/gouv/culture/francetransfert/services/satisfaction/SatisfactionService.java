@@ -21,6 +21,9 @@ public class SatisfactionService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SatisfactionService.class);
 
+	private static final String[] HEADER = { "ID_PLIS", "DATE", "COMMENTAIRE", "NOTE", "TYPE_SATISFACTION",
+			"DOMAINE_DESTINATAIRE" };
+
 	public boolean saveData(RateRepresentation rate) throws WorkerException {
 		try {
 			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
@@ -29,7 +32,8 @@ public class SatisfactionService {
 					+ rate.getType().getValue() + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
-			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
+			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
+					.setSkipHeaderRecord(Files.exists(filePath)).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 			csvPrinter.printRecord(rate.getPlis(), rate.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
 					rate.getMessage(), rate.getSatisfaction(), rate.getType().getValue(), rate.getDomain());
