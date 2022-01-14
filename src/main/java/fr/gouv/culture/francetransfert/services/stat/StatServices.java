@@ -38,7 +38,7 @@ public class StatServices {
 	Base64CryptoService base64CryptoService;
 
 	private static final String[] HEADER = { "ID_PLIS", "DATE", "DOMAINE_EXPEDITEUR", "DOMAINE_DESTINATAIRE", "TAILLE",
-			"HASH_MAIL", "TYPE_ACTION" };
+			"HASH_EXPE", "TYPE_ACTION" };
 
 	public boolean saveDataUpload(String enclosureId) throws WorkerException {
 		try {
