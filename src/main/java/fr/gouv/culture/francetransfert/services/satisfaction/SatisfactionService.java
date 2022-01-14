@@ -22,7 +22,7 @@ public class SatisfactionService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SatisfactionService.class);
 
 	private static final String[] HEADER = { "ID_PLIS", "DATE", "COMMENTAIRE", "NOTE", "TYPE_SATISFACTION",
-			"DOMAINE_DESTINATAIRE" };
+			"DOMAINE" };
 
 	public boolean saveData(RateRepresentation rate) throws WorkerException {
 		try {

@@ -38,7 +38,7 @@ public class StatServices {
 	Base64CryptoService base64CryptoService;
 
 	private static final String[] HEADER = { "ID_PLIS", "DATE", "DOMAINE_EXPEDITEUR", "DOMAINE_DESTINATAIRE", "TAILLE",
-			"HASH_EXPE", "TYPE_ACTION" };
+			"HASH_MAIL", "TYPE_ACTION" };
 
 	public boolean saveDataUpload(String enclosureId) throws WorkerException {
 		try {
@@ -106,7 +106,8 @@ public class StatServices {
 					+ TypeStat.DOWNLOAD.getValue() + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
-			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
+			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
+					.setSkipHeaderRecord(Files.exists(filePath)).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 
 			// PLIS,DATE,Expediteur,destinataire,poids,hash_reciever,type
