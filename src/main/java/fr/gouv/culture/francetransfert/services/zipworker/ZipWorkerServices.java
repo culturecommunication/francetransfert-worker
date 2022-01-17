@@ -102,17 +102,18 @@ public class ZipWorkerServices {
 	public void startZip(String prefix) throws MetaloadException, StorageException {
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
-		LOGGER.info(" STEP STATE ZIP ");
-		LOGGER.info(" SIZE " + list.size() + " LIST ===> " + list.toString());
+		LOGGER.debug(" STEP STATE ZIP ");
+		LOGGER.debug(" SIZE " + list.size() + " LIST ===> " + list.toString());
 		Enclosure enclosure = Enclosure.build(prefix, redisManager);
 
-		/*subjectVirusErr = subjectVirusError;
-		subjVirusFound = subjectVirusFound;
-
-		if(StringUtils.isNotBlank(enclosure.getSubject())){
-			subjectVirusErr = subjectVirusError.concat(" : ").concat(enclosure.getSubject());
-			subjVirusFound = subjectVirusFound.concat(" : ").concat(enclosure.getSubject());
-		}*/
+		/*
+		 * subjectVirusErr = subjectVirusError; subjVirusFound = subjectVirusFound;
+		 * 
+		 * if(StringUtils.isNotBlank(enclosure.getSubject())){ subjectVirusErr =
+		 * subjectVirusError.concat(" : ").concat(enclosure.getSubject());
+		 * subjVirusFound =
+		 * subjectVirusFound.concat(" : ").concat(enclosure.getSubject()); }
+		 */
 
 		try {
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
@@ -134,27 +135,27 @@ public class ZipWorkerServices {
 
 			if (isClean) {
 
-				LOGGER.info(" start zip files temp to disk");
+				LOGGER.debug(" start zip files temp to disk");
 				zipDownloadedContent(prefix, passwordUnHashed, passwordGenerated);
 
-				LOGGER.info(" start upload zip file temp to OSU");
+				LOGGER.debug(" start upload zip file temp to OSU");
 				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
 						getBaseFolderNameWithZipPrefix(prefix));
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
-				LOGGER.info(" start delete zip file in local disk");
+				LOGGER.debug(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
 				File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
 				if (!fileZip.delete()) {
 					throw new WorkerException("error delete zip file");
 				}
-				LOGGER.info(" start delete zip file in OSU");
+				LOGGER.debug(" start delete zip file in OSU");
 				deleteFilesFromOSU(manager, bucketName, prefix);
 				notifyEmailWorker(prefix);
 			} else {
 				cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(),
 						subjectVirusFound);
 			}
-			LOGGER.info(" STEP STATE ZIP OK");
+			LOGGER.debug(" STEP STATE ZIP OK");
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
 			cleanUpEnclosure(bucketName, prefix, enclosure,
@@ -379,28 +380,29 @@ public class ZipWorkerServices {
 			String emailSubject) {
 		try {
 			/** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
-			LOGGER.info(" Processing clean up {} / {} - {} ", bucketName, prefix, bucketPrefix);
-			LOGGER.info(" clean up OSU");
+			LOGGER.info("Processing clean up for enclosure{} - {} / {} - {} ", enclosure.getGuid(), bucketName, prefix,
+					bucketPrefix);
+			LOGGER.debug("clean up OSU");
 			deleteFilesFromOSU(manager, bucketName, prefix);
 
 			// clean temp data in REDIS for Enclosure
-			LOGGER.info(" clean up REDIS temp data");
+			LOGGER.debug("clean up REDIS temp data");
 			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix);
 
 			// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 			// recipients, sender and enclosure
-			LOGGER.info(" clean up REDIS");
+			LOGGER.debug("clean up REDIS");
 			cleanUpServices.cleanUpEnclosureCoreInRedis(prefix);
 
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
 			// Notify sender
-			if(StringUtils.isNotBlank(enclosure.getSubject())){
+			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
 			}
 			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName);
 		} catch (Exception e) {
-			LOGGER.error("Error while cleaning up Enclosure : " + e.getMessage(), e);
+			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		}
 	}
 
