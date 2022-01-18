@@ -11,7 +11,7 @@
             <p style="color: #0269cc; margin-right: 3em;
                             margin-block-start: 0em;margin-block-end: 0.5em;"
                th:each="recipient : ${enclosure.get('notDownloadRecipients')}">
-                <a th:text="${recipient.get('mail').getAsString()}"></a>
+                <a style="color: #0269cc;" th:text="${recipient.get('mail').getAsString()}"></a>
             </p>
         </div>
 

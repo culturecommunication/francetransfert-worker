@@ -10,7 +10,7 @@
                 <p style="color: #0269cc; margin-right: 3em;
                         margin-block-start: 0em;margin-block-end: 0.5em;"
                         th:each="recipientDl : ${enclosure.get('recipientDownloadInProgress')}">
-                        <a th:text="${#strings.toLowerCase(recipientDl.getAsString())}"></a>
+                        <a style="color: #0269cc;" th:text="${#strings.toLowerCase(recipientDl.getAsString())}"></a>
                 </p>
             </div>
         </div>
