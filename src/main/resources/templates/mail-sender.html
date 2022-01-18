@@ -6,8 +6,8 @@
 </head>
 <body>
 
-    <div th:fragment="senderEmail" style="margin: 0rem 1rem 0.15rem 2rem;;color: #000000;">
-        <p>
+    <div th:fragment="senderEmail" style="margin: 0rem 1rem 0.15rem 2rem;color: #000000;">
+        <p style="margin-block-start: 0em;margin-block-end: 0em;margin-left: 2em;">
             <strong>Expéditeur :  </strong>
 
                 <span style="color: #0269cc"><a th:text="${#strings.toLowerCase(enclosure.get('sender').getAsString())}"></a>

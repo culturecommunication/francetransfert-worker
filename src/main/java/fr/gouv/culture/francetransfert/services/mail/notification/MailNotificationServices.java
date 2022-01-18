@@ -67,11 +67,8 @@ public class MailNotificationServices {
 				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
 			}
 
-			Resource fileRessource = new ClassPathResource("static/images/logo-ft.png");
-
 			String htmlContent = htmlBuilder.build(object, templateName);
 			helper.setText(htmlContent, true);
-			helper.addInline(fileRessource.getFilename(), fileRessource, "image/png");
 			emailSender.send(message);
 		} catch (MessagingException | IOException e) {
 			throw new WorkerException("Enclosure build error");
