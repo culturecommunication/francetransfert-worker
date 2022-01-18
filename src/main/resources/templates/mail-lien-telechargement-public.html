@@ -7,13 +7,13 @@
 <body>
 <div th:fragment="lienPublic" style="margin: 0rem 2rem 0.5rem 2rem; ;color: #000000;">
         <hr style="margin-block-start: 0;margin-inline-start: 2rem;margin-inline-end: 2rem;">
-        <p style="color: #0269cc; font-size: small; margin-block-end: 0em;margin-block-start: 0;">
+        <p style="color: #0269cc; font-size: small; margin-block-end: 0em;margin-block-start: 0;margin-left: 2em;">
             <strong>
                 <a th:href="${enclosure.get('urlDownload').getAsString()}">Lien de téléchargement public</a>
             </strong>
         </p>
 
-        <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;">
+        <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;margin-left: 2em;">
             Si le lien de téléchargement ne fonctionne pas dans votre messagerie,
             utilisez le lien :
             <span th:text="${enclosure.get('urlDownload').getAsString()}"></span>

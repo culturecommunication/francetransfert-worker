@@ -7,14 +7,14 @@
 <body>
         <div th:fragment="contentPli" style="margin: 0rem 1rem 2rem 2rem; ;color: #000000;">
 
-            <p style="margin-top: 1.5rem">
+            <p style="margin-top: 1.5rem ;margin-left: 2em;">
                 <strong>Contenu du pli : </strong>
                     <span><a th:text="${enclosure.get('countElements')}"></a></span> élément(s),
                     <span><a th:text="${enclosure.get('totalSize').getAsString()}"></a></span> au total
             </p>
             <div th:each="rootFile : ${enclosure.get('rootFiles')}"
                  style="padding: 0px 0.5px 0px 3rem;">
-                        <p style="margin-block-start: 0.25em;margin-block-end: 0.25em;">
+                        <p style="margin-block-start: 0.25em;margin-block-end: 0.25em;margin-left: 3em;">
                             <strong>&bull;&nbsp;
                                 <span ><a th:text="${rootFile.get('nameWithoutExtension').getAsString()}"></a></span>
                             </strong>
@@ -28,7 +28,7 @@
             </div>
             <div th:each="rootDir : ${enclosure.get('rootDirs')}" style="padding: 0px 0.5px 0px 3rem;">
 
-                        <p style="margin-block-start: 0.25em;margin-block-end: 0.25em;">
+                        <p style="margin-block-start: 0.25em;margin-block-end: 0.25em;margin-left: 3em;">
                             <strong>&bull;&nbsp;
                                 <span ><a th:text="${rootDir.get('name').getAsString()}"></a></span>
                             </strong>
