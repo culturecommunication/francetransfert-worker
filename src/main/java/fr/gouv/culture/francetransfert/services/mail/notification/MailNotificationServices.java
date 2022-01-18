@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -64,8 +66,12 @@ public class MailNotificationServices {
 			if (StringUtils.isNotBlank(subject)) {
 				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
 			}
+
+			Resource fileRessource = new ClassPathResource("static/images/logo-ft.png");
+
 			String htmlContent = htmlBuilder.build(object, templateName);
 			helper.setText(htmlContent, true);
+			helper.addInline(fileRessource.getFilename(), fileRessource, "image/png");
 			emailSender.send(message);
 		} catch (MessagingException | IOException e) {
 			throw new WorkerException("Enclosure build error");

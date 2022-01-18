@@ -50,6 +50,7 @@ public class MailContentBuilder {
         Context context = new Context();
         context.setVariable("enclosure", jsonObject);
         context.setVariable("logoFt", logoFT);
+        context.setVariable("logoFtRessource", "logo-ft.png");
         context.setVariable("fileIcone", fileIcone);
         context.setVariable("folerIcone", folderIcone);
         context.setVariable("accessButton", accessButtonImg);
