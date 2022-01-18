@@ -40,6 +40,8 @@ public class StatServices {
 	private static final String[] HEADER = { "ID_PLIS", "DATE", "DOMAINE_EXPEDITEUR", "DOMAINE_DESTINATAIRE", "TAILLE",
 			"HASH_EXPE", "TYPE_ACTION" };
 
+	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+
 	public boolean saveDataUpload(String enclosureId) throws WorkerException {
 		try {
 			LOGGER.info("STEP SAVE UPLOAD STATS");
@@ -58,8 +60,9 @@ public class StatServices {
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
 			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
 			LOGGER.debug("Hostname: " + hostname);
-			String fileName = hostname + "_" + date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
-					+ TypeStat.UPLOAD.getValue() + ".csv";
+			// ip-10-50-11-193_2022-01-18_FranceTransfert_upload_stats.csv
+			String fileName = hostname + "_FranceTransfert_" + date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
+					+ TypeStat.UPLOAD.getValue() + "_stats" + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
@@ -102,8 +105,9 @@ public class StatServices {
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
 			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
 			LOGGER.debug("Hostname: " + hostname);
-			String fileName = hostname + "_" + date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
-					+ TypeStat.DOWNLOAD.getValue() + ".csv";
+			// FranceTransfert_stats_download_20220114.csv
+			String fileName = "FranceTransfert_stats" + "_" + TypeStat.DOWNLOAD.getValue() + date.format(DATE_FORMAT)
+					+ ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
