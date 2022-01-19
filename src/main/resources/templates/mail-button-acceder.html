@@ -11,14 +11,19 @@
 		<p style="margin: 0px 0px 0px 0px; font-style: italic">Pour
 			accéder au pli vous aurez besoin d’un mot de passe qui vous a été
 			transmis dans un courriel séparé.</p>
-		<p width="46%" height="12%"
-			style="vertical-align: middle; mso-line-height-rule: exactly; background-color: #0269cc; margin-left: 27%; line-height: 40px; margin-right: 27%; border-radius: 7px;">
-			<a
-				style="mso-line-height-rule: exactly; color: #FFFFFF; padding: 10px; font-size: 16px; line-height: 40px;"
-				th:href="${enclosure.get('urlDownload').getAsString()}"> <strong>
-					Accéder au pli </strong>
-			</a>
-		</p>
+		<table
+			style="margin-left: 26%; margin-right: 26%; vertical-align: middle;">
+			<tr style="vertical-align: middle;">
+				<td
+					style="vertical-align: middle; padding: 8px 32px; color: #ffffff; mso-line-height-rule: exactly; background-color: #0269cc; line-height: 40px; border-radius: 7px;">
+					<a
+					style="vertical-align: middle; color: #ffffff; mso-line-height-rule: exactly; background-color: #0269cc; border-radius: 7px;"
+					th:href="${enclosure.get('urlDownload').getAsString()}"> <strong>
+							Accéder au pli </strong>
+				</a>
+				</td>
+			</tr>
+		</table>
 		<p style="margin: 0px 0px 0px 0px; font-style: italic">
 			Si le bouton ne fonctionne pas dans votre messagerie, utilisez le
 			lien : <a th:href="${enclosure.get('urlDownload').getAsString()}"
