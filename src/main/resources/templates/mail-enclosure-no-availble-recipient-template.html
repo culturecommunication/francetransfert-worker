@@ -9,36 +9,42 @@
 
 <body
 	style="margin: 0px 0px 0px 0px; padding: 40px 0px 40px 0px; background-color: #D9D9D9; height: auto; font-family: Calibri, sans-serif">
-	<div class="container"
-		style="width: 51%; border-color: black; background-color: #ffffff; margin-left: 25%; border-radius: 10px; padding-bottom: 1rem; border-style: solid; border-width: thin; border-color: #454141;">
-		<div th:insert="~{mail-header :: header}"></div>
-		<div>
-			<p
-				style="margin: 1.5rem 0rem 3rem 0rem; font-size: 26px; text-align: center;">
-				<strong> <span style="color: black">Oups! Vous
-						n’avez pas téléchargé le pli à temps</span>
-				</strong>
-			</p>
-		</div>
-		<div>
-			<p
-				style="margin: 0rem 0rem 2.5rem 0rem; font-size: 16px; text-align: center;">
-				<strong>Il était disponible jusqu’au </strong> <strong><span
-					style="color: #0269cc"
-					th:text="${enclosure.get('expireDate').getAsString()}"></span> </strong> <strong>,
-					il est désormais supprimé.</strong>
-			</p>
-		</div>
-		<div th:insert="~{mail-sender :: senderEmail}"></div>
-		<div
-			th:if="${enclosure.get('subject').getAsString() != '' && enclosure.get('subject').getAsString() != ' '}"
-			th:insert="~{mail-nom-pli :: nomPli}"></div>
-		<div
-			th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}"
-			th:insert="~{mail-message :: message}"></div>
-		<div th:insert="~{mail-pli-content :: contentPli}"></div>
-		<hr
-			style="margin-block-start: 0; margin-inline-start: 2rem; margin-inline-end: 2rem;" />
+	<div style="text-align: center;">
+		<table class="container"
+			style="width: 51%; border-color: black; background-color: #ffffff; margin-left: 25%; border-radius: 10px; padding-bottom: 1rem; border-style: solid; border-width: thin; border-color: #454141;">
+			<tr>
+				<td style="text-align: initial;"><div
+						th:insert="~{mail-header :: header}"></div>
+					<div>
+						<p
+							style="margin: 1.5rem 0rem 3rem 0rem; font-size: 26px; text-align: center;">
+							<strong> <span style="color: black">Oups! Vous
+									n’avez pas téléchargé le pli à temps</span>
+							</strong>
+						</p>
+					</div>
+					<div>
+						<p
+							style="margin: 0rem 0rem 2.5rem 0rem; font-size: 16px; text-align: center;">
+							<strong>Il était disponible jusqu’au </strong> <strong><span
+								style="color: #0269cc"
+								th:text="${enclosure.get('expireDate').getAsString()}"></span> </strong>
+							<strong>, il est désormais supprimé.</strong>
+						</p>
+					</div>
+					<div th:insert="~{mail-sender :: senderEmail}"></div>
+					<div
+						th:if="${enclosure.get('subject').getAsString() != '' && enclosure.get('subject').getAsString() != ' '}"
+						th:insert="~{mail-nom-pli :: nomPli}"></div>
+					<div
+						th:if="${enclosure.get('message').getAsString() != '' && enclosure.get('message').getAsString() != ' '}"
+						th:insert="~{mail-message :: message}"></div>
+					<div th:insert="~{mail-pli-content :: contentPli}"></div>
+					<hr
+						style="margin-block-start: 0; margin-inline-start: 2rem; margin-inline-end: 2rem;" />
+				</td>
+			</tr>
+		</table>
 	</div>
 </body>
 </html>
