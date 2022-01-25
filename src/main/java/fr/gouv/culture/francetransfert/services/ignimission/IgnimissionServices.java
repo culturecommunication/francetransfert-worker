@@ -61,11 +61,17 @@ public class IgnimissionServices {
 	@Value("${ignimission.domain.chunk_size}")
 	private int chunkSize;
 
-	@Value("${ignimission.stat.updown.id}")
-	private int idClientUpDown;
+	@Value("${ignimission.stat.upload.id:0}")
+	private int idClientUploadStat;
 
-	@Value("${ignimission.stat.satisfaction.id}")
-	private int idClientSatisfaction;
+	@Value("${ignimission.stat.satisfaction.upload.id:0}")
+	private int idClientSatisfactionUpload;
+
+	@Value("${ignimission.stat.download.id:0}")
+	private int idClientDownloadStat;
+
+	@Value("${ignimission.stat.satisfaction.download.id:0}")
+	private int idClientSatisfactionDownload;
 
 	@Autowired
 	private RestClientUtils restClientUtils;
@@ -138,9 +144,17 @@ public class IgnimissionServices {
 						File file = x.toFile();
 						// Check file type
 						if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "satisfaction")) {
-							idStat = idClientSatisfaction;
+							if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "download")) {
+								idStat = idClientSatisfactionDownload;
+							} else {
+								idStat = idClientSatisfactionUpload;
+							}
 						} else {
-							idStat = idClientUpDown;
+							if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "download")) {
+								idStat = idClientDownloadStat;
+							} else {
+								idStat = idClientUploadStat;
+							}
 						}
 						// Send file to ignimission
 						restClientUtils.sendIgniStat(ignimissionAuth.getAccessToken(), baseUri + statPath,
