@@ -94,6 +94,25 @@ public class MailNotificationServices {
 		}
 	}
 
+	public void prepareAndSendMailContact(String from ,String subject ,Object object, String templateName){
+		try {
+			LOGGER.debug("start send emails contact ");
+			templateName = templateName != null && !templateName.isEmpty() ? templateName
+					: NotificationTemplateEnum.MAIL_TEMPLATE.getValue();
+			JavaMailSenderImpl sender = new JavaMailSenderImpl();
+			MimeMessage message = sender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+			helper.setFrom(franceTransfertMail);
+			helper.setTo(from);
+			helper.setSubject(subject);
+			String htmlContent = htmlBuilder.build(object, templateName);
+			helper.setText(htmlContent, true);
+			emailSender.send(message);
+		} catch (MessagingException | IOException e) {
+			throw new WorkerException("formulaire contact build error");
+		}
+	}
+
 	public String generateUrlForDownload(String enclosureId, String recipientMail, String recipientId) {
 		try {
 			return urlDownloadApi + "?enclosure=" + enclosureId + "&recipient="

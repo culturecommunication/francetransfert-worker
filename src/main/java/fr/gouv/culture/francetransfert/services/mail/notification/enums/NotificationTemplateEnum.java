@@ -16,7 +16,8 @@ public enum NotificationTemplateEnum {
 	MAIL_VIRUS_ERROR_SENDER("mail-virus-error-sender-template"),
 	MAIL_INVALID_ENCLOSURE_SENDER("mail-invalid-sender-template"),
 	MAIL_PASSWORD_RECIPIENT("mail-available-recipient-password-template"),
-	MAIL_PASSWORD_SENDER("mail-available-sender-password-template");
+	MAIL_PASSWORD_SENDER("mail-available-sender-password-template"),
+	Mail_contact("mail-contact-template");
 
 	private String value;
 
