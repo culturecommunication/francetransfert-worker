@@ -4,16 +4,15 @@ import com.google.gson.Gson;
 
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
+import fr.gouv.culture.francetransfert.core.model.FormulaireContactData;
 import fr.gouv.culture.francetransfert.core.model.RateRepresentation;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
+import fr.gouv.culture.francetransfert.services.formulaireContact.FormulaireContactService;
 import fr.gouv.culture.francetransfert.services.ignimission.IgnimissionServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.*;
 import fr.gouv.culture.francetransfert.services.satisfaction.SatisfactionService;
 import fr.gouv.culture.francetransfert.services.sequestre.SequestreService;
 import fr.gouv.culture.francetransfert.services.stat.StatServices;
@@ -75,6 +74,9 @@ public class ScheduledTasks {
     private SequestreService sequestreService;
 
     @Autowired
+    private MailFormulaireContactServices formulaireContactService;
+
+    @Autowired
     private RedisManager redisManager;
 
     @Autowired
@@ -108,6 +110,10 @@ public class ScheduledTasks {
     @Autowired
     @Qualifier("sequestreWorkerExecutor")
     Executor sequestreWorkerExecutorFromBean;
+
+    @Autowired
+    @Qualifier("formuleContactWorkerExecutor")
+    Executor formuleContactWorkerExecutorFromBean;
 
     @Scheduled(cron = "${scheduled.relaunch.mail}")
     public void relaunchMail() throws WorkerException {
@@ -178,6 +184,7 @@ public class ScheduledTasks {
         initSatisfactionWorkers();
         initStatWorker();
         initSequestre();
+        initFormuleContact();
     }
 
     private void initSequestre() {
@@ -311,6 +318,28 @@ public class ScheduledTasks {
                         }
                     } catch (Exception e) {
                         LOGGER.error("Error initZipWorkers : " + e.getMessage(), e);
+                    }
+                }
+            }
+        });
+    }
+
+    private void initFormuleContact() {
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                ThreadPoolTaskExecutor formuleContactExecutor = (ThreadPoolTaskExecutor) formuleContactWorkerExecutorFromBean;
+                while (true) {
+                    try {
+                        List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.FORMULE_CONTACT_QUEUE.getValue());
+                        if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+                            FormulaireContactData formulaire = new Gson().fromJson(returnedBLPOPList.get(1),
+                                    FormulaireContactData.class);
+                            FormulaireContactTask task = new FormulaireContactTask(formulaire, formulaireContactService);
+                            formuleContactExecutor.execute(task);
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Error initFormulaireContact : " + e.getMessage(), e);
                     }
                 }
             }

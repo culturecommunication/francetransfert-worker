@@ -44,8 +44,15 @@ public class AsyncConfig {
     @Value("5")
     private int sequestreWorkerExecutorPoolSize;
 
+    @Value("5")
+    private int formuleContactWorkerExecutorPoolSize;
 
-    
+
+    @Bean(name = "formuleContactWorkerExecutor")
+    public Executor formuleContactWorkerExecutor() {
+        return generateThreadPoolTaskExecutor(formuleContactWorkerExecutorPoolSize);
+    }
+
     @Bean(name = "satisfactionWorkerExecutor")
     public Executor satisfactionWorkerExecutor() {
     	return generateThreadPoolTaskExecutor(satisfactionWorkerExecutorPoolSize);
