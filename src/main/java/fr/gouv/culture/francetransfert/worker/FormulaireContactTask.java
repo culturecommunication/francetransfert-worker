@@ -1,7 +1,6 @@
 package fr.gouv.culture.francetransfert.worker;
 
 import fr.gouv.culture.francetransfert.core.model.FormulaireContactData;
-import fr.gouv.culture.francetransfert.services.formulaireContact.FormulaireContactService;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailFormulaireContactServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import org.slf4j.Logger;
