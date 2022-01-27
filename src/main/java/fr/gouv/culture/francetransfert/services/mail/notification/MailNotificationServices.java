@@ -13,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -35,6 +33,9 @@ public class MailNotificationServices {
 //    properties mail France transfert SMTP
 	@Value("${spring.mail.ftmail}")
 	private String franceTransfertMail;
+
+	@Value("${contact.mail:''}")
+	private String franceTransfertContactMail;
 
 	@Value("${url.download.api}")
 	private String urlDownloadApi;
@@ -94,7 +95,7 @@ public class MailNotificationServices {
 		}
 	}
 
-	public void prepareAndSendMailContact(String from ,String subject ,Object object, String templateName){
+	public void prepareAndSendMailContact(String from, String subject, Object object, String templateName) {
 		try {
 			LOGGER.debug("start send emails contact ");
 			templateName = templateName != null && !templateName.isEmpty() ? templateName
@@ -102,8 +103,8 @@ public class MailNotificationServices {
 			JavaMailSenderImpl sender = new JavaMailSenderImpl();
 			MimeMessage message = sender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-			helper.setFrom(from);
-			helper.setTo(franceTransfertMail);
+			helper.setFrom(franceTransfertMail);
+			helper.setTo(franceTransfertContactMail);
 			helper.setSubject(subject);
 			String htmlContent = htmlBuilder.build(object, templateName);
 			helper.setText(htmlContent, true);
