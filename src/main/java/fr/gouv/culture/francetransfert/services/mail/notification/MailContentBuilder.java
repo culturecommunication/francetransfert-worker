@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.annotation.PostConstruct;
 
+import com.google.gson.GsonBuilder;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,17 +66,21 @@ public class MailContentBuilder {
 			jsonObject = new JsonParser().parse(jsonInString).getAsJsonObject();
 		}
 		Context context = new Context();
+
 		if(tempName.equalsIgnoreCase(serviceContact)){
 			context = buildFormulaireContact(jsonObject);
 		}else{
 		context.setVariable("enclosure", jsonObject);
-		context.setVariable("logoFt", logoFT);
 
-		context.setVariable("logoFtRessource", "data:image/png;base64," + IMG_RESSOURCE);
+
+
 		context.setVariable("fileIcone", fileIcone);
 		context.setVariable("folerIcone", folderIcone);
 		context.setVariable("accessButton", accessButtonImg);
 		}
+
+		context.setVariable("logoFt", logoFT);
+		context.setVariable("logoFtRessource", "data:image/png;base64," + IMG_RESSOURCE);
 		return templateEngine.process(tempName, context);
 	}
 
@@ -85,5 +90,6 @@ public class MailContentBuilder {
 		context.setVariable("contact", obj);
 		return  context;
 	}
+
 
 }

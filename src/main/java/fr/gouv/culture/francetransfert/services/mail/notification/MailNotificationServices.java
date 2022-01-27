@@ -102,8 +102,8 @@ public class MailNotificationServices {
 			JavaMailSenderImpl sender = new JavaMailSenderImpl();
 			MimeMessage message = sender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-			helper.setFrom(franceTransfertMail);
-			helper.setTo(from);
+			helper.setFrom(from);
+			helper.setTo(franceTransfertMail);
 			helper.setSubject(subject);
 			String htmlContent = htmlBuilder.build(object, templateName);
 			helper.setText(htmlContent, true);
