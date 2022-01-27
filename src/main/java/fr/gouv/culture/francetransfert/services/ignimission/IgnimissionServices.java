@@ -145,14 +145,18 @@ public class IgnimissionServices {
 						// Check file type
 						if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "satisfaction")) {
 							if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "download")) {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - satisfaction download");
 								idStat = idClientSatisfactionDownload;
 							} else {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - satisfaction upload");
 								idStat = idClientSatisfactionUpload;
 							}
 						} else {
 							if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "download")) {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - stat download");
 								idStat = idClientDownloadStat;
 							} else {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - stat upload");
 								idStat = idClientUploadStat;
 							}
 						}
