@@ -8,41 +8,46 @@
 </head>
 
 <body
-	style="margin: 0px 0px 0px 0px; padding: 40px 0px 40px 0px; background-color: #D9D9D9; height: auto; font-family: Calibri, sans-serif">
-
-	<div style="text-align: center;"><table class="container"
-		style="width: 51%; border-color: black; background-color: #ffffff; margin-left: 25%; border-radius: 10px; padding-bottom: 1rem; border-style: solid; border-width: thin; border-color: #454141;">
+	style="margin: 0px 0px 0px 0px; padding: 40px 0px 40px 0px; background-color: #D9D9D9; height: auto; width: 100%; font-family: Calibri, sans-serif">
+	<table align="center"
+		style="background-color: #D9D9D9; height: auto; width: 60%; text-align: center;">
 		<tr>
-			<td style="text-align: initial;">
-				<div th:insert="~{mail-header :: header}"></div>
-				<div style="margin: 2.5rem 1rem 0.15rem 2rem;">
-					<div>
-						<p style="font-size: 26px; text-align: center">
-							<strong> <span>Au moins un de vos fichiers ne
-									correspond pas au type de fichier autorisé, votre pli a donc
-									été supprimé de notre système. </span>
-							</strong>
-						</p>
-					</div>
-					<div style="margin: 2.5rem 1rem 1.5rem 2rem;">
-						<p>
-							<strong> Référence technique du pli : </strong> <span
-								th:text="${enclosure.get('guid').getAsString()}"></span>
-						</p>
-					</div>
+			<td>
+				<table class="container"
+					style="border-color: black; background-color: #ffffff; border-radius: 10px; padding-bottom: 1rem; border-style: solid; border-width: thin; border-color: #454141;">
+					<tr>
+						<td style="text-align: initial;">
+							<div th:insert="~{mail-header :: header}"></div>
+							<div style="margin: 2.5rem 1rem 0.15rem 2rem;">
+								<div>
+									<p style="font-size: 26px; text-align: center">
+										<strong> <span>Au moins un de vos fichiers ne
+												correspond pas au type de fichier autorisé, votre pli a donc
+												été supprimé de notre système. </span>
+										</strong>
+									</p>
+								</div>
+								<div style="margin: 2.5rem 1rem 1.5rem 2rem;">
+									<p>
+										<strong> Référence technique du pli : </strong> <span
+											th:text="${enclosure.get('guid').getAsString()}"></span>
+									</p>
+								</div>
 
-					<div
-						th:if="${enclosure.get('subject').getAsString() != '' && enclosure.get('subject').getAsString() != ' '}"
-						th:insert="~{mail-nom-pli :: nomPli}"></div>
-					<div th:insert="~{mail-pli-content :: contentPli}"></div>
+								<div
+									th:if="${enclosure.get('subject').getAsString() != '' && enclosure.get('subject').getAsString() != ' '}"
+									th:insert="~{mail-nom-pli :: nomPli}"></div>
+								<div th:insert="~{mail-pli-content :: contentPli}"></div>
 
-				</div>
-				<hr
-					style="margin-block-start: 0; margin-inline-start: 2rem; margin-inline-end: 2rem;" />
+							</div>
+							<hr
+								style="margin-block-start: 0; margin-inline-start: 2rem; margin-inline-end: 2rem;" />
+						</td>
+					</tr>
+				</table>
 			</td>
 		</tr>
-	</table></div>
-
+	</table>
 </body>
 </html>
 
