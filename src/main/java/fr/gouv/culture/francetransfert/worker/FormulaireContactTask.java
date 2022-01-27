@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FormulaireContactTask implements Runnable{
-    private static final Logger LOGGER = LoggerFactory.getLogger(SequestreWorkerTask.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FormulaireContactTask.class);
 
     FormulaireContactData formuleContactData;
     MailFormulaireContactServices formulaireContactService;
