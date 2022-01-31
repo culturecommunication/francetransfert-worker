@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +13,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RecipientKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.utils.DateUtils;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.security.WorkerException;
@@ -65,7 +66,11 @@ public class MailRelaunchServices {
 	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName)
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
+		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
 		if (!CollectionUtils.isEmpty(recipients)) {
+			if (StringUtils.isNotBlank(enclosure.getSubject())) {
+				sendRelaunchRecipient = sendRelaunchRecipient.concat(" : ").concat(enclosure.getSubject());
+			}
 			for (Recipient recipient : recipients) {
 				Map<String, String> recipientMap = RedisUtils.getRecipientEnclosure(redisManager, recipient.getId());
 				boolean isFileDownloaded = (!CollectionUtils.isEmpty(recipientMap)
@@ -75,7 +80,7 @@ public class MailRelaunchServices {
 							recipient.getMail(), recipient.getId()));
 					LOGGER.info(" send relaunch mail to {} ", recipient.getMail());
 					mailNotificationServices.prepareAndSend(recipient.getMail(),
-							subjectRelaunchRecipient + enclosure.getSender(), enclosure, templateName);
+							sendRelaunchRecipient, enclosure, templateName);
 				}
 			}
 		}

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="UTF-8">
+<title>button acceder</title>
+</head>
+<body>
+	<div th:fragment="buttonAcceder"
+		style="margin: 0rem 2rem 0.15rem 2rem; text-align: center; font-size: 14px;">
+
+		<p style="margin: 0px 0px 0px 0px; font-style: italic">Pour
+			accéder au pli vous aurez besoin d’un mot de passe qui vous a été
+			transmis dans un courriel séparé.</p>
+		<table
+			style="margin-left: 35%; margin-right: 26%; vertical-align: middle;">
+			<tr style="vertical-align: middle;">
+				<td
+					style="vertical-align: middle; padding: 12px 20px; color: #ffffff; mso-line-height-rule: exactly; background-color: #0269cc; border-radius: 7px;">
+					<a
+					style="vertical-align: middle; color: #ffffff; mso-line-height-rule: exactly; background-color: #0269cc; border-radius: 7px;"
+					th:href="${enclosure.get('urlDownload').getAsString()}"> <strong>
+							Accéder au pli </strong>
+				</a>
+				</td>
+			</tr>
+		</table>
+		<p style="margin: 0px 0px 0px 0px; font-style: italic">
+			Si le bouton ne fonctionne pas dans votre messagerie, utilisez le
+			lien : <a th:href="${enclosure.get('urlDownload').getAsString()}"
+				style="color: #0269cc">Accéder au pli</a>
+		</p>
+	</div>
+</body>
+</html>

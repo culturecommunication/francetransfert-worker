@@ -6,11 +6,11 @@ import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.DateUtils;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.utils.DateUtils;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,7 +39,11 @@ public class Enclosure {
 
 	private List<Recipient> recipients;
 
+	private List<Recipient> notDownloadRecipients;
+
 	private String message;
+
+	private String subject;
 
 	private boolean withPassword;
 
@@ -80,12 +84,13 @@ public class Enclosure {
 		String expireEnclosureDate = DateUtils
 				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
 		String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
+		String subject = enclosureRedis.get(EnclosureKeysEnum.SUBJECT.getKey());
 		String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
 		boolean withPassword = password != null && !password.isEmpty();
 
 		return Enclosure.builder().guid(enclosureId).rootFiles(filesOfEnclosure).rootDirs(dirsOfEnclosure)
 				.countElements(filesOfEnclosure.size() + dirsOfEnclosure.size()).totalSize(totalSize)
 				.expireDate(expireEnclosureDate).sender(senderEnclosure).recipients(recipientsEnclosure)
-				.message(message).withPassword(withPassword).build();
+				.message(message).subject(subject).withPassword(withPassword).build();
 	}
 }

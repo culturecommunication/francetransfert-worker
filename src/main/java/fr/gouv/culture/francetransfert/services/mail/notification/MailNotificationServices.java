@@ -6,7 +6,9 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +18,12 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
-import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 
 @Component
 public class MailNotificationServices {
@@ -31,6 +33,9 @@ public class MailNotificationServices {
 //    properties mail France transfert SMTP
 	@Value("${spring.mail.ftmail}")
 	private String franceTransfertMail;
+
+	@Value("${contact.mail:''}")
+	private String franceTransfertContactMail;
 
 	@Value("${url.download.api}")
 	private String urlDownloadApi;
@@ -59,7 +64,10 @@ public class MailNotificationServices {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 			helper.setFrom(franceTransfertMail);
 			helper.setTo(to);
-			helper.setSubject(subject);
+			if (StringUtils.isNotBlank(subject)) {
+				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
+			}
+
 			String htmlContent = htmlBuilder.build(object, templateName);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
@@ -84,6 +92,25 @@ public class MailNotificationServices {
 			emailSender.send(message);
 		} catch (MessagingException e) {
 			throw new WorkerException("Enclosure build error");
+		}
+	}
+
+	public void prepareAndSendMailContact(String from, String subject, Object object, String templateName) {
+		try {
+			LOGGER.debug("start send emails contact ");
+			templateName = templateName != null && !templateName.isEmpty() ? templateName
+					: NotificationTemplateEnum.MAIL_TEMPLATE.getValue();
+			JavaMailSenderImpl sender = new JavaMailSenderImpl();
+			MimeMessage message = sender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+			helper.setFrom(franceTransfertMail);
+			helper.setTo(franceTransfertContactMail);
+			helper.setSubject(subject);
+			String htmlContent = htmlBuilder.build(object, templateName);
+			helper.setText(htmlContent, true);
+			emailSender.send(message);
+		} catch (MessagingException | IOException e) {
+			throw new WorkerException("formulaire contact build error");
 		}
 	}
 
