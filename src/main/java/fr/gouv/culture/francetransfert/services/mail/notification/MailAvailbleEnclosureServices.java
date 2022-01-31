@@ -2,6 +2,7 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,15 +10,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import fr.gouv.culture.francetransfert.exception.StatException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
+import fr.gouv.culture.francetransfert.core.exception.StatException;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
-import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -34,6 +35,9 @@ public class MailAvailbleEnclosureServices {
 
 	@Value("${subject.sender}")
 	private String subjectSender;
+
+	@Value("${subject.sender.link}")
+	private String subjectSenderLink;
 
 	@Value("${subject.recipient}")
 	private String subjectRecipient;
@@ -57,21 +61,35 @@ public class MailAvailbleEnclosureServices {
 		enclosure.setPassword(passwordUnHashed);
 		enclosure.setPublicLink(publicLink);
 		enclosure.setUrlAdmin(mailNotificationServices.generateUrlAdmin(enclosure.getGuid()));
+		String subjectSend = new String(subjectSender);
+		String subjectSenderPassw = new String(subjectSenderPassword);
 		if (publicLink) {
 			enclosure.setUrlDownload(mailNotificationServices.generateUrlPublicForDownload(enclosure.getGuid()));
+			subjectSend = subjectSenderLink;
 		}
-		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSender, enclosure,
+		if (StringUtils.isNotBlank(enclosure.getSubject())) {
+			subjectSend = subjectSend.concat(" : ").concat(enclosure.getSubject());
+			subjectSenderPassw = subjectSenderPassw.concat(" : ").concat(enclosure.getSubject());
+		}
+		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
-		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassword, enclosure,
+		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassw, enclosure,
 				NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue());
 		if (!publicLink)
-			sendToRecipients(enclosure, subjectRecipient, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
+			sendToRecipients(enclosure, new String(subjectRecipient),
+					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
 	}
 
 	// Send mails to recipients
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName) {
-		subject = enclosure.getSender() + " " + subject;
-		String subjectPassword = subjectRecipientPassword + " " + enclosure.getSender();
+		subject = subject + " " + enclosure.getSender();
+		String subjectPassword = new String(subjectRecipientPassword);
+
+		if (StringUtils.isNotBlank(enclosure.getSubject())) {
+			subject = subject.concat(" : ").concat(enclosure.getSubject());
+			subjectPassword  = subjectPassword.concat(" : ").concat(enclosure.getSubject());
+
+		}
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
 			for (Recipient recipient : recipients) {

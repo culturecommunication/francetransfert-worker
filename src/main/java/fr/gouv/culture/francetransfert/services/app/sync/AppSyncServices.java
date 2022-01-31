@@ -5,18 +5,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.AppSyncKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.AppSyncKeysEnum;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 
 @Service
 public class AppSyncServices {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AppSyncServices.class);
-    
-    @Autowired
-    RedisManager redisManager;
+	private static final Logger LOGGER = LoggerFactory.getLogger(AppSyncServices.class);
+
+	@Autowired
+	RedisManager redisManager;
 
 	public void appSyncCleanup() {
 		try {
@@ -25,7 +24,7 @@ public class AppSyncServices {
 			throw new WorkerException(e.getMessage());
 		}
 	}
-	
+
 	public void appSyncRelaunch() {
 		try {
 			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_RELAUNCH.getKey());
@@ -46,7 +45,7 @@ public class AppSyncServices {
 		boolean shouldRelaunch = false;
 		try {
 			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_RELAUNCH.getKey());
-			if(incrementedAppSyncCounter == 1) {
+			if (incrementedAppSyncCounter == 1) {
 				shouldRelaunch = true;
 			}
 		} catch (Exception e) {
@@ -59,7 +58,7 @@ public class AppSyncServices {
 		boolean shouldCleanup = false;
 		try {
 			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_CLEANUP.getKey());
-			if(incrementedAppSyncCounter == 1) {
+			if (incrementedAppSyncCounter == 1) {
 				shouldCleanup = true;
 			}
 		} catch (Exception e) {
@@ -72,8 +71,9 @@ public class AppSyncServices {
 		boolean shouldUpdateDomain = false;
 		try {
 			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_IGNIMISSION_DOMAIN.getKey());
-			LOGGER.info(" worker : start Application ignimission incrementedAppSyncCounter {} ", incrementedAppSyncCounter);
-			if(incrementedAppSyncCounter == 1) {
+			LOGGER.info(" worker : start Application ignimission incrementedAppSyncCounter {} ",
+					incrementedAppSyncCounter);
+			if (incrementedAppSyncCounter == 1) {
 				shouldUpdateDomain = true;
 			}
 		} catch (Exception e) {

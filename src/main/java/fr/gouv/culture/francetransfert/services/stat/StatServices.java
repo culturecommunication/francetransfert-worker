@@ -1,5 +1,6 @@
 package fr.gouv.culture.francetransfert.services.stat;
 
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -18,12 +19,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fr.gouv.culture.francetransfert.enums.TypeStat;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.TypeStat;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.security.WorkerException;
-import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 
 @Service
 public class StatServices {
@@ -35,6 +36,11 @@ public class StatServices {
 
 	@Autowired
 	Base64CryptoService base64CryptoService;
+
+	private static final String[] HEADER = { "ID_PLIS", "DATE", "DOMAINE_EXPEDITEUR", "DOMAINE_DESTINATAIRE", "TAILLE",
+			"HASH_EXPE", "TYPE_ACTION" };
+
+	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
 	public boolean saveDataUpload(String enclosureId) throws WorkerException {
 		try {
@@ -52,11 +58,15 @@ public class StatServices {
 					.collect(Collectors.joining("|"));
 
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
-
-			String fileName = date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + TypeStat.UPLOAD.getValue() + ".csv";
+			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
+			LOGGER.debug("Hostname: " + hostname);
+			// ip-10-50-11-193_2022-01-18_FranceTransfert_upload_stats.csv
+			String fileName = hostname + "_FranceTransfert_" + date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
+					+ TypeStat.UPLOAD.getValue() + "_stats" + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
-			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
+			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
+					.setSkipHeaderRecord(Files.exists(filePath)).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 
 			// PLIS,DATE,Expediteur,destinataire,poids,hash_sender,type
@@ -93,12 +103,15 @@ public class StatServices {
 			}
 
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
-
-			String fileName = date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_" + TypeStat.DOWNLOAD.getValue()
-					+ ".csv";
+			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
+			LOGGER.debug("Hostname: " + hostname);
+			// FranceTransfert_stats_download_20220114.csv
+			String fileName = hostname + "_FranceTransfert_" + date.format(DateTimeFormatter.ISO_LOCAL_DATE) + "_"
+					+ TypeStat.DOWNLOAD.getValue() + "_stats" + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
-			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).build();
+			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
+					.setSkipHeaderRecord(Files.exists(filePath)).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 
 			// PLIS,DATE,Expediteur,destinataire,poids,hash_reciever,type

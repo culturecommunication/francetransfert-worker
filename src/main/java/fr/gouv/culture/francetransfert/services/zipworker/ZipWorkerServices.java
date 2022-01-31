@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,22 +23,22 @@ import org.springframework.stereotype.Service;
 
 import com.amazonaws.services.s3.model.S3Object;
 
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
+import fr.gouv.culture.francetransfert.core.exception.StorageException;
+import fr.gouv.culture.francetransfert.core.services.MimeService;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.services.StorageManager;
+import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.exception.InvalidSizeTypeException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.MimeService;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.exception.MetaloadException;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.utils.RedisUtils;
-import fr.gouv.culture.francetransfert.francetransfert_storage_api.StorageManager;
-import fr.gouv.culture.francetransfert.francetransfert_storage_api.Exception.StorageException;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificationServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
-import fr.gouv.culture.francetransfert.utils.Base64CryptoService;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.io.outputstream.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
@@ -94,12 +95,26 @@ public class ZipWorkerServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
+	private String subjectVirusErr;
+
+	private String subjVirusFound;
+
 	public void startZip(String prefix) throws MetaloadException, StorageException {
 		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
-		LOGGER.info(" STEP STATE ZIP ");
-		LOGGER.info(" SIZE " + list.size() + " LIST ===> " + list.toString());
+		LOGGER.debug(" STEP STATE ZIP ");
+		LOGGER.debug(" SIZE " + list.size() + " LIST ===> " + list.toString());
 		Enclosure enclosure = Enclosure.build(prefix, redisManager);
+
+		/*
+		 * subjectVirusErr = subjectVirusError; subjVirusFound = subjectVirusFound;
+		 * 
+		 * if(StringUtils.isNotBlank(enclosure.getSubject())){ subjectVirusErr =
+		 * subjectVirusError.concat(" : ").concat(enclosure.getSubject());
+		 * subjVirusFound =
+		 * subjectVirusFound.concat(" : ").concat(enclosure.getSubject()); }
+		 */
+
 		try {
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
@@ -120,27 +135,27 @@ public class ZipWorkerServices {
 
 			if (isClean) {
 
-				LOGGER.info(" start zip files temp to disk");
+				LOGGER.debug(" start zip files temp to disk");
 				zipDownloadedContent(prefix, passwordUnHashed, passwordGenerated);
 
-				LOGGER.info(" start upload zip file temp to OSU");
+				LOGGER.debug(" start upload zip file temp to OSU");
 				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
 						getBaseFolderNameWithZipPrefix(prefix));
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
-				LOGGER.info(" start delete zip file in local disk");
+				LOGGER.debug(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
 				File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
 				if (!fileZip.delete()) {
 					throw new WorkerException("error delete zip file");
 				}
-				LOGGER.info(" start delete zip file in OSU");
+				LOGGER.debug(" start delete zip file in OSU");
 				deleteFilesFromOSU(manager, bucketName, prefix);
 				notifyEmailWorker(prefix);
 			} else {
 				cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(),
 						subjectVirusFound);
 			}
-			LOGGER.info(" STEP STATE ZIP OK");
+			LOGGER.debug(" STEP STATE ZIP OK");
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
 			cleanUpEnclosure(bucketName, prefix, enclosure,
@@ -180,20 +195,20 @@ public class ZipWorkerServices {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 	}
 
-	private void zipDownloadedContent(String zippedFileName, String password, String passwordGenerated) throws IOException {
-		if(passwordGenerated.equalsIgnoreCase("false")){
-		String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
-		try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
-				ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());)
-		{
-			File fileToZip = new File(sourceFile);
-			for (File file : fileToZip.listFiles()) {
-				zipFile(file, file.getName(), zipOut, true);
+	private void zipDownloadedContent(String zippedFileName, String password, String passwordGenerated)
+			throws IOException {
+		if (passwordGenerated.equalsIgnoreCase("false")) {
+			String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
+			try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
+					ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());) {
+				File fileToZip = new File(sourceFile);
+				for (File file : fileToZip.listFiles()) {
+					zipFile(file, file.getName(), zipOut, true);
+				}
+				zipOut.flush();
+				fos.flush();
 			}
-			zipOut.flush();
-			fos.flush();
-		}
-		}else {
+		} else {
 			zipDownloadedContentWithoutPassword(zippedFileName);
 		}
 	}
@@ -201,8 +216,7 @@ public class ZipWorkerServices {
 	private void zipDownloadedContentWithoutPassword(String zippedFileName) throws IOException {
 		String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
 		try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
-			 ZipOutputStream zipOut = new ZipOutputStream(fos);)
-		{
+				ZipOutputStream zipOut = new ZipOutputStream(fos);) {
 			File fileToZip = new File(sourceFile);
 			for (File file : fileToZip.listFiles()) {
 				zipFile(file, file.getName(), zipOut, false);
@@ -212,16 +226,17 @@ public class ZipWorkerServices {
 		}
 	}
 
-	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut, boolean crypted) throws IOException {
+	private static void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut, boolean crypted)
+			throws IOException {
 		try {
 			ZipParameters parameters = new ZipParameters();
 			parameters.setCompressionMethod(CompressionMethod.DEFLATE);
 			parameters.setCompressionLevel(CompressionLevel.NORMAL);
-			if(crypted){
-			parameters.setEncryptFiles(true);
-			parameters.setEncryptionMethod(EncryptionMethod.AES);
-			parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-			}else {
+			if (crypted) {
+				parameters.setEncryptFiles(true);
+				parameters.setEncryptionMethod(EncryptionMethod.AES);
+				parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+			} else {
 				parameters.setEncryptFiles(false);
 			}
 			parameters.setFileNameInZip(fileName);
@@ -365,25 +380,29 @@ public class ZipWorkerServices {
 			String emailSubject) {
 		try {
 			/** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
-			LOGGER.info(" Processing clean up {} / {} - {} ", bucketName, prefix, bucketPrefix);
-			LOGGER.info(" clean up OSU");
+			LOGGER.info("Processing clean up for enclosure{} - {} / {} - {} ", enclosure.getGuid(), bucketName, prefix,
+					bucketPrefix);
+			LOGGER.debug("clean up OSU");
 			deleteFilesFromOSU(manager, bucketName, prefix);
 
 			// clean temp data in REDIS for Enclosure
-			LOGGER.info(" clean up REDIS temp data");
+			LOGGER.debug("clean up REDIS temp data");
 			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix);
 
 			// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 			// recipients, sender and enclosure
-			LOGGER.info(" clean up REDIS");
+			LOGGER.debug("clean up REDIS");
 			cleanUpServices.cleanUpEnclosureCoreInRedis(prefix);
 
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
 			// Notify sender
+			if (StringUtils.isNotBlank(enclosure.getSubject())) {
+				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
+			}
 			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName);
 		} catch (Exception e) {
-			LOGGER.error("Error while cleaning up Enclosure : " + e.getMessage(), e);
+			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		}
 	}
 

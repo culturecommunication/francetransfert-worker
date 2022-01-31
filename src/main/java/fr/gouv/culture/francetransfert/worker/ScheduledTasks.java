@@ -1,21 +1,11 @@
 package fr.gouv.culture.francetransfert.worker;
 
-import com.google.gson.Gson;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisQueueEnum;
-import fr.gouv.culture.francetransfert.model.RateRepresentation;
-import fr.gouv.culture.francetransfert.security.WorkerException;
-import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
-import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
-import fr.gouv.culture.francetransfert.services.ignimission.IgnimissionServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
-import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
-import fr.gouv.culture.francetransfert.services.satisfaction.SatisfactionService;
-import fr.gouv.culture.francetransfert.services.sequestre.SequestreService;
-import fr.gouv.culture.francetransfert.services.stat.StatServices;
-import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +16,26 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import com.google.gson.Gson;
+
+import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.exception.StorageException;
+import fr.gouv.culture.francetransfert.core.model.FormulaireContactData;
+import fr.gouv.culture.francetransfert.core.model.RateRepresentation;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.security.WorkerException;
+import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
+import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
+import fr.gouv.culture.francetransfert.services.ignimission.IgnimissionServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailFormulaireContactServices;
+import fr.gouv.culture.francetransfert.services.mail.notification.MailRelaunchServices;
+import fr.gouv.culture.francetransfert.services.satisfaction.SatisfactionService;
+import fr.gouv.culture.francetransfert.services.sequestre.SequestreService;
+import fr.gouv.culture.francetransfert.services.stat.StatServices;
+import fr.gouv.culture.francetransfert.services.zipworker.ZipWorkerServices;
 
 @Component
 public class ScheduledTasks {
@@ -73,6 +79,9 @@ public class ScheduledTasks {
 	private SequestreService sequestreService;
 
 	@Autowired
+	private MailFormulaireContactServices formulaireContactService;
+
+	@Autowired
 	private RedisManager redisManager;
 
 	@Autowired
@@ -107,6 +116,10 @@ public class ScheduledTasks {
 	@Qualifier("sequestreWorkerExecutor")
 	Executor sequestreWorkerExecutorFromBean;
 
+	@Autowired
+	@Qualifier("formuleContactWorkerExecutor")
+	Executor formuleContactWorkerExecutorFromBean;
+
 	@Scheduled(cron = "${scheduled.relaunch.mail}")
 	public void relaunchMail() throws WorkerException {
 		LOGGER.info("Worker : start relaunch for download Check");
@@ -119,11 +132,13 @@ public class ScheduledTasks {
 	}
 
 	@Scheduled(cron = "${scheduled.clean.up}")
-	public void cleanUp() throws WorkerException {
+	public void cleanUp() throws WorkerException, StorageException {
 		LOGGER.info("Worker : start clean-up expired enclosure Check");
 		if (appSyncServices.shouldCleanup()) {
 			LOGGER.info("Worker : start clean-up expired enclosure Checked and Started");
 			cleanUpServices.cleanUp();
+			LOGGER.info("Worker : start clean-up expired buckets");
+			cleanUpServices.deleteBucketOutOfTime();
 			LOGGER.info("Worker : finished clean-up expired enclosure");
 		}
 	}
@@ -174,6 +189,7 @@ public class ScheduledTasks {
 		initSatisfactionWorkers();
 		initStatWorker();
 		initSequestre();
+		initFormuleContact();
 	}
 
 	private void initSequestre() {
@@ -307,6 +323,30 @@ public class ScheduledTasks {
 						}
 					} catch (Exception e) {
 						LOGGER.error("Error initZipWorkers : " + e.getMessage(), e);
+					}
+				}
+			}
+		});
+	}
+
+	private void initFormuleContact() {
+		Executors.newSingleThreadExecutor().execute(new Runnable() {
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor formuleContactExecutor = (ThreadPoolTaskExecutor) formuleContactWorkerExecutorFromBean;
+				while (true) {
+					try {
+						List<String> returnedBLPOPList = redisManager
+								.subscribeFT(RedisQueueEnum.FORMULE_CONTACT_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							FormulaireContactData formulaire = new Gson().fromJson(returnedBLPOPList.get(1),
+									FormulaireContactData.class);
+							FormulaireContactTask task = new FormulaireContactTask(formulaire,
+									formulaireContactService);
+							formuleContactExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initFormulaireContact : " + e.getMessage(), e);
 					}
 				}
 			}

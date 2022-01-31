@@ -8,17 +8,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.RedisManager;
-import fr.gouv.culture.francetransfert.francetransfert_metaload_api.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.model.IgnimissionAuthenticationResponse;
 import fr.gouv.culture.francetransfert.model.IgnimissionDomainDataParameter;
 import fr.gouv.culture.francetransfert.model.IgnimissionDomainParameter;
@@ -40,6 +40,9 @@ public class IgnimissionServices {
 	@Value("${ignimission.path.domain}")
 	private String domainPath;
 
+	@Value("${ignimission.path.stat}")
+	private String statPath;
+
 	@Value("${ignimission.grant.type}")
 	private String grantType;
 
@@ -57,6 +60,18 @@ public class IgnimissionServices {
 
 	@Value("${ignimission.domain.chunk_size}")
 	private int chunkSize;
+
+	@Value("${ignimission.stat.upload.id:0}")
+	private int idClientUploadStat;
+
+	@Value("${ignimission.stat.satisfaction.upload.id:0}")
+	private int idClientSatisfactionUpload;
+
+	@Value("${ignimission.stat.download.id:0}")
+	private int idClientDownloadStat;
+
+	@Value("${ignimission.stat.satisfaction.download.id:0}")
+	private int idClientSatisfactionDownload;
 
 	@Autowired
 	private RestClientUtils restClientUtils;
@@ -115,26 +130,47 @@ public class IgnimissionServices {
 	public void sendStats() {
 
 		try {
-			IgnimissionAuthenticationResponse ignimissionAuth = getAuthentication();
 
-			if (Objects.nonNull(ignimissionAuth)) {
-				Path statPathRoot = Path.of(System.getProperty("java.io.tmpdir"));
-				try (Stream<Path> files = Files.list(statPathRoot)) {
-					files.filter(x -> x.getFileName().toString().endsWith(".csv")).forEach(x -> {
-						try {
-							File file = x.toFile();
-							LOGGER.info(x.getFileName().toString());
-
-							restClientUtils.getAsamExtensions(null, null, null, null);
-
-							file.delete();
-						} catch (Exception ex) {
-							LOGGER.error("Worker Ignimission stat error {} ", ex.getMessage(), ex);
+			Path statPathRoot = Path.of(System.getProperty("java.io.tmpdir"));
+			try (Stream<Path> files = Files.list(statPathRoot)) {
+				files.filter(x -> x.getFileName().toString().endsWith(".csv")).forEach(x -> {
+					try {
+						// Check auth before sending file 1 auth for all file
+						IgnimissionAuthenticationResponse ignimissionAuth = null;
+						if (Objects.isNull(ignimissionAuth)) {
+							ignimissionAuth = getAuthentication();
 						}
-					});
-				}
-
+						int idStat = 0;
+						File file = x.toFile();
+						// Check file type
+						if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "satisfaction")) {
+							if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "download")) {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - satisfaction download");
+								idStat = idClientSatisfactionDownload;
+							} else {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - satisfaction upload");
+								idStat = idClientSatisfactionUpload;
+							}
+						} else {
+							if (StringUtils.containsIgnoreCase(x.getFileName().toString(), "download")) {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - stat download");
+								idStat = idClientDownloadStat;
+							} else {
+								LOGGER.debug("Igni Stat : " + x.getFileName() + " - stat upload");
+								idStat = idClientUploadStat;
+							}
+						}
+						// Send file to ignimission
+						restClientUtils.sendIgniStat(ignimissionAuth.getAccessToken(), baseUri + statPath,
+								HttpMethod.POST, file, idStat);
+						// Delete file ton success
+						file.delete();
+					} catch (Exception ex) {
+						LOGGER.error("Worker Ignimission stat error {} ", ex.getMessage(), ex);
+					}
+				});
 			}
+
 		} catch (Exception ex) {
 			LOGGER.error("Worker Ignimission stat update error {} ", ex.getMessage(), ex);
 		}
