@@ -74,8 +74,9 @@ public class MailNotificationServicesTest {
         String recipient = "louay.haddad@gouv.fr";
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
+        String email = null;
         //when
-        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
+        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), email);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);

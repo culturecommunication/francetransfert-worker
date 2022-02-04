@@ -21,11 +21,20 @@ public class SendEmailNotificationUploadDownloadTask implements Runnable {
 
 	private String enclosureId;
 
+	private String newRecipient;
+
 	public SendEmailNotificationUploadDownloadTask(String enclosureId, RedisManager redisManager,
 			MailAvailbleEnclosureServices mailAvailbleEnclosureServices) {
 		this.enclosureId = enclosureId;
 		this.mailAvailbleEnclosureServices = mailAvailbleEnclosureServices;
 		this.redisManager = redisManager;
+	}
+	public SendEmailNotificationUploadDownloadTask(String enclosureId, String newRecipient,RedisManager redisManager,
+												   MailAvailbleEnclosureServices mailAvailbleEnclosureServices) {
+		this.enclosureId = enclosureId;
+		this.mailAvailbleEnclosureServices = mailAvailbleEnclosureServices;
+		this.redisManager = redisManager;
+		this.newRecipient = newRecipient;
 	}
 
 	public SendEmailNotificationUploadDownloadTask() {
@@ -37,7 +46,7 @@ public class SendEmailNotificationUploadDownloadTask implements Runnable {
 		try {
 			LOGGER.info(" [Worker] Start send email notification availble enclosure to download for enclosure N° {}",
 					enclosureId);
-			mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager));
+			mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager), newRecipient);
 			String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
 			redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 		} catch (Exception e) {

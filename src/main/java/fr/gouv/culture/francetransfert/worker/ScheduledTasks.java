@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.PostConstruct;
 
+import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -293,11 +294,16 @@ public class ScheduledTasks {
 				ThreadPoolTaskExecutor SendEmailNotificationUploadDownloadWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
 				while (true) {
 					try {
+						String email = "";
 						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
+						List<String> returnesBLOPemail = redisManager.subscribeFT(RedisQueueEnum.NEW_RECIPIENT.getValue());
+						if(!CollectionUtils.isEmpty(returnesBLOPemail)){
+							email = returnesBLOPemail.get(1);
+						}
 						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
 							String enclosureId = returnedBLPOPList.get(1);
 							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
-									enclosureId, redisManager, mailAvailbleEnclosureServices);
+									enclosureId,redisManager, mailAvailbleEnclosureServices);
 							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
 						}
 					} catch (Exception e) {
