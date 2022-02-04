@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import net.logstash.logback.util.StringUtils;
 
 @Data
 @AllArgsConstructor
@@ -84,7 +85,13 @@ public class Enclosure {
 		String expireEnclosureDate = DateUtils
 				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
 		String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
+		if (StringUtils.isBlank(message)) {
+			message = "";
+		}
 		String subject = enclosureRedis.get(EnclosureKeysEnum.SUBJECT.getKey());
+		if (StringUtils.isBlank(subject)) {
+			subject = "";
+		}
 		String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
 		boolean withPassword = password != null && !password.isEmpty();
 
