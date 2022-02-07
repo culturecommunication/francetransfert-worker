@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
@@ -85,6 +86,12 @@ public class Enclosure {
 				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
 		String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
 		String subject = enclosureRedis.get(EnclosureKeysEnum.SUBJECT.getKey());
+		if (StringUtils.isBlank(message)) {
+			message = "";
+		}
+		if (StringUtils.isBlank(subject)) {
+			subject = "";
+		}
 		String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
 		boolean withPassword = password != null && !password.isEmpty();
 
