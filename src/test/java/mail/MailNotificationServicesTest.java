@@ -62,7 +62,7 @@ public class MailNotificationServicesTest {
                 .totalSize(WorkerUtils.getFormattedFileSize(17))
                 .expireDate(LocalDateTime.now().plusDays(30).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)))
                 .sender("louay.haddad@live.fr")
-                .recipients(Arrays.asList(new Recipient("e4cce869-6f3d-4e10-900a-74299602f460", "louay.haddad@gouv.fr"), new Recipient("6efb01a7-bd3d-46a9-ac12-33085f76ce1c","louayhadded2012@gmail.com")))
+                .recipients(Arrays.asList(new Recipient("e4cce869-6f3d-4e10-900a-74299602f460", "louay.haddad@gouv.fr",false), new Recipient("6efb01a7-bd3d-46a9-ac12-33085f76ce1c","louayhadded2012@gmail.com",false)))
                 .message("Test message content")
                 .withPassword(false)
                 .build();

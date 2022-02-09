@@ -79,7 +79,8 @@ public class MailAvailbleEnclosureServices {
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassw, enclosure,
-				NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue());}
+				NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue());
+		}
 		if (!publicLink)
 			sendToRecipients(enclosure, new String(subjectRecipient),
 					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), email);
@@ -109,13 +110,15 @@ public class MailAvailbleEnclosureServices {
 				newRecipient.add(newRec);
 				recipients = newRecipient;
 			}
-			for (Recipient recipient : recipients) {
+			for (Recipient recipient : recipients ) {
+				if(!recipient.isSuppressionLogique()){
 				LOGGER.info("send email notification availble to recipient: {}", recipient.getMail());
 				enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 						recipient.getMail(), recipient.getId()));
 				mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName);
 				mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
 						NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue());
+				}
 			}
 
 		}

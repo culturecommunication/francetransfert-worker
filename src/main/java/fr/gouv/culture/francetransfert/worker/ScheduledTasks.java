@@ -191,6 +191,7 @@ public class ScheduledTasks {
 		initStatWorker();
 		initSequestre();
 		initFormuleContact();
+		initSendToNewEmailNotificationUploadDownloadWorkers();
 	}
 
 	private void initSequestre() {
@@ -294,17 +295,41 @@ public class ScheduledTasks {
 				ThreadPoolTaskExecutor SendEmailNotificationUploadDownloadWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
 				while (true) {
 					try {
-						String email = "";
 						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_QUEUE.getValue());
-						List<String> returnesBLOPemail = redisManager.subscribeFT(RedisQueueEnum.NEW_RECIPIENT.getValue());
-						if(!CollectionUtils.isEmpty(returnesBLOPemail)){
-							email = returnesBLOPemail.get(1);
-						}
 						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
 							String enclosureId = returnedBLPOPList.get(1);
 							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
 									enclosureId,redisManager, mailAvailbleEnclosureServices);
 							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initSendEmailNotificationUploadDownloadWorkers : " + e.getMessage(), e);
+					}
+				}
+			}
+		});
+	}
+
+	private void initSendToNewEmailNotificationUploadDownloadWorkers() {
+		LOGGER.info("initSendEmailNotificationUploadDownloadWorkers");
+		Executors.newSingleThreadExecutor().execute(new Runnable() {
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor SendEmailNotificationUploadDownloadWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
+				while (true) {
+					try {
+						String email = "";
+						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_NEW_RECIPIENT_QUEUE.getValue());
+						List<String> returnesBLOPemail = redisManager.subscribeFT(RedisQueueEnum.NEW_RECIPIENT.getValue());
+
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String enclosureId = returnedBLPOPList.get(1);
+							if(!CollectionUtils.isEmpty(returnesBLOPemail)){
+								email = returnesBLOPemail.get(1);
+							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
+									enclosureId,email,redisManager, mailAvailbleEnclosureServices);
+							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
+							}
 						}
 					} catch (Exception e) {
 						LOGGER.error("Error initSendEmailNotificationUploadDownloadWorkers : " + e.getMessage(), e);
