@@ -5,6 +5,7 @@ import java.util.List;
 
 import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.model.NewRecipient;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class MailAvailbleEnclosureServices {
 	Base64CryptoService base64CryptoService;
 
 	// Send Mails to snder and recipients
-	public void sendMailsAvailableEnclosure(Enclosure enclosure, String email) throws MetaloadException, StatException {
+	public void sendMailsAvailableEnclosure(Enclosure enclosure, NewRecipient metaDataRecipient) throws MetaloadException, StatException {
 		LOGGER.info("send email notification availble to sender: {}", enclosure.getSender());
 		String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 				EnclosureKeysEnum.PASSWORD.getKey());
@@ -74,8 +75,7 @@ public class MailAvailbleEnclosureServices {
 			subjectSend = subjectSend.concat(" : ").concat(enclosure.getSubject());
 			subjectSenderPassw = subjectSenderPassw.concat(" : ").concat(enclosure.getSubject());
 		}
-
-		if(!StringUtils.isNotBlank(email)){
+		if(metaDataRecipient == null){
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
 				NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassw, enclosure,
@@ -83,11 +83,11 @@ public class MailAvailbleEnclosureServices {
 		}
 		if (!publicLink)
 			sendToRecipients(enclosure, new String(subjectRecipient),
-					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), email);
+					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), metaDataRecipient);
 	}
 
 	// Send mails to recipients
-	public void sendToRecipients(Enclosure enclosure, String subject, String templateName, String email) {
+	public void sendToRecipients(Enclosure enclosure, String subject, String templateName, NewRecipient metaDataRecipient) {
 		subject = subject + " " + enclosure.getSender();
 		String subjectPassword = new String(subjectRecipientPassword);
 
@@ -98,18 +98,15 @@ public class MailAvailbleEnclosureServices {
 		}
 		List<Recipient> recipients = enclosure.getRecipients();
 		if (!CollectionUtils.isEmpty(recipients)) {
-
-			if(StringUtils.isNotBlank(email)) {
+			if(metaDataRecipient != null){
+			if(StringUtils.isNotBlank(metaDataRecipient.getMail())) {
 				Recipient newRec = new Recipient();
-				newRec.setMail(email);
-				List<String> returnesBLOP = redisManager.subscribeFT(RedisQueueEnum.NEW_ID_RECIPIENT.getValue());
-				if(!CollectionUtils.isEmpty(returnesBLOP)){
-					newRec.setId(returnesBLOP.get(1));
-				}
-				List<Recipient> newRecipient = new ArrayList<>();
-				newRecipient.add(newRec);
-				recipients = newRecipient;
-			}
+				newRec.setMail(metaDataRecipient.getMail());
+				newRec.setId(metaDataRecipient.getId());
+				List<Recipient> newRecipientList = new ArrayList<>();
+				newRecipientList.add(newRec);
+				recipients = newRecipientList;
+			}}
 			for (Recipient recipient : recipients ) {
 				if(!recipient.isSuppressionLogique()){
 				LOGGER.info("send email notification availble to recipient: {}", recipient.getMail());

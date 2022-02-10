@@ -3,6 +3,7 @@ package mail;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import fr.gouv.culture.francetransfert.FranceTransfertWorkerStarter;
+import fr.gouv.culture.francetransfert.core.model.NewRecipient;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.model.RootData;
@@ -71,12 +72,13 @@ public class MailNotificationServicesTest {
     @Test
     public void shouldSendMailToRecipientTest() throws Exception {
         //given
-        String recipient = "louay.haddad@gouv.fr";
+        NewRecipient recipient = new NewRecipient();
+        recipient.setMail("louay.haddad@gouv.fr");
+        recipient.setId("ffeepklfjeo2eo6hity");
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
-        String email = null;
         //when
-        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), email);
+        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), recipient);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);

@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import javax.annotation.PostConstruct;
 
 import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
+import fr.gouv.culture.francetransfert.core.model.NewRecipient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -320,16 +321,14 @@ public class ScheduledTasks {
 					try {
 						String email = "";
 						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_NEW_RECIPIENT_QUEUE.getValue());
-						List<String> returnesBLOPemail = redisManager.subscribeFT(RedisQueueEnum.NEW_RECIPIENT.getValue());
-
+						NewRecipient dataRecipient = new Gson().fromJson(returnedBLPOPList.get(1),
+								NewRecipient.class);
 						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
-							String enclosureId = returnedBLPOPList.get(1);
-							if(!CollectionUtils.isEmpty(returnesBLOPemail)){
-								email = returnesBLOPemail.get(1);
+							String enclosureId = dataRecipient.getIdEnclosure();
 							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
-									enclosureId,email,redisManager, mailAvailbleEnclosureServices);
+									enclosureId,dataRecipient,redisManager, mailAvailbleEnclosureServices);
 							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
-							}
+
 						}
 					} catch (Exception e) {
 						LOGGER.error("Error initSendEmailNotificationUploadDownloadWorkers : " + e.getMessage(), e);
