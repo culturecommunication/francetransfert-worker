@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -58,6 +59,7 @@ public class Enclosure {
 
 	private boolean publicLink;
 
+
 	public static Enclosure build(String enclosureId, RedisManager redisManager) throws MetaloadException {
 
 		List<RootData> filesOfEnclosure = new ArrayList<>();
@@ -79,7 +81,8 @@ public class Enclosure {
 		List<Recipient> recipientsEnclosure = new ArrayList<>();
 		for (Map.Entry<String, String> recipient : RedisUtils.getRecipientsEnclosure(redisManager, enclosureId)
 				.entrySet()) {
-			recipientsEnclosure.add(Recipient.builder().mail(recipient.getKey()).id(recipient.getValue()).build());
+			recipientsEnclosure.add(Recipient.builder().mail(recipient.getKey()).id(recipient.getValue())
+					.suppressionLogique(RedisUtils.isRecipientDeleted(redisManager,recipient.getValue())).build());
 		}
 		Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 		String expireEnclosureDate = DateUtils
