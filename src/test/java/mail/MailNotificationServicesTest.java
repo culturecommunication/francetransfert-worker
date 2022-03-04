@@ -3,6 +3,7 @@ package mail;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import fr.gouv.culture.francetransfert.FranceTransfertWorkerStarter;
+import fr.gouv.culture.francetransfert.core.model.NewRecipient;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.model.RootData;
@@ -62,7 +63,7 @@ public class MailNotificationServicesTest {
                 .totalSize(WorkerUtils.getFormattedFileSize(17))
                 .expireDate(LocalDateTime.now().plusDays(30).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)))
                 .sender("louay.haddad@live.fr")
-                .recipients(Arrays.asList(new Recipient("e4cce869-6f3d-4e10-900a-74299602f460", "louay.haddad@gouv.fr"), new Recipient("6efb01a7-bd3d-46a9-ac12-33085f76ce1c","louayhadded2012@gmail.com")))
+                .recipients(Arrays.asList(new Recipient("e4cce869-6f3d-4e10-900a-74299602f460", "louay.haddad@gouv.fr",false), new Recipient("6efb01a7-bd3d-46a9-ac12-33085f76ce1c","louayhadded2012@gmail.com",false)))
                 .message("Test message content")
                 .withPassword(false)
                 .build();
@@ -71,11 +72,13 @@ public class MailNotificationServicesTest {
     @Test
     public void shouldSendMailToRecipientTest() throws Exception {
         //given
-        String recipient = "louay.haddad@gouv.fr";
+        NewRecipient recipient = new NewRecipient();
+        recipient.setMail("louay.haddad@gouv.fr");
+        recipient.setId("ffeepklfjeo2eo6hity");
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue());
+        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), recipient);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);

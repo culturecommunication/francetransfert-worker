@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class Recipient {
     private String id;
     private String mail;
+    private boolean suppressionLogique;
 }

@@ -6,6 +6,8 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.PostConstruct;
 
+import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
+import fr.gouv.culture.francetransfert.core.model.NewRecipient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -190,6 +192,7 @@ public class ScheduledTasks {
 		initStatWorker();
 		initSequestre();
 		initFormuleContact();
+		initSendToNewEmailNotificationUploadDownloadWorkers();
 	}
 
 	private void initSequestre() {
@@ -297,8 +300,35 @@ public class ScheduledTasks {
 						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
 							String enclosureId = returnedBLPOPList.get(1);
 							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
-									enclosureId, redisManager, mailAvailbleEnclosureServices);
+									enclosureId,redisManager, mailAvailbleEnclosureServices);
 							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initSendEmailNotificationUploadDownloadWorkers : " + e.getMessage(), e);
+					}
+				}
+			}
+		});
+	}
+
+	private void initSendToNewEmailNotificationUploadDownloadWorkers() {
+		LOGGER.info("initSendEmailNotificationUploadDownloadWorkers");
+		Executors.newSingleThreadExecutor().execute(new Runnable() {
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor SendEmailNotificationUploadDownloadWorkerExecutor = (ThreadPoolTaskExecutor) sendEmailNotificationUploadDownloadWorkerExecutorFromBean;
+				while (true) {
+					try {
+						String email = "";
+						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_NEW_RECIPIENT_QUEUE.getValue());
+						NewRecipient dataRecipient = new Gson().fromJson(returnedBLPOPList.get(1),
+								NewRecipient.class);
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String enclosureId = dataRecipient.getIdEnclosure();
+							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
+									enclosureId,dataRecipient,redisManager, mailAvailbleEnclosureServices);
+							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
+
 						}
 					} catch (Exception e) {
 						LOGGER.error("Error initSendEmailNotificationUploadDownloadWorkers : " + e.getMessage(), e);
