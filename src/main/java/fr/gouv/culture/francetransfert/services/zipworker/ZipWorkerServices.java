@@ -1,6 +1,13 @@
 package fr.gouv.culture.francetransfert.services.zipworker;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -8,11 +15,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.util.IOUtils;
-import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
@@ -145,16 +149,14 @@ public class ZipWorkerServices {
 						getBaseFolderNameWithZipPrefix(prefix));
 
 				LOGGER.debug(" add hashZipFile to redis");
-				addHashFilesToMetData(prefix,getHashFromS3(prefix));
+				addHashFilesToMetData(prefix, getHashFromS3(prefix));
 
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
 				LOGGER.debug(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
 				File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
-				try {
-					fileZip.delete();
-				} catch (Exception e) {
-					throw new WorkerException("error delete zip file",e);
+				if (!fileZip.delete()) {
+					throw new WorkerException("error delete zip file");
 				}
 				LOGGER.debug(" start delete zip file in OSU");
 				deleteFilesFromOSU(manager, bucketName, prefix);
@@ -175,22 +177,22 @@ public class ZipWorkerServices {
 		}
 	}
 
-	private  String getHashFromS3(String enclosureId) throws MetaloadException, StorageException {
+	private String getHashFromS3(String enclosureId) throws MetaloadException, StorageException {
 		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 		String fileToDownload = storageManager.getZippedEnclosureName(enclosureId);
-		ObjectMetadata obj = storageManager.getObjectMetadata(bucketName,fileToDownload);
+		ObjectMetadata obj = storageManager.getObjectMetadata(bucketName, fileToDownload);
 		String hashFileFromS3 = obj.getETag();
 		return hashFileFromS3;
 	}
 
-	private void getContentMd5ForRedis(String prefix) throws IOException {
-		File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
-		FileInputStream fis = new FileInputStream(fileZip);
-		byte[] content_bytes = IOUtils.toByteArray(fis);
-		String md5 = new String(DigestUtils.md5Hex(content_bytes));
-		addHashFilesToMetData(prefix,md5);
-		fis.close();
-	}
+	/*
+	 * private void getContentMd5ForRedis(String prefix) throws IOException { File
+	 * fileZip = new File(getBaseFolderNameWithZipPrefix(prefix)); FileInputStream
+	 * fis = new FileInputStream(fileZip); byte[] content_bytes =
+	 * IOUtils.toByteArray(fis); String md5 = new
+	 * String(DigestUtils.md5Hex(content_bytes)); addHashFilesToMetData(prefix,md5);
+	 * fis.close(); }
+	 */
 
 	public void addHashFilesToMetData(String enclosureId, String hashFile) {
 		try {
@@ -233,7 +235,7 @@ public class ZipWorkerServices {
 	}
 
 	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, String fileZipPath)
-			throws StorageException{
+			throws StorageException {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 	}
 
