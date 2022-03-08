@@ -1,19 +1,18 @@
 package fr.gouv.culture.francetransfert.services.zipworker;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.channels.FileChannel;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.util.IOUtils;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +60,9 @@ public class ZipWorkerServices {
 
 	@Autowired
 	RedisManager redisManager;
+
+	@Autowired
+	StorageManager storageManager;
 
 	@Autowired
 	ClamAVScannerManager clamAVScannerManager;
@@ -141,12 +143,18 @@ public class ZipWorkerServices {
 				LOGGER.debug(" start upload zip file temp to OSU");
 				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
 						getBaseFolderNameWithZipPrefix(prefix));
+
+				LOGGER.debug(" add hashZipFile to redis");
+				addHashFilesToMetData(prefix,getHashFromS3(prefix));
+
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
 				LOGGER.debug(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
 				File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
-				if (!fileZip.delete()) {
-					throw new WorkerException("error delete zip file");
+				try {
+					fileZip.delete();
+				} catch (Exception e) {
+					throw new WorkerException("error delete zip file",e);
 				}
 				LOGGER.debug(" start delete zip file in OSU");
 				deleteFilesFromOSU(manager, bucketName, prefix);
@@ -164,6 +172,40 @@ public class ZipWorkerServices {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
 					subjectVirusError);
+		}
+	}
+
+	private  String getHashFromS3(String enclosureId) throws MetaloadException, StorageException {
+		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
+		String fileToDownload = storageManager.getZippedEnclosureName(enclosureId);
+		ObjectMetadata obj = storageManager.getObjectMetadata(bucketName,fileToDownload);
+		String hashFileFromS3 = obj.getETag();
+		return hashFileFromS3;
+	}
+
+	private void getContentMd5ForRedis(String prefix) throws IOException {
+		File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
+		FileInputStream fis = new FileInputStream(fileZip);
+		byte[] content_bytes = IOUtils.toByteArray(fis);
+		String md5 = new String(DigestUtils.md5Hex(content_bytes));
+		addHashFilesToMetData(prefix,md5);
+		fis.close();
+	}
+
+	public void addHashFilesToMetData(String enclosureId, String hashFile) {
+		try {
+			Map<String, String> tokenMap = redisManager
+					.hmgetAllString(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
+			if (tokenMap != null) {
+				Map<String, String> enclosureMap = redisManager
+						.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+				enclosureMap.put(EnclosureKeysEnum.HASH_FILE.getKey(), hashFile);
+				redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), enclosureMap);
+			} else {
+				throw new WorkerException("tokenMap from Redis is null");
+			}
+		} catch (Exception e) {
+			throw new WorkerException("Unable to add hashFile to redis");
 		}
 	}
 
@@ -191,7 +233,7 @@ public class ZipWorkerServices {
 	}
 
 	public void uploadZippedEnclosure(String bucketName, StorageManager manager, String fileName, String fileZipPath)
-			throws StorageException {
+			throws StorageException{
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 	}
 
@@ -311,9 +353,6 @@ public class ZipWorkerServices {
 	 * Writing files into temp directory and scanning for vulnerabilities
 	 *
 	 * @param list
-	 * @param bucketName
-	 * @param prefix
-	 * @param enclosure
 	 * @return
 	 * @throws InvalidSizeTypeException
 	 */
