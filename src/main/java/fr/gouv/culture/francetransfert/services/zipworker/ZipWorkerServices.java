@@ -404,7 +404,8 @@ public class ZipWorkerServices {
 	private void checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
 			FileInputStream fileInputStream) throws IOException, InvalidSizeTypeException {
 		if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
-			throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
+			String mimetype = mimeService.getMimeTypeFromFile(fileInputStream);
+			throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype : " + mimetype);
 		}
 
 		if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {
