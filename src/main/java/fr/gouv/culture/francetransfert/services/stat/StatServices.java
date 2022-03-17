@@ -66,7 +66,7 @@ public class StatServices {
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
-					.setRecordSeparator('\n').setSkipHeaderRecord(Files.exists(filePath)).build();
+					.setSkipHeaderRecord(Files.exists(filePath)).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 
 			// PLIS,DATE,Expediteur,destinataire,poids,hash_sender,type
@@ -111,7 +111,7 @@ public class StatServices {
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
 			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
-					.setRecordSeparator('\n').setSkipHeaderRecord(Files.exists(filePath)).build();
+					.setSkipHeaderRecord(Files.exists(filePath)).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 
 			// PLIS,DATE,Expediteur,destinataire,poids,hash_reciever,type
