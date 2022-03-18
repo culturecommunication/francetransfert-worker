@@ -38,7 +38,7 @@ public class SatisfactionService {
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 			csvPrinter.printRecord(rate.getPlis(), rate.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
 					rate.getMessage().replaceAll("\\s", " "), rate.getSatisfaction(), rate.getType().getValue(),
-					rate.getDomain());
+					rate.getDomain().toLowerCase());
 			csvPrinter.flush();
 			csvPrinter.close();
 			Files.writeString(filePath, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
