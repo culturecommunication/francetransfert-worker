@@ -49,12 +49,12 @@ public class StatServices {
 
 			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 
-			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
+			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId).toLowerCase();
 			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
 			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
 			Map<String, String> recipient = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
 
-			String recipientList = recipient.keySet().stream().map(x -> x.split("@")[1]).distinct()
+			String recipientList = recipient.keySet().stream().map(x -> x.toLowerCase().split("@")[1]).distinct()
 					.collect(Collectors.joining("|"));
 
 			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
@@ -91,14 +91,14 @@ public class StatServices {
 
 			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 
-			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
+			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId).toLowerCase();
 			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
 			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
 
 			String recipientList = "";
 			String hashedMail = "";
 			if (StringUtils.isNotBlank(recipientMail)) {
-				recipientList = recipientMail.split("@")[1];
+				recipientList = recipientMail.toLowerCase().split("@")[1];
 				hashedMail = base64CryptoService.encodedHash(recipientMail);
 			}
 
