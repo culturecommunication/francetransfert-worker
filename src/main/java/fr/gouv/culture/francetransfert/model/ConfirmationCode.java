@@ -11,9 +11,13 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ConfirmationCode {
 
-    private String code;
+	private String code;
 
-    private String mail;
+	private String mail;
 
-    private String dateExpiration;
+	private String dateExpiration;
+
+	private int sessionTime;
+
+	private int codeTime;
 }
