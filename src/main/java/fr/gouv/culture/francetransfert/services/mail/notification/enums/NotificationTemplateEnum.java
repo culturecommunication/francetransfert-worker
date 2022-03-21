@@ -12,6 +12,7 @@ public enum NotificationTemplateEnum {
 	MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS("mail-enclosure-no-availble-recipient-template"),
 	MAIL_ENCLOSURE_NO_AVAILBLE_SENDER("mail-enclosure-no-availble-sender-template"),
 	MAIL_CONFIRMATION_CODE("mail-confirmation-code-template"),
+	MAIL_CONFIRMATION_CODE_CONNECT("mail-confirmation-code-connect-template"),
 	MAIL_DOWNLOAD_SENDER_TEMPLATE("mail-download-sender-template"), MAIL_VIRUS_SENDER("mail-virus-sender-template"),
 	MAIL_VIRUS_ERROR_SENDER("mail-virus-error-sender-template"),
 	MAIL_INVALID_ENCLOSURE_SENDER("mail-invalid-sender-template"),
