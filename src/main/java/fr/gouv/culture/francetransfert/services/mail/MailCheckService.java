@@ -55,7 +55,7 @@ public class MailCheckService {
 	public void mailCheck() {
 
 		Map<String, String> hashRedis = redisManager.hmgetAllString(RedisKeysEnum.CHECK_MAIL.getFirstKeyPart());
-		String uuid = hashRedis.getOrDefault(CheckMailKeysEnum.UUID.getKey(), null);
+		String uuid = hashRedis.getOrDefault(CheckMailKeysEnum.UUID.getKey(), "");
 
 		try {
 			if (StringUtils.isNoneBlank(uuid)) {
@@ -101,7 +101,7 @@ public class MailCheckService {
 							redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_SEND.getKey());
 							redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
 							Map<String, String> mailInfo = new HashMap<String, String>();
-							mailInfo.put(CheckMailKeysEnum.UUID.getKey(), uuid);
+							mailInfo.put(CheckMailKeysEnum.UUID.getKey(), "");
 							mailInfo.put(CheckMailKeysEnum.DELAY.getKey(), delay.toString());
 							mailInfo.put(CheckMailKeysEnum.PENDING.getKey(), "0");
 							redisManager.insertHASH(RedisKeysEnum.CHECK_MAIL.getFirstKeyPart(), mailInfo);
