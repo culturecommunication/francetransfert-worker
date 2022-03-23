@@ -54,6 +54,25 @@ public class MailNotificationServices {
 	@Autowired
 	private RedisManager redisManager;
 
+	public void send(String to, String subject, String content) {
+		try {
+			LOGGER.debug("Start simple send");
+			JavaMailSenderImpl sender = new JavaMailSenderImpl();
+			MimeMessage message = sender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+			helper.setFrom(franceTransfertMail);
+			helper.setTo(to);
+			if (StringUtils.isNotBlank(subject)) {
+				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
+			}
+			String htmlContent = content;
+			helper.setText(htmlContent, true);
+			emailSender.send(message);
+		} catch (MessagingException | IOException e) {
+			throw new WorkerException("Simple send error", e);
+		}
+	}
+
 	public void prepareAndSend(String to, String subject, Object object, String templateName) {
 		try {
 			LOGGER.debug("start send emails for enclosure ");
@@ -72,7 +91,7 @@ public class MailNotificationServices {
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
 		} catch (MessagingException | IOException e) {
-			throw new WorkerException("Enclosure build error");
+			throw new WorkerException("Enclosure build error", e);
 		}
 	}
 
@@ -91,7 +110,7 @@ public class MailNotificationServices {
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
 		} catch (MessagingException e) {
-			throw new WorkerException("Enclosure build error");
+			throw new WorkerException("Enclosure build error", e);
 		}
 	}
 
@@ -110,7 +129,7 @@ public class MailNotificationServices {
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
 		} catch (MessagingException | IOException e) {
-			throw new WorkerException("formulaire contact build error");
+			throw new WorkerException("formulaire contact build error", e);
 		}
 	}
 
@@ -119,7 +138,7 @@ public class MailNotificationServices {
 			return urlDownloadApi + "?enclosure=" + enclosureId + "&recipient="
 					+ base64CryptoService.base64Encoder(recipientMail) + "&token=" + recipientId;
 		} catch (UnsupportedEncodingException e) {
-			throw new WorkerException("Download url error");
+			throw new WorkerException("Download url error", e);
 		}
 	}
 

@@ -6,8 +6,6 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.PostConstruct;
 
-import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
-import fr.gouv.culture.francetransfert.core.model.NewRecipient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +21,14 @@ import com.google.gson.Gson;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
 import fr.gouv.culture.francetransfert.core.model.FormulaireContactData;
+import fr.gouv.culture.francetransfert.core.model.NewRecipient;
 import fr.gouv.culture.francetransfert.core.model.RateRepresentation;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.app.sync.AppSyncServices;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
 import fr.gouv.culture.francetransfert.services.ignimission.IgnimissionServices;
+import fr.gouv.culture.francetransfert.services.mail.MailCheckService;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailAvailbleEnclosureServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailConfirmationCodeServices;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailDownloadServices;
@@ -85,6 +85,9 @@ public class ScheduledTasks {
 
 	@Autowired
 	private RedisManager redisManager;
+
+	@Autowired
+	private MailCheckService mailCheckService;
 
 	@Autowired
 	@Qualifier("satisfactionWorkerExecutor")
@@ -166,6 +169,38 @@ public class ScheduledTasks {
 			ignimissionServices.updateDomains();
 			LOGGER.info("Worker : finished Application ignimission domain extension update");
 		}
+	}
+
+	@Scheduled(cron = "${scheduled.sendcheckmail}")
+	public void checkMailSend() throws WorkerException {
+		if (appSyncServices.shouldSendCheckMail()) {
+			LOGGER.info("Worker : start checkMailSend");
+			mailCheckService.sendMail();
+			LOGGER.info("Worker : finished checkMailSend");
+		}
+	}
+
+	@Scheduled(cron = "${scheduled.checkmail}")
+	public void checkMailCheck() throws WorkerException {
+		if (appSyncServices.shouldCheckMailCheck()) {
+			LOGGER.info("Worker : start checkMail");
+			mailCheckService.mailCheck();
+			LOGGER.info("Worker : finished checkMail");
+		}
+	}
+
+	@Scheduled(cron = "${scheduled.sync.checkmail}")
+	public void appSyncCheckMailCheck() {
+		LOGGER.info("Worker : start Application synchronization CheckMailCheck");
+		appSyncServices.appSyncCheckMailCheck();
+		LOGGER.info("Worker : finished Application synchronization CheckMailCheck");
+	}
+
+	@Scheduled(cron = "${scheduled.sync.checkmail}")
+	public void appSyncCheckMailSend() {
+		LOGGER.info("Worker : start Application synchronization CheckMailSend");
+		appSyncServices.appSyncCheckMailSend();
+		LOGGER.info("Worker : finished Application synchronization CheckMailSend");
 	}
 
 	@Scheduled(cron = "${scheduled.send.stat}")
@@ -300,7 +335,7 @@ public class ScheduledTasks {
 						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
 							String enclosureId = returnedBLPOPList.get(1);
 							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
-									enclosureId,redisManager, mailAvailbleEnclosureServices);
+									enclosureId, redisManager, mailAvailbleEnclosureServices);
 							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
 						}
 					} catch (Exception e) {
@@ -320,13 +355,13 @@ public class ScheduledTasks {
 				while (true) {
 					try {
 						String email = "";
-						List<String> returnedBLPOPList = redisManager.subscribeFT(RedisQueueEnum.MAIL_NEW_RECIPIENT_QUEUE.getValue());
-						NewRecipient dataRecipient = new Gson().fromJson(returnedBLPOPList.get(1),
-								NewRecipient.class);
+						List<String> returnedBLPOPList = redisManager
+								.subscribeFT(RedisQueueEnum.MAIL_NEW_RECIPIENT_QUEUE.getValue());
+						NewRecipient dataRecipient = new Gson().fromJson(returnedBLPOPList.get(1), NewRecipient.class);
 						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
 							String enclosureId = dataRecipient.getIdEnclosure();
 							SendEmailNotificationUploadDownloadTask task = new SendEmailNotificationUploadDownloadTask(
-									enclosureId,dataRecipient,redisManager, mailAvailbleEnclosureServices);
+									enclosureId, dataRecipient, redisManager, mailAvailbleEnclosureServices);
 							SendEmailNotificationUploadDownloadWorkerExecutor.execute(task);
 
 						}
