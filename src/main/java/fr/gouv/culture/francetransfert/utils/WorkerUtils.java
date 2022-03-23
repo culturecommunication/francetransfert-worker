@@ -50,7 +50,7 @@ public class WorkerUtils {
 	}
 
 	// convert bit to octets", "Ko", "Mo", "Go", "To
-	public static String getFormattedFileSize(long size) {
+	public static String getFormattedFileSize(double size) {
 		String[] suffixes = new String[] { "octets", "Ko", "Mo", "Go", "To" };
 
 		double tmpSize = size;

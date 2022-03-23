@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -31,6 +32,8 @@ public class StatServices {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(StatServices.class);
 
+	private static final DecimalFormat df = new DecimalFormat("#.##");
+
 	@Autowired
 	RedisManager redisManager;
 
@@ -50,7 +53,7 @@ public class StatServices {
 			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId).toLowerCase();
-			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
+			double plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
 			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
 			Map<String, String> recipient = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
 
@@ -92,7 +95,7 @@ public class StatServices {
 			Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId).toLowerCase();
-			long plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
+			double plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
 			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
 
 			String recipientList = "";
@@ -128,10 +131,24 @@ public class StatServices {
 		}
 	}
 
-	private String byteCountToDisplaySize(long plisSize) {
-		String size = FileUtils.byteCountToDisplaySize(plisSize);
-		size = size.replace("bytes", "B");
+	private String byteCountToDisplaySize(double plisSize) {
+		String size = byteCountToDisplaySizeCustom(plisSize);
 		return size;
+	}
+
+	private static String byteCountToDisplaySizeCustom(double size) {
+		String displaySize;
+
+		if (size / FileUtils.ONE_GB >= 1) {
+			displaySize = df.format((size / FileUtils.ONE_GB)) + " GB";
+		} else if (size / FileUtils.ONE_MB >= 1) {
+			displaySize = df.format((size / FileUtils.ONE_MB)) + " MB";
+		} else if (size / FileUtils.ONE_KB >= 1) {
+			displaySize = df.format((size / FileUtils.ONE_KB)) + " KB";
+		} else {
+			displaySize = df.format((size)) + " B";
+		}
+		return displaySize;
 	}
 
 }
