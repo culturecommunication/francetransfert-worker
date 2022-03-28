@@ -12,6 +12,7 @@ import java.nio.channels.FileChannel;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang.StringUtils;
@@ -21,9 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
@@ -61,6 +64,9 @@ public class ZipWorkerServices {
 
 	@Autowired
 	RedisManager redisManager;
+
+	@Autowired
+	StorageManager storageManager;
 
 	@Autowired
 	ClamAVScannerManager clamAVScannerManager;
@@ -141,6 +147,10 @@ public class ZipWorkerServices {
 				LOGGER.debug(" start upload zip file temp to OSU");
 				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
 						getBaseFolderNameWithZipPrefix(prefix));
+
+				LOGGER.debug(" add hashZipFile to redis");
+				addHashFilesToMetData(prefix, getHashFromS3(prefix));
+
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
 				LOGGER.debug(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
@@ -164,6 +174,40 @@ public class ZipWorkerServices {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
 					subjectVirusError);
+		}
+	}
+
+	private String getHashFromS3(String enclosureId) throws MetaloadException, StorageException {
+		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
+		String fileToDownload = storageManager.getZippedEnclosureName(enclosureId);
+		ObjectMetadata obj = storageManager.getObjectMetadata(bucketName, fileToDownload);
+		String hashFileFromS3 = obj.getETag();
+		return hashFileFromS3;
+	}
+
+	/*
+	 * private void getContentMd5ForRedis(String prefix) throws IOException { File
+	 * fileZip = new File(getBaseFolderNameWithZipPrefix(prefix)); FileInputStream
+	 * fis = new FileInputStream(fileZip); byte[] content_bytes =
+	 * IOUtils.toByteArray(fis); String md5 = new
+	 * String(DigestUtils.md5Hex(content_bytes)); addHashFilesToMetData(prefix,md5);
+	 * fis.close(); }
+	 */
+
+	public void addHashFilesToMetData(String enclosureId, String hashFile) {
+		try {
+			Map<String, String> tokenMap = redisManager
+					.hmgetAllString(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
+			if (tokenMap != null) {
+				Map<String, String> enclosureMap = redisManager
+						.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+				enclosureMap.put(EnclosureKeysEnum.HASH_FILE.getKey(), hashFile);
+				redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), enclosureMap);
+			} else {
+				throw new WorkerException("tokenMap from Redis is null");
+			}
+		} catch (Exception e) {
+			throw new WorkerException("Unable to add hashFile to redis");
 		}
 	}
 
@@ -311,9 +355,6 @@ public class ZipWorkerServices {
 	 * Writing files into temp directory and scanning for vulnerabilities
 	 *
 	 * @param list
-	 * @param bucketName
-	 * @param prefix
-	 * @param enclosure
 	 * @return
 	 * @throws InvalidSizeTypeException
 	 */
@@ -363,7 +404,8 @@ public class ZipWorkerServices {
 	private void checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
 			FileInputStream fileInputStream) throws IOException, InvalidSizeTypeException {
 		if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
-			throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype");
+			String mimetype = mimeService.getMimeTypeFromFile(fileInputStream);
+			throw new InvalidSizeTypeException("File " + currentFileName + " as invalid mimetype : " + mimetype);
 		}
 
 		if (currentSize > maxFileSize || enclosureSize > maxEnclosureSize) {

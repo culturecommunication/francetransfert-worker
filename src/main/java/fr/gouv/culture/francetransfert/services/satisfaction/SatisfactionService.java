@@ -34,11 +34,11 @@ public class SatisfactionService {
 					+ "_" + rate.getType().getValue() + ".csv";
 			Path filePath = Path.of(System.getProperty("java.io.tmpdir"), fileName);
 			StringBuilder sb = new StringBuilder();
-			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER)
-					.setSkipHeaderRecord(Files.exists(filePath)).build();
+			CSVFormat option = CSVFormat.DEFAULT.builder().setQuoteMode(QuoteMode.ALL).setHeader(HEADER).setSkipHeaderRecord(Files.exists(filePath)).build();
 			CSVPrinter csvPrinter = new CSVPrinter(sb, option);
 			csvPrinter.printRecord(rate.getPlis(), rate.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
-					rate.getMessage(), rate.getSatisfaction(), rate.getType().getValue(), rate.getDomain());
+					rate.getMessage().replaceAll("\\s", " "), rate.getSatisfaction(), rate.getType().getValue(),
+					rate.getDomain().toLowerCase());
 			csvPrinter.flush();
 			csvPrinter.close();
 			Files.writeString(filePath, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);

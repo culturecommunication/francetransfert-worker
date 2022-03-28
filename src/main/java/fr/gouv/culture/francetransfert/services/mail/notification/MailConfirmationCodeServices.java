@@ -24,13 +24,21 @@ public class MailConfirmationCodeServices {
 	@Value("${subject.confirmation.code}")
 	private String subjectConfirmationCode;
 
+	@Value("${expire.confirmation.code}")
+	private int secondsToExpireConfirmationCode;
+
+	@Value("${expire.token.sender}")
+	private int expireTokenSender;
+
 	public void sendConfirmationCode(String mailCode) {
 		LOGGER.info("STEP SEND MAIL");
 		String senderMail = extractSenderMail(mailCode);
 		String code = extractConfirmationCode(mailCode);
 		String ttlCode = extractHeureExpirationCode(mailCode);
+		int codeMin = secondsToExpireConfirmationCode / 60;
+		int sessionMin = expireTokenSender / 60;
 		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
-				.dateExpiration(ttlCode).build();
+				.dateExpiration(ttlCode).codeTime(codeMin).sessionTime(sessionMin).build();
 		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
 		mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
 				NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue());
