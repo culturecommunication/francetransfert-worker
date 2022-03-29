@@ -102,6 +102,7 @@ public class MailCheckService {
 						message.setFlag(Flag.SEEN, true);
 						message.setFlag(Flag.DELETED, true);
 						try {
+							LOGGER.info("Mail check OK for uuid: " + uuid);
 							Map<String, String> mailInfo = new HashMap<String, String>();
 							mailInfo.put(CheckMailKeysEnum.UUID.getKey(), "");
 							mailInfo.put(CheckMailKeysEnum.DELAY.getKey(), delay.toString());
