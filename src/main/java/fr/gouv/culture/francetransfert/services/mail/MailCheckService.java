@@ -14,6 +14,8 @@ import javax.mail.Store;
 import javax.mail.search.FlagTerm;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,8 @@ import fr.gouv.culture.francetransfert.services.mail.notification.MailNotificati
 
 @Service
 public class MailCheckService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(MailCheckService.class);
 
 	@Autowired
 	private MailNotificationServices mailNotificationServices;
@@ -59,7 +63,7 @@ public class MailCheckService {
 
 		try {
 			if (StringUtils.isNoneBlank(uuid)) {
-
+				LOGGER.debug("Checking mail for uuid: " + uuid);
 				Long sendAt = Long.parseLong(hashRedis.getOrDefault(CheckMailKeysEnum.SEND_AT.getKey(), null));
 
 				Map<String, String> mailPending = new HashMap<String, String>();
@@ -98,8 +102,7 @@ public class MailCheckService {
 						message.setFlag(Flag.SEEN, true);
 						message.setFlag(Flag.DELETED, true);
 						try {
-							redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_SEND.getKey());
-							redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
+							LOGGER.info("Mail check OK for uuid: " + uuid);
 							Map<String, String> mailInfo = new HashMap<String, String>();
 							mailInfo.put(CheckMailKeysEnum.UUID.getKey(), "");
 							mailInfo.put(CheckMailKeysEnum.DELAY.getKey(), delay.toString());
@@ -107,6 +110,8 @@ public class MailCheckService {
 							redisManager.insertHASH(RedisKeysEnum.CHECK_MAIL.getFirstKeyPart(), mailInfo);
 							uuid = null;
 							delay = null;
+							redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_SEND.getKey());
+							redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
 						} catch (Exception e) {
 							redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
 							throw new WorkerException(e.getMessage());
@@ -121,19 +126,19 @@ public class MailCheckService {
 
 		} catch (Exception e) {
 			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
-			e.printStackTrace();
+			LOGGER.error("Cannot check mail for uuid: {} , env: {}", uuid, environnement, e);
 		}
 		redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
 
 	}
 
 	public void sendMail() {
-
 		Date sendAt = new Date();
 		String uuid = RedisUtils.generateGUID();
 		String subject = "CheckMail - " + environnement + " - " + uuid;
-		mailNotificationServices.send(smtpTargetUsername, subject, uuid);
+		LOGGER.info("Sending checkmail for uuid: " + uuid);
 		try {
+			mailNotificationServices.send(smtpTargetUsername, subject, uuid);
 			Map<String, String> mailInfo = new HashMap<String, String>();
 			mailInfo.put(CheckMailKeysEnum.UUID.getKey(), uuid);
 			// mailInfo.put(CheckMailKeysEnum.DELAY.getKey(), null);
@@ -142,8 +147,10 @@ public class MailCheckService {
 			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
 		} catch (Exception e) {
 			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_SEND.getKey());
+			LOGGER.error("Cannot send mail for uuid: {} , env: {}", uuid, environnement, e);
+		} finally {
+			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
 		}
-		redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
 
 	}
 
