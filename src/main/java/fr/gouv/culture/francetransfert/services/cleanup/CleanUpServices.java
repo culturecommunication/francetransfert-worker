@@ -6,7 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -37,6 +38,8 @@ import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureN
 public class CleanUpServices {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CleanUpServices.class);
+
+	private static final DateTimeFormatter DATE_FORMAT_BUCKET = DateTimeFormatter.ofPattern("yyyyMMdd");
 
 	@Value("${bucket.prefix}")
 	private String bucketPrefix;
@@ -281,26 +284,43 @@ public class CleanUpServices {
 
 	public void deleteBucketOutOfTime() throws StorageException {
 
+		LocalDateTime now = LocalDateTime.now();
+		for (int i = 0; i < 7; i++) {
+			try {
+				String buckName = bucketPrefix + now.format(DATE_FORMAT_BUCKET);
+				storageManager.createBucket(buckName);
+			} catch (Exception e) {
+				LOGGER.debug("Error while creating bucket : " + e.getMessage(), e);
+			}
+			now = now.plusDays(1L);
+		}
+
 		List<Bucket> listeBucket = storageManager.listBuckets();
 		listeBucket.forEach(bucket -> {
-			LocalDate date = bucket.getCreationDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-			if (date.plusDays(maxUpdateDate).isBefore(LocalDate.now()) && bucket.getName().startsWith(bucketPrefix)) {
-				try {
-					deletContentBucket(bucket.getName());
-				} catch (StorageException e) {
-					LOGGER.error("unable to delete content of bucket {} ", bucket.getName(), e.getMessage(), e);
+			try {
+				String bucketDate = bucket.getName().substring(bucketPrefix.length());
+				LocalDate date = LocalDate.parse(bucketDate, DATE_FORMAT_BUCKET);
+				if (date.plusDays(maxUpdateDate).isBefore(LocalDate.now())
+						&& bucket.getName().startsWith(bucketPrefix)) {
+					try {
+						deleteContentBucket(bucket.getName());
+					} catch (StorageException e) {
+						LOGGER.error("unable to delete content of bucket {} ", bucket.getName(), e.getMessage(), e);
+					}
+					try {
+						storageManager.deleteBucket(bucket.getName());
+					} catch (StorageException e) {
+						LOGGER.error("unable to delete bucket {} ", bucket.getName(), e.getMessage(), e);
+					}
 				}
-				try {
-					storageManager.deleteBucket(bucket.getName());
-				} catch (StorageException e) {
-					LOGGER.error("unable to delete bucket {} ", bucket.getName(), e.getMessage(), e);
-				}
+			} catch (Exception e) {
+				LOGGER.error("cannot parse bucket date {} ", bucket.getName(), e.getMessage(), e);
 			}
 		});
 
 	}
 
-	public void deletContentBucket(String bucketName) throws StorageException {
+	public void deleteContentBucket(String bucketName) throws StorageException {
 		ArrayList<String> objectListing = storageManager.listBucketContent(bucketName);
 
 		objectListing.forEach(file -> {

@@ -41,6 +41,22 @@ public class AppSyncServices {
 		}
 	}
 
+	public void appSyncCheckMailCheck() {
+		try {
+			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
+		} catch (Exception e) {
+			throw new WorkerException(e.getMessage());
+		}
+	}
+
+	public void appSyncCheckMailSend() {
+		try {
+			redisManager.deleteKey(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_SEND.getKey());
+		} catch (Exception e) {
+			throw new WorkerException(e.getMessage());
+		}
+	}
+
 	public boolean shouldRelaunch() {
 		boolean shouldRelaunch = false;
 		try {
@@ -80,6 +96,34 @@ public class AppSyncServices {
 			throw new WorkerException(e.getMessage());
 		}
 		return shouldUpdateDomain;
+	}
+
+	public boolean shouldCheckMailCheck() {
+		boolean shouldCheckMail = false;
+		try {
+			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_CHECK.getKey());
+			LOGGER.info(" worker : start CheckMailCheck incrementedAppSyncCounter {} ", incrementedAppSyncCounter);
+			if (incrementedAppSyncCounter == 1) {
+				shouldCheckMail = true;
+			}
+		} catch (Exception e) {
+			throw new WorkerException(e.getMessage());
+		}
+		return shouldCheckMail;
+	}
+
+	public boolean shouldSendCheckMail() {
+		boolean shouldCheckMail = false;
+		try {
+			Long incrementedAppSyncCounter = redisManager.incr(AppSyncKeysEnum.APP_SYNC_CHECK_MAIL_SEND.getKey());
+			LOGGER.info(" worker : start CheckMailSend incrementedAppSyncCounter {} ", incrementedAppSyncCounter);
+			if (incrementedAppSyncCounter == 1) {
+				shouldCheckMail = true;
+			}
+		} catch (Exception e) {
+			throw new WorkerException(e.getMessage());
+		}
+		return shouldCheckMail;
 	}
 
 }
