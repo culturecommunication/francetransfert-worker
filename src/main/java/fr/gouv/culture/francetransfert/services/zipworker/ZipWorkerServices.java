@@ -180,8 +180,7 @@ public class ZipWorkerServices {
 	private String getHashFromS3(String enclosureId) throws MetaloadException, StorageException {
 		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 		String fileToDownload = storageManager.getZippedEnclosureName(enclosureId);
-		ObjectMetadata obj = storageManager.getObjectMetadata(bucketName, fileToDownload);
-		String hashFileFromS3 = obj.getETag();
+		String hashFileFromS3 = storageManager.getEtag(bucketName, fileToDownload);
 		return hashFileFromS3;
 	}
 
