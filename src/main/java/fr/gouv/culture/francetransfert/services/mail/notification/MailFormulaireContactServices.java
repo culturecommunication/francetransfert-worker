@@ -7,6 +7,10 @@ import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.model.Recipient;
 import fr.gouv.culture.francetransfert.security.WorkerException;
+
+import java.util.Locale;
+
+import org.apache.commons.lang.LocaleUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +45,11 @@ public class MailFormulaireContactServices {
                 subject = subject.concat(" : ").concat(formulaireContactData.getSubject());
             }
 
+            Locale currentLanguageContact = Locale.FRENCH;
 
             LOGGER.info(" send mail to service contact by {} ", formulaireContactData.getFrom());
              mailNotificationServices.prepareAndSendMailContact(formulaireContactData.getFrom(),
-                    subject, formulaireContactData, templateName);
+                    subject, formulaireContactData, currentLanguageContact, templateName);
 
 	}
 }

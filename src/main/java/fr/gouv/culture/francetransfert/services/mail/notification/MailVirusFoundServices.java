@@ -1,5 +1,7 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
+import java.util.Locale;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,8 @@ public class MailVirusFoundServices {
 	MailNotificationServices mailNotificationServices;
 
 	// Send mail to sender
-	public void sendToSender(Enclosure enclosure, String templateName, String subject) {
+	public void sendToSender(Enclosure enclosure, String templateName, String subject, Locale currentLanguage) {
 		LOGGER.info("send email notification virus to sender: {}", enclosure.getSender());
-		mailNotificationServices.prepareAndSend(enclosure.getSender(), subject, enclosure, templateName);
+		mailNotificationServices.prepareAndSend(enclosure.getSender(), subject, enclosure, templateName, currentLanguage);
 	}
 }

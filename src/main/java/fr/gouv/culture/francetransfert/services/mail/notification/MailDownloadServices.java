@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -47,7 +48,7 @@ public class MailDownloadServices {
 
 		LOGGER.info("Send email notification download in progress to sender:  {}", enclosure.getSender());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), sendObject, enclosure,
-				NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
+				NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue(),Locale.FRENCH);
 	}
 
 	public void sendMailsDownload() {

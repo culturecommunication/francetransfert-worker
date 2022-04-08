@@ -3,6 +3,7 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -53,7 +54,7 @@ public class MailRelaunchServices {
 						Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 						LOGGER.info(" send relaunch mail for enclosure N° {}", enclosureId);
 						sendToRecipientsAndSenderRelaunch(enclosure,
-								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
+								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue(), Locale.FRENCH);
 					}
 				} catch (Exception e) {
 					LOGGER.error("Cannot send relaunch for enclosure {} :  {}", enclosureId, e.getMessage(), e);
@@ -63,7 +64,7 @@ public class MailRelaunchServices {
 	}
 
 	// Send mails Relaunch to recipients
-	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName)
+	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName, Locale currentLanguage)
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
 		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
@@ -80,7 +81,7 @@ public class MailRelaunchServices {
 							recipient.getMail(), recipient.getId()));
 					LOGGER.info(" send relaunch mail to {} ", recipient.getMail());
 					mailNotificationServices.prepareAndSend(recipient.getMail(),
-							sendRelaunchRecipient, enclosure, templateName);
+							sendRelaunchRecipient, enclosure, templateName, currentLanguage);
 				}
 			}
 		}

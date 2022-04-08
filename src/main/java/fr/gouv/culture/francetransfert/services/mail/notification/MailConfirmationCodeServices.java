@@ -1,7 +1,9 @@
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,20 +31,42 @@ public class MailConfirmationCodeServices {
 
 	@Value("${expire.token.sender}")
 	private int expireTokenSender;
-
+	
+	
 	public void sendConfirmationCode(String mailCode) {
-		LOGGER.info("STEP SEND MAIL");
+		LOGGER.info("STEP SEND MAIL 2");
 		String senderMail = extractSenderMail(mailCode);
+		LOGGER.info("ERROR 0");
 		String code = extractConfirmationCode(mailCode);
 		String ttlCode = extractHeureExpirationCode(mailCode);
 		int codeMin = secondsToExpireConfirmationCode / 60;
 		int sessionMin = expireTokenSender / 60;
+		LOGGER.info("ERROR 1");
+		Locale currentLanguage = LocaleUtils.toLocale(extractCurrentLanguage(mailCode));
+		LOGGER.info("ERROR 2");
 		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
 				.dateExpiration(ttlCode).codeTime(codeMin).sessionTime(sessionMin).build();
 		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
 		mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
+				NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
+	}
+	
+	/*public void sendConfirmationCode(String mailCode) {
+		LOGGER.info("STEP SEND MAIL 2");
+		String senderMail = extractSenderMail(mailCode);
+		LOGGER.info("ERROR 0");
+		String code = extractConfirmationCode(mailCode);
+		String ttlCode = extractHeureExpirationCode(mailCode);
+		LOGGER.info("ERROR 1");
+		String currentLanguage = extractCurrentLanguage(mailCode);
+		LOGGER.info("ERROR 2");
+		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
+				.dateExpiration(ttlCode).currentLanguage(currentLanguage).build();
+		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
+		mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
 				NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue());
 	}
+
 
 	/**
 	 *
@@ -54,8 +78,8 @@ public class MailConfirmationCodeServices {
 	private String extractSenderMailAndConfirmationCode(String mailCode, int part) {
 		String result = "";
 		Pattern pattern = Pattern.compile(":");
-		String[] items = pattern.split(mailCode, 3);
-		if (3 == items.length) {
+		String[] items = pattern.split(mailCode, 4);
+		if (4 == items.length) {
 			result = items[part];
 		} else {
 			LOGGER.error("Error extract mail and code");
@@ -65,19 +89,32 @@ public class MailConfirmationCodeServices {
 	}
 
 	private String extractConfirmationCode(String mailCode) {
-		return extractSenderMailAndConfirmationCode(mailCode, 1);
+		return extractSenderMailAndConfirmationCode(mailCode, 2);
 	}
 
 	private String extractSenderMail(String mailCode) {
-		return extractSenderMailAndConfirmationCode(mailCode, 0);
+		return extractSenderMailAndConfirmationCode(mailCode, 1);
 	}
 
 	private String extractHeureExpirationCode(String mailCode) {
 		String result = "";
-		String code = extractSenderMailAndConfirmationCode(mailCode, 2);
+		String code = extractSenderMailAndConfirmationCode(mailCode, 3);
 		if (StringUtils.isNotBlank(code)) {
 			result = code.substring(11, 19);
 		}
 		return result;
+	}
+	
+	private String extractCurrentLanguage(String mailCode) {
+		
+		
+		String result = extractSenderMailAndConfirmationCode(mailCode, 0);
+		Pattern pattern = Pattern.compile("-");
+		String[] items = pattern.split(result, 2);
+	
+			result = items[0];
+			LOGGER.info("RESULT:  {}", result);
+			return result;
+			
 	}
 }

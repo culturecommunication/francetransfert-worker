@@ -12,6 +12,7 @@ import java.nio.channels.FileChannel;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -441,7 +442,7 @@ public class ZipWorkerServices {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
 			}
-			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName);
+			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName,Locale.FRENCH);
 		} catch (Exception e) {
 			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		}

@@ -2,6 +2,7 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public class MailAvailbleEnclosureServices {
 	Base64CryptoService base64CryptoService;
 
 	// Send Mails to snder and recipients
-	public void sendMailsAvailableEnclosure(Enclosure enclosure, NewRecipient metaDataRecipient)
+	public void sendMailsAvailableEnclosure(Enclosure enclosure, NewRecipient metaDataRecipient, Locale currentLanguage)
 			throws MetaloadException, StatException {
 		LOGGER.info("send email notification availble to sender: {}", enclosure.getSender());
 		String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
@@ -78,18 +79,18 @@ public class MailAvailbleEnclosureServices {
 		}
 		if (metaDataRecipient == null) {
 			mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
-					NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
+					NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue(), currentLanguage);
 			mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassw, enclosure,
-					NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue());
+					NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue(), currentLanguage);
 		}
 		if (!publicLink)
 			sendToRecipients(enclosure, new String(subjectRecipient),
-					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), metaDataRecipient);
+					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), metaDataRecipient, currentLanguage);
 	}
 
 	// Send mails to recipients
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName,
-			NewRecipient metaDataRecipient) {
+			NewRecipient metaDataRecipient, Locale currentLanguage) {
 		subject = subject + " " + enclosure.getSender();
 		String subjectPassword = new String(subjectRecipientPassword);
 
@@ -115,9 +116,9 @@ public class MailAvailbleEnclosureServices {
 					LOGGER.info("send email notification availble to recipient: {}", recipient.getMail());
 					enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 							recipient.getMail(), recipient.getId()));
-					mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName);
+					mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName, currentLanguage);
 					mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
-							NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue());
+							NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), currentLanguage);
 				}
 			}
 
