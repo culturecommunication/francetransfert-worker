@@ -96,7 +96,8 @@ public class MailNotificationServices {
 		}
 	}
 
-	public void prepareAndSendMailContact(String from, String subject, Object object, Locale locale, String templateName) {
+	public void prepareAndSendMailContact(String from, String subject, Object object, Locale locale,
+			String templateName) {
 		try {
 			LOGGER.debug("start send emails contact ");
 			templateName = templateName != null && !templateName.isEmpty() ? templateName
@@ -137,9 +138,24 @@ public class MailNotificationServices {
 		Map<String, String> tokenMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
 		return urlAdminPage + "?token=" + tokenMap.get(EnclosureKeysEnum.TOKEN.getKey()) + "&enclosure=" + enclosureId;
 	}
-	
-	
-	
-	
+
+	public void send(String to, String subject, String content) {
+		try {
+			LOGGER.debug("Start simple send");
+			JavaMailSenderImpl sender = new JavaMailSenderImpl();
+			MimeMessage message = sender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+			helper.setFrom(franceTransfertMail);
+			helper.setTo(to);
+			if (StringUtils.isNotBlank(subject)) {
+				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
+			}
+			String htmlContent = content;
+			helper.setText(htmlContent, true);
+			emailSender.send(message);
+		} catch (MessagingException | IOException e) {
+			throw new WorkerException("Simple send error", e);
+		}
+	}
 
 }
