@@ -8,11 +8,10 @@
 	<div th:fragment="validateDate"
 		style="margin: 1rem 1rem 0.15rem 2rem;; color: #000000;">
 		<p style="margin-left: 2em;">
-			<strong>Date de validité : </strong> <strong><span
-				style="color: #0269cc;"
-				th:text="${enclosure.get('expireDate').getAsString()}"></span></strong>
-			(au-delà le pli sera supprimé et le téléchargement ne sera plus
-			possible)
+			<strong th:text="#{date.validité}"></strong>&nbsp;
+			 <strong><span style="color: #0269cc;"
+				th:text="${enclosure.get('expireDate').getAsString()}"></span></strong>&nbsp;
+			<span th:text="#{durée.supression}" > </span>
 		</p>
 	</div>
 </body>

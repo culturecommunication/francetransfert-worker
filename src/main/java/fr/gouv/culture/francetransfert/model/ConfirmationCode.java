@@ -23,5 +23,5 @@ public class ConfirmationCode {
 
 	private int codeTime;
     
-    //private String currentLanguage;
+    //private Locale currentLanguage;
 }

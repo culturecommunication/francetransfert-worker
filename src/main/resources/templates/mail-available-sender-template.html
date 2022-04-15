@@ -22,8 +22,7 @@
 								th:if="${enclosure.get('publicLink').getAsString().equals('false')}">
 								<p
 									style="margin: 1.5rem 0rem 3rem 0rem; font-size: 26px; text-align: center;">
-									<strong> <span style="color: black">Votre pli a
-											été envoyé</span>
+									<strong> <span style="color: black"  th:text="#{pli.envoyé}"></span>
 									</strong>
 								</p>
 							</div>
@@ -31,19 +30,14 @@
 								th:if="${enclosure.get('publicLink').getAsString().equals('true')}">
 								<p
 									style="margin: 1.5rem 0rem 1rem 0rem; font-size: 26px; text-align: center;">
-									<strong> <span style="color: black">Votre lien
-											a été généré</span>
+									<strong> <span style="color: black" th:text="#{lien.généré}"></span>
 									</strong>
 								</p>
 							</div>
 							<div
 								th:if="${enclosure.get('publicLink').getAsString().equals('true')}"
 								style="margin: 0rem 2rem 2rem 2rem; text-align: center; font-size: 14px;">
-								<p style="margin: 0px 0px 0px 0px; font-style: italic">Pour
-									partager votre pli, vous devez communiquer le lien de
-									téléchargement public fourni plus bas ainsi que le mot de passe
-									permettant d’accéder au téléchargement du pli qui vous a été
-									fourni dans un courriel séparé.</p>
+								<p style="margin: 0px 0px 0px 0px; font-style: italic" th:text="#{partage.pli}"></p>
 							</div>
 							<div
 								th:if="${enclosure.get('publicLink').getAsString().equals('false')}"

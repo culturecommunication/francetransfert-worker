@@ -43,13 +43,11 @@ public class MailFormulaireContactServices {
             }
             if (StringUtils.isNotBlank(formulaireContactData.getSubject())) {
                 subject = subject.concat(" : ").concat(formulaireContactData.getSubject());
-            }
-
-            Locale currentLanguageContact = Locale.FRENCH;
+            }     
 
             LOGGER.info(" send mail to service contact by {} ", formulaireContactData.getFrom());
              mailNotificationServices.prepareAndSendMailContact(formulaireContactData.getFrom(),
-                    subject, formulaireContactData, currentLanguageContact, templateName);
+                    subject, formulaireContactData, templateName);
 
 	}
 }

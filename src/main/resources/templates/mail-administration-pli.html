@@ -9,13 +9,11 @@
             <hr style="margin-block-start: 0;margin-inline-start: 2rem;margin-inline-end: 2rem;"/>
             <p style="color: #0269cc; font-size: small; margin-block-end: 0em;margin-block-start: 0;margin-left: 2em;">
                     <strong>
-                        <a th:href="${enclosure.get('urlAdmin').getAsString()}">Lien d'administration du pli</a>
+                        <a th:href="${enclosure.get('urlAdmin').getAsString()}" th:text="#{lien.administration}"> </a>
                     </strong>
             </p>
 
-            <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;margin-left: 2em;">
-                      Si le lien d'administration ne fonctionne pas dans votre messagerie,
-                      utilisez le lien :
+            <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;margin-left: 2em;" th:text="#{fonctionnement.lien}">
                        <span th:text="${enclosure.get('urlAdmin').getAsString()}"></span>
              </p>
 

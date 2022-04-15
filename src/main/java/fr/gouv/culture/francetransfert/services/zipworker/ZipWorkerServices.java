@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,8 +126,12 @@ public class ZipWorkerServices {
 		try {
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
-			String passwordGenerated = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
-					EnclosureKeysEnum.PASSWORD_GENERATED.getKey());
+			//added by abir
+			
+			Map<String, String> enclosureMapp = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));					
+			String zipPassword = enclosureMapp.get(EnclosureKeysEnum.PASSWORD_ZIP.getKey());
+			
+
 			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
 			LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName,
 					list, prefix, bucketPrefix);
@@ -143,7 +148,7 @@ public class ZipWorkerServices {
 			if (isClean) {
 
 				LOGGER.debug(" start zip files temp to disk");
-				zipDownloadedContent(prefix, passwordUnHashed, passwordGenerated);
+				zipDownloadedContent(prefix, passwordUnHashed, zipPassword);
 
 				LOGGER.debug(" start upload zip file temp to OSU");
 				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
@@ -239,9 +244,11 @@ public class ZipWorkerServices {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 	}
 
-	private void zipDownloadedContent(String zippedFileName, String password, String passwordGenerated)
+	private void zipDownloadedContent(String zippedFileName, String password, String zipPassword)
 			throws IOException {
-		if (passwordGenerated.equalsIgnoreCase("false")) {
+
+		
+			if(zipPassword.equalsIgnoreCase("true")) {
 			String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
 			try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
 					ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());) {
@@ -251,10 +258,15 @@ public class ZipWorkerServices {
 				}
 				zipOut.flush();
 				fos.flush();
-			}
-		} else {
+				}
+		}
+		else {
 			zipDownloadedContentWithoutPassword(zippedFileName);
 		}
+		
+		 
+		
+		
 	}
 
 	private void zipDownloadedContentWithoutPassword(String zippedFileName) throws IOException {
@@ -442,7 +454,13 @@ public class ZipWorkerServices {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
 			}
-			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName,Locale.FRENCH);
+			
+			/*added by abir */
+			Map<String, String> enclosureMapp = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));					
+			Locale  language = LocaleUtils.toLocale(enclosureMapp.get(EnclosureKeysEnum.LANGUAGE.getKey())) ;
+			//--------//
+			
+			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName, language);
 		} catch (Exception e) {
 			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		}

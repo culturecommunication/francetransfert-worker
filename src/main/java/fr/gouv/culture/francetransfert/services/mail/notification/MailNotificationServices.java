@@ -58,6 +58,9 @@ public class MailNotificationServices {
 	public void prepareAndSend(String to, String subject, Object object, String templateName, Locale locale) {
 		try {
 			LOGGER.debug("start send emails for enclosure ");
+			if ( locale == null || locale.toString().isEmpty() )  {
+				locale = Locale.FRENCH;
+			}
 			templateName = templateName != null && !templateName.isEmpty() ? templateName
 					: NotificationTemplateEnum.MAIL_TEMPLATE.getValue();
 			JavaMailSenderImpl sender = new JavaMailSenderImpl();
@@ -96,7 +99,7 @@ public class MailNotificationServices {
 		}
 	}
 
-	public void prepareAndSendMailContact(String from, String subject, Object object, Locale locale,
+	public void prepareAndSendMailContact(String from, String subject, Object object,
 			String templateName) {
 		try {
 			LOGGER.debug("start send emails contact ");
@@ -108,7 +111,7 @@ public class MailNotificationServices {
 			helper.setFrom(franceTransfertMail);
 			helper.setTo(franceTransfertContactMail);
 			helper.setSubject(subject);
-			String htmlContent = htmlBuilder.build(object, templateName, locale);
+			String htmlContent = htmlBuilder.build(object, templateName, Locale.FRENCH);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
 		} catch (MessagingException | IOException e) {

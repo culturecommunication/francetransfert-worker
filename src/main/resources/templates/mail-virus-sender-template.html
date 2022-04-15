@@ -21,14 +21,13 @@
 							<div style="margin: 2.5rem 1rem 0.15rem 2rem;">
 								<div>
 									<p style="font-size: 26px; text-align: center">
-										<strong> <span>Vos fichiers sont infectés par
-												un virus et ont été supprimés de notre système. </span>
+										<strong> <span th:text="#{fichiers.infectés.virus}"></span>
 										</strong>
 									</p>
 								</div>
 								<div style="margin: 2.5rem 1rem 1.5rem 2rem;">
 									<p>
-										<strong> Référence technique du pli : </strong> <span
+										<strong th:text="#{référence.technique.pli}"></strong>&nbsp; <span
 											th:text="${enclosure.get('guid').getAsString()}"></span>
 									</p>
 								</div>

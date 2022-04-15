@@ -34,16 +34,13 @@ public class MailConfirmationCodeServices {
 	
 	
 	public void sendConfirmationCode(String mailCode) {
-		LOGGER.info("STEP SEND MAIL 2");
+		LOGGER.info("STEP SEND MAIL ");
 		String senderMail = extractSenderMail(mailCode);
-		LOGGER.info("ERROR 0");
 		String code = extractConfirmationCode(mailCode);
 		String ttlCode = extractHeureExpirationCode(mailCode);
 		int codeMin = secondsToExpireConfirmationCode / 60;
 		int sessionMin = expireTokenSender / 60;
-		LOGGER.info("ERROR 1");
 		Locale currentLanguage = LocaleUtils.toLocale(extractCurrentLanguage(mailCode));
-		LOGGER.info("ERROR 2");
 		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
 				.dateExpiration(ttlCode).codeTime(codeMin).sessionTime(sessionMin).build();
 		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
@@ -51,21 +48,7 @@ public class MailConfirmationCodeServices {
 				NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
 	}
 	
-	/*public void sendConfirmationCode(String mailCode) {
-		LOGGER.info("STEP SEND MAIL 2");
-		String senderMail = extractSenderMail(mailCode);
-		LOGGER.info("ERROR 0");
-		String code = extractConfirmationCode(mailCode);
-		String ttlCode = extractHeureExpirationCode(mailCode);
-		LOGGER.info("ERROR 1");
-		String currentLanguage = extractCurrentLanguage(mailCode);
-		LOGGER.info("ERROR 2");
-		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
-				.dateExpiration(ttlCode).currentLanguage(currentLanguage).build();
-		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
-		mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
-				NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue());
-	}
+
 
 
 	/**

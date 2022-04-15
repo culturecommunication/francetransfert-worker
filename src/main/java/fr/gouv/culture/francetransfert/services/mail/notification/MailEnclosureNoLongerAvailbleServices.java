@@ -6,6 +6,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
@@ -43,6 +46,12 @@ public class MailEnclosureNoLongerAvailbleServices {
 		List<Recipient> recipients = enclosure.getRecipients();
 		String sendNoAvailbleEnclosureRecipient = new String(subjectNoAvailbleEnclosureRecipient);
 		String sendNoAvailbleEnclosureSender = new String(subjectNoAvailbleEnclosureSender);
+		
+		/*added by abir */
+		Map<String, String> enclosureMapp = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));					
+		Locale  language = LocaleUtils.toLocale(enclosureMapp.get(EnclosureKeysEnum.LANGUAGE.getKey())) ;
+		//--------//
+		
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				sendNoAvailbleEnclosureRecipient = sendNoAvailbleEnclosureRecipient.concat(" : ")
@@ -58,7 +67,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 				if (isFileDownloaded) {
 					recipientsDoNotDownloadedEnclosure.add(recipient);
 					mailNotificationServices.prepareAndSend(recipient.getMail(), sendNoAvailbleEnclosureRecipient,
-							enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue(), currentLanguage);
+							enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue(), language);
 					LOGGER.info("send email notification enclosure not availble to recipient: {}", recipient.getMail());
 				}
 			}
@@ -67,7 +76,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 			if (!CollectionUtils.isEmpty(recipientsDoNotDownloadedEnclosure)) {
 				enclosure.setNotDownloadRecipients(recipientsDoNotDownloadedEnclosure);
 				mailNotificationServices.prepareAndSend(enclosure.getSender(), sendNoAvailbleEnclosureSender, enclosure,
-						NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue(), currentLanguage);
+						NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_SENDER.getValue(), language);
 				LOGGER.info("send email notification enclosure not availble to sender: {}", enclosure.getSender());
 			}
 		}
