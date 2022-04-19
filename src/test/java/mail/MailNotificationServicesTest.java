@@ -118,7 +118,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enclosure, Locale.FRENCH);
+        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enclosure);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
