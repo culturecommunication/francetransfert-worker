@@ -16,7 +16,6 @@ import org.springframework.util.CollectionUtils;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RecipientKeysEnum;
-import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
@@ -46,12 +45,10 @@ public class MailEnclosureNoLongerAvailbleServices {
 		List<Recipient> recipients = enclosure.getRecipients();
 		String sendNoAvailbleEnclosureRecipient = new String(subjectNoAvailbleEnclosureRecipient);
 		String sendNoAvailbleEnclosureSender = new String(subjectNoAvailbleEnclosureSender);
-		
-		/*added by abir */
-		Map<String, String> enclosureMapp = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));					
-		Locale  language = LocaleUtils.toLocale(enclosureMapp.get(EnclosureKeysEnum.LANGUAGE.getKey())) ;
-		//--------//
-		
+
+		Locale language = LocaleUtils.toLocale(
+				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				sendNoAvailbleEnclosureRecipient = sendNoAvailbleEnclosureRecipient.concat(" : ")
@@ -67,7 +64,8 @@ public class MailEnclosureNoLongerAvailbleServices {
 				if (isFileDownloaded) {
 					recipientsDoNotDownloadedEnclosure.add(recipient);
 					mailNotificationServices.prepareAndSend(recipient.getMail(), sendNoAvailbleEnclosureRecipient,
-							enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue(), language);
+							enclosure, NotificationTemplateEnum.MAIL_ENCLOSURE_NO_AVAILBLE_RECIPIENTS.getValue(),
+							language);
 					LOGGER.info("send email notification enclosure not availble to recipient: {}", recipient.getMail());
 				}
 			}

@@ -27,10 +27,10 @@
 									<strong> <span style="color: black"  th:text="#{code.confirmation}" > </span>
 									</strong>
 								</p>
-								<p style="margin: 0 44px; color: #414856; text-align: center;"  th:text="#{login.durée}">
-									<span th:text="${enclosure.get('sessionTime').getAsString()}"></span>
-									 <span  th:text="#{minutes.inactivité }">
-                   					 </span>
+								<p style="margin: 0 44px; color: #414856; text-align: center;">
+									 <span th:text="#{login.durée}"></span>
+									 <span th:text="${enclosure.get('sessionTime').getAsString()}"></span>
+									 <span th:text="#{minutes.inactivité}"></span>
                    				</p>
 							</div>
 							<div>
@@ -43,10 +43,9 @@
 							</div>
 							<div>
 								<p style="text-align: center; color: #414856;">
-								<span th:text="#{code.valable}"> </span>&nbsp;
-								<strong  th:text="#{durée.code}"></strong>&nbsp;
-									<span th:text="#{date.disponibilité} + ' ' + ${enclosure.get('dateExpiration').getAsString()} + ' ' + #{cet}"  ></span>
-								
+								<span th:text="#{code.valable}"></span>&nbsp;
+								<strong><span th:text="${enclosure.get('codeTime').getAsString()} + ' ' + #{durée.code}"></span></strong>&nbsp;
+								<span th:text="#{date.disponibilité} + ' ' + ${enclosure.get('dateExpiration').getAsString()} + ' ' + #{cet}"></span>
 								</p>
 								<p style="font-size: 12px; font-style: italic; margin: 24px 17px 0px 9px; text-align: center" th:text="#{origine.opération}">
 								</p>

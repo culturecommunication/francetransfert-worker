@@ -18,9 +18,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
-import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
@@ -39,7 +40,7 @@ public class MailDownloadServices {
 	@Autowired
 	private MailNotificationServices mailNotificationServices;
 
-	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) {
+	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) throws MetaloadException {
 		ArrayList<String> recipList = new ArrayList<String>();
 		String sendObject = new String(subjectDownloadProgress);
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
@@ -48,12 +49,9 @@ public class MailDownloadServices {
 		recipList.addAll(enclosure.getRecipients().stream().filter(c -> recipientId.contains(c.getId()))
 				.map(x -> x.getMail()).collect(Collectors.toList()));
 		enclosure.setRecipientDownloadInProgress(recipList);
-		
-		/*added by abir */
-		Map<String, String> enclosureMapp = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));					
-		Locale  language = LocaleUtils.toLocale(enclosureMapp.get(EnclosureKeysEnum.LANGUAGE.getKey())) ;
-		//--------//
-		
+
+		Locale language = LocaleUtils.toLocale(
+				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
 
 		LOGGER.info("Send email notification download in progress to sender:  {}", enclosure.getSender());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), sendObject, enclosure,

@@ -31,10 +31,9 @@ public class MailConfirmationCodeServices {
 
 	@Value("${expire.token.sender}")
 	private int expireTokenSender;
-	
-	
+
 	public void sendConfirmationCode(String mailCode) {
-		LOGGER.info("STEP SEND MAIL ");
+		LOGGER.debug("STEP SEND MAIL ");
 		String senderMail = extractSenderMail(mailCode);
 		String code = extractConfirmationCode(mailCode);
 		String ttlCode = extractHeureExpirationCode(mailCode);
@@ -47,9 +46,6 @@ public class MailConfirmationCodeServices {
 		mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
 				NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
 	}
-	
-
-
 
 	/**
 	 *
@@ -87,17 +83,16 @@ public class MailConfirmationCodeServices {
 		}
 		return result;
 	}
-	
+
 	private String extractCurrentLanguage(String mailCode) {
-		
-		
+
 		String result = extractSenderMailAndConfirmationCode(mailCode, 0);
 		Pattern pattern = Pattern.compile("-");
 		String[] items = pattern.split(result, 2);
-	
-			result = items[0];
-			LOGGER.info("RESULT:  {}", result);
-			return result;
-			
+
+		result = items[0];
+		LOGGER.debug("RESULT:  {}", result);
+		return result;
+
 	}
 }

@@ -58,7 +58,7 @@ public class MailNotificationServices {
 	public void prepareAndSend(String to, String subject, Object object, String templateName, Locale locale) {
 		try {
 			LOGGER.debug("start send emails for enclosure ");
-			if ( locale == null || locale.toString().isEmpty() )  {
+			if (locale == null || locale.toString().isEmpty()) {
 				locale = Locale.FRENCH;
 			}
 			templateName = templateName != null && !templateName.isEmpty() ? templateName
@@ -99,8 +99,7 @@ public class MailNotificationServices {
 		}
 	}
 
-	public void prepareAndSendMailContact(String from, String subject, Object object,
-			String templateName) {
+	public void prepareAndSendMailContact(String from, String subject, Object object, String templateName) {
 		try {
 			LOGGER.debug("start send emails contact ");
 			templateName = templateName != null && !templateName.isEmpty() ? templateName

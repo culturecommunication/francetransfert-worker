@@ -69,7 +69,7 @@ public class MailRelaunchServices {
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
 		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
-		
+
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				sendRelaunchRecipient = sendRelaunchRecipient.concat(" : ").concat(enclosure.getSubject());
@@ -82,15 +82,12 @@ public class MailRelaunchServices {
 					enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 							recipient.getMail(), recipient.getId()));
 					LOGGER.info(" send relaunch mail to {} ", recipient.getMail());
-					
 
-					/*added by abir */
-					Map<String, String> enclosureMapp = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));					
-					Locale  language = LocaleUtils.toLocale(enclosureMapp.get(EnclosureKeysEnum.LANGUAGE.getKey())) ;
-					//--------//
-					
-					mailNotificationServices.prepareAndSend(recipient.getMail(),
-							sendRelaunchRecipient, enclosure, templateName, language);
+					Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager,
+							enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+
+					mailNotificationServices.prepareAndSend(recipient.getMail(), sendRelaunchRecipient, enclosure,
+							templateName, language);
 				}
 			}
 		}
