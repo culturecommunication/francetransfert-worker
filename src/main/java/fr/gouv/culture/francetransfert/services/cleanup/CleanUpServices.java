@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -75,7 +74,7 @@ public class CleanUpServices {
 							.toLocalDate();
 					if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) { // expire date + 1
 						mailEnclosureNoLongerAvailbleServices
-								.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager),Locale.FRENCH);
+								.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager));
 						LOGGER.info(" clean up for enclosure N° {}", enclosureId);
 						String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 

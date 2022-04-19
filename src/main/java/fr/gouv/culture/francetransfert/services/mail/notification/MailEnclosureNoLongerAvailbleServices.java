@@ -40,7 +40,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 	@Autowired
 	RedisManager redisManager;
 
-	public void sendEnclosureNotAvailble(Enclosure enclosure, Locale currentLanguage) throws MetaloadException {
+	public void sendEnclosureNotAvailble(Enclosure enclosure) throws MetaloadException {
 
 		List<Recipient> recipients = enclosure.getRecipients();
 		String sendNoAvailbleEnclosureRecipient = new String(subjectNoAvailbleEnclosureRecipient);
