@@ -2,6 +2,7 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.MessagingException;
@@ -54,28 +55,12 @@ public class MailNotificationServices {
 	@Autowired
 	private RedisManager redisManager;
 
-	public void send(String to, String subject, String content) {
-		try {
-			LOGGER.debug("Start simple send");
-			JavaMailSenderImpl sender = new JavaMailSenderImpl();
-			MimeMessage message = sender.createMimeMessage();
-			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-			helper.setFrom(franceTransfertMail);
-			helper.setTo(to);
-			if (StringUtils.isNotBlank(subject)) {
-				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
-			}
-			String htmlContent = content;
-			helper.setText(htmlContent, true);
-			emailSender.send(message);
-		} catch (MessagingException | IOException e) {
-			throw new WorkerException("Simple send error", e);
-		}
-	}
-
-	public void prepareAndSend(String to, String subject, Object object, String templateName) {
+	public void prepareAndSend(String to, String subject, Object object, String templateName, Locale locale) {
 		try {
 			LOGGER.debug("start send emails for enclosure ");
+			if (locale == null || locale.toString().isEmpty()) {
+				locale = Locale.FRENCH;
+			}
 			templateName = templateName != null && !templateName.isEmpty() ? templateName
 					: NotificationTemplateEnum.MAIL_TEMPLATE.getValue();
 			JavaMailSenderImpl sender = new JavaMailSenderImpl();
@@ -87,7 +72,7 @@ public class MailNotificationServices {
 				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
 			}
 
-			String htmlContent = htmlBuilder.build(object, templateName);
+			String htmlContent = htmlBuilder.build(object, templateName, locale);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
 		} catch (MessagingException | IOException e) {
@@ -95,7 +80,7 @@ public class MailNotificationServices {
 		}
 	}
 
-	public void prepareAndSend(String to, String subject, String body, String templateName) {
+	public void prepareAndSend(String to, String subject, String body, String templateName, Locale locale) {
 		try {
 			LOGGER.debug("start send emails for enclosure ");
 			templateName = templateName != null && !templateName.isEmpty() ? templateName
@@ -106,7 +91,7 @@ public class MailNotificationServices {
 			helper.setFrom(franceTransfertMail);
 			helper.setTo(to);
 			helper.setSubject(subject);
-			String htmlContent = htmlBuilder.build(body, templateName);
+			String htmlContent = htmlBuilder.build(body, templateName, locale);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
 		} catch (MessagingException e) {
@@ -125,7 +110,7 @@ public class MailNotificationServices {
 			helper.setFrom(franceTransfertMail);
 			helper.setTo(franceTransfertContactMail);
 			helper.setSubject(subject);
-			String htmlContent = htmlBuilder.build(object, templateName);
+			String htmlContent = htmlBuilder.build(object, templateName, Locale.FRENCH);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
 		} catch (MessagingException | IOException e) {
@@ -154,6 +139,25 @@ public class MailNotificationServices {
 	public String generateUrlAdmin(String enclosureId) {
 		Map<String, String> tokenMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
 		return urlAdminPage + "?token=" + tokenMap.get(EnclosureKeysEnum.TOKEN.getKey()) + "&enclosure=" + enclosureId;
+	}
+
+	public void send(String to, String subject, String content) {
+		try {
+			LOGGER.debug("Start simple send");
+			JavaMailSenderImpl sender = new JavaMailSenderImpl();
+			MimeMessage message = sender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+			helper.setFrom(franceTransfertMail);
+			helper.setTo(to);
+			if (StringUtils.isNotBlank(subject)) {
+				helper.setSubject(MimeUtility.encodeText(subject, "utf-8", "B"));
+			}
+			String htmlContent = content;
+			helper.setText(htmlContent, true);
+			emailSender.send(message);
+		} catch (MessagingException | IOException e) {
+			throw new WorkerException("Simple send error", e);
+		}
 	}
 
 }

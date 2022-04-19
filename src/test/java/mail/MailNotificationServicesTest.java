@@ -10,6 +10,8 @@ import fr.gouv.culture.francetransfert.model.RootData;
 import fr.gouv.culture.francetransfert.services.mail.notification.*;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
+import net.bytebuddy.asm.Advice.Local;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -78,7 +80,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), recipient);
+        mailAvailbleEnclosureServices.sendToRecipients(enclosure,message, NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), recipient,Locale.FRENCH);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
@@ -92,7 +94,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue());
+        mailNotificationServices.prepareAndSend(recipient, message, enclosure, NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue(), Locale.FRENCH);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
@@ -116,7 +118,7 @@ public class MailNotificationServicesTest {
         String message = "Test message content";
         enclosure.setUrlDownload("download_url");
         //when
-        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enclosure);
+        mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enclosure, Locale.FRENCH);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
@@ -129,7 +131,7 @@ public class MailNotificationServicesTest {
         String subject = "Virus found subject";
         enclosure.setUrlDownload("download_url");
         //when
-        mailVirusFoundServices.sendToSender(enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subject);
+        mailVirusFoundServices.sendToSender(enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subject, Locale.FRENCH);
         //then
         String content = message + "</span>";
         assertReceivedMessageContains(content);
