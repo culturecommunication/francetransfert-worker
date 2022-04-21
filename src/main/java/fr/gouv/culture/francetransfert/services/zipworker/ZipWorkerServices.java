@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
@@ -182,7 +183,7 @@ public class ZipWorkerServices {
 
 	private String getHashFromS3(String enclosureId) throws MetaloadException, StorageException {
 		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
-		String fileToDownload = storageManager.getZippedEnclosureName(enclosureId);
+		String fileToDownload = storageManager.getZippedEnclosureName(enclosureId);		
 		String hashFileFromS3 = storageManager.getEtag(bucketName, fileToDownload);
 		return hashFileFromS3;
 	}
@@ -246,7 +247,7 @@ public class ZipWorkerServices {
 		if (zipPassword.equalsIgnoreCase("true")) {
 			String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
 			try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
-					ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());) {
+					ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray(), Charsets.UTF_8);) {
 				File fileToZip = new File(sourceFile);
 				for (File file : fileToZip.listFiles()) {
 					zipFile(file, file.getName(), zipOut, true);

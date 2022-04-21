@@ -12,9 +12,10 @@
                         <a th:href="${enclosure.get('urlAdmin').getAsString()}" th:text="#{lien.administration}"> </a>
                     </strong>
             </p>
+            
 
-            <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;margin-left: 2em;" th:text="#{fonctionnement.lien}">
-                       <span th:text="${enclosure.get('urlAdmin').getAsString()}"></span>
+            <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;margin-left: 2em;">          
+                  	<span th:text="#{fonctionnement.lien} + ' ' + ${enclosure.get('urlAdmin').getAsString()} "  ></span>
              </p>
 
         </div>

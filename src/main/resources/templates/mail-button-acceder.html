@@ -22,10 +22,14 @@
 				</td>
 			</tr>
 		</table>
-		<p style="margin: 0px 0px 0px 0px; font-style: italic" th:text="#{lien}">
+		<p style="margin: 0px 0px 0px 0px; font-style: italic">
+		<span  th:text="#{lien}"></span>
 			<a th:href="${enclosure.get('urlDownload').getAsString()}"
 				style="color: #0269cc" th:text="#{accès.pli}"></a>
 		</p>
+		
+
+             
 	</div>
 </body>
 </html>
