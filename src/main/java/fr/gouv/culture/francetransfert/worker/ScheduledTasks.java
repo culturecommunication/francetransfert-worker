@@ -125,6 +125,10 @@ public class ScheduledTasks {
 	@Qualifier("formuleContactWorkerExecutor")
 	Executor formuleContactWorkerExecutorFromBean;
 
+	@Autowired
+	@Qualifier("deleteEnclosureWorkerExecutor")
+	Executor deleteEnclosureWorkerExecutorFromBean;
+
 	@Scheduled(cron = "${scheduled.relaunch.mail}")
 	public void relaunchMail() throws WorkerException {
 		LOGGER.info("Worker : start relaunch for download Check");
@@ -228,6 +232,7 @@ public class ScheduledTasks {
 		initSequestre();
 		initFormuleContact();
 		initSendToNewEmailNotificationUploadDownloadWorkers();
+		initDeleteEnclosureWorkers();
 	}
 
 	private void initSequestre() {
@@ -435,6 +440,29 @@ public class ScheduledTasks {
 						}
 					} catch (Exception e) {
 						LOGGER.error("Error initSatisfactionWorkers : " + e.getMessage(), e);
+					}
+				}
+			}
+		});
+	}
+
+	private void initDeleteEnclosureWorkers() {
+		LOGGER.info("initDeleteEnclosureWorkers");
+		Executors.newSingleThreadExecutor().execute(new Runnable() {
+			@Override
+			public void run() {
+				ThreadPoolTaskExecutor DeleteEnclosureWorkerExecutor = (ThreadPoolTaskExecutor) deleteEnclosureWorkerExecutorFromBean;
+				while (true) {
+					try {
+						List<String> returnedBLPOPList = redisManager
+								.subscribeFT(RedisQueueEnum.DELETE_ENCLOSURE_QUEUE.getValue());
+						if (!CollectionUtils.isEmpty(returnedBLPOPList)) {
+							String enclosureId = returnedBLPOPList.get(1);
+							CleanEnclosureTask task = new CleanEnclosureTask(enclosureId, cleanUpServices);
+							DeleteEnclosureWorkerExecutor.execute(task);
+						}
+					} catch (Exception e) {
+						LOGGER.error("Error initDeleteEnclosureWorkers : " + e.getMessage(), e);
 					}
 				}
 			}
