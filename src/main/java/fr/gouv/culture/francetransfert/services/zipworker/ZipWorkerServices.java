@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -139,6 +138,7 @@ public class ZipWorkerServices {
 			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
+				LOGGER.warn("VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(), enclosure.getSender());
 			}
 			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
