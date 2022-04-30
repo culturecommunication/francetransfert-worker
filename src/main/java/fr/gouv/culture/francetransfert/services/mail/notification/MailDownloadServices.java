@@ -59,7 +59,7 @@ public class MailDownloadServices {
 	}
 
 	public void sendMailsDownload() {
-		LOGGER.info("STEP SEND MAIL DOWNLOAD");
+		LOGGER.debug("STEP SEND MAIL DOWNLOAD");
 		List<String> downloadList = redisManager.lrange(RedisQueueEnum.DOWNLOAD_QUEUE.getValue(), 0, -1);
 		redisManager.deleteKey(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
 		Map<String, Set<String>> encloRecipMap = new HashMap<String, Set<String>>();

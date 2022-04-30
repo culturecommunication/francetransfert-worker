@@ -120,18 +120,24 @@ public class MailAvailbleEnclosureServices {
 			}
 			for (Recipient recipient : recipients) {
 				if (!recipient.isSuppressionLogique()) {
-					LOGGER.info("send email notification availble to recipient: {} for enclosure {}",
-							recipient.getMail(), enclosure.getGuid());
+					try {
+						LOGGER.info("send email notification availble to recipient: {} for enclosure {}",
+								recipient.getMail(), enclosure.getGuid());
 
-					Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager,
-							enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+						Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager,
+								enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
 
-					enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
-							recipient.getMail(), recipient.getId()));
-					mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName,
-							language);
-					mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
-							NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
+						enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
+								recipient.getMail(), recipient.getId()));
+						mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName,
+								language);
+						mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
+								NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
+
+					} catch (Exception e) {
+						LOGGER.error("Cannot send mail recipient mail {} for enclosure {}", recipient.getMail(),
+								enclosure.getGuid());
+					}
 				}
 			}
 
