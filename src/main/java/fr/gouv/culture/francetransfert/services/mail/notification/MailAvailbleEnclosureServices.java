@@ -58,7 +58,8 @@ public class MailAvailbleEnclosureServices {
 	// Send Mails to snder and recipients
 	public void sendMailsAvailableEnclosure(Enclosure enclosure, NewRecipient metaDataRecipient, Locale currentLanguage)
 			throws MetaloadException, StatException {
-		LOGGER.info("send email notification availble to sender: {}", enclosure.getSender());
+		LOGGER.info("send email notification availble to sender: {} for enclosure {}", enclosure.getSender(),
+				enclosure.getGuid());
 		String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 				EnclosureKeysEnum.PASSWORD.getKey());
 		boolean publicLink = mailNotificationServices.getPublicLink(enclosure.getGuid());
@@ -119,7 +120,8 @@ public class MailAvailbleEnclosureServices {
 			}
 			for (Recipient recipient : recipients) {
 				if (!recipient.isSuppressionLogique()) {
-					LOGGER.info("send email notification availble to recipient: {}", recipient.getMail());
+					LOGGER.info("send email notification availble to recipient: {} for enclosure {}",
+							recipient.getMail(), enclosure.getGuid());
 
 					Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager,
 							enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
