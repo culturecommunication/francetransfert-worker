@@ -126,8 +126,10 @@ public class CleanUpServices {
 	 *
 	 * @param enclosureId
 	 * @throws WorkerException
+	 * @throws MetaloadException
 	 */
-	public void cleanUpEnclosureCoreInRedis(String enclosureId) throws WorkerException {
+	public void cleanUpEnclosureCoreInRedis(String enclosureId) throws WorkerException, MetaloadException {
+		Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 		// delete list and HASH root-files
 		deleteRootFiles(enclosureId);
 		LOGGER.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
@@ -142,6 +144,8 @@ public class CleanUpServices {
 		LOGGER.debug("clean sender HASH {}", RedisKeysEnum.FT_SENDER.getKey(enclosureId));
 		// delete hash enclosure
 		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+		// delete enclosureid from sendlist
+		redisManager.lrem(RedisKeysEnum.FT_SEND.getKey(enclosure.getSender()), 1, enclosureId);
 		LOGGER.debug("clean enclosure HASH {}", RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 	}
 
