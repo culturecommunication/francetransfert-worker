@@ -106,12 +106,12 @@ public class ZipWorkerServices {
 
 	private String subjVirusFound;
 
-	public void startZip(String prefix) throws MetaloadException, StorageException {
-		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
-		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
+	public void startZip(String enclosureId) throws MetaloadException, StorageException {
+		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
+		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, enclosureId);
 		LOGGER.debug(" STEP STATE ZIP ");
 		LOGGER.debug(" SIZE " + list.size() + " LIST ===> " + list.toString());
-		Enclosure enclosure = Enclosure.build(prefix, redisManager);
+		Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 
 		/*
 		 * subjectVirusErr = subjectVirusError; subjVirusFound = subjectVirusFound;
@@ -131,7 +131,7 @@ public class ZipWorkerServices {
 
 			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
 			LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName,
-					list, prefix, bucketPrefix);
+					list, enclosureId, bucketPrefix);
 			downloadFilesToTempFolder(manager, bucketName, list);
 			LOGGER.info(" Start scanning files {} with ClamaV", list);
 			LocalDateTime beginDate = LocalDateTime.now();
@@ -146,38 +146,39 @@ public class ZipWorkerServices {
 			if (isClean) {
 
 				LOGGER.debug(" start zip files temp to disk");
-				zipDownloadedContent(prefix, passwordUnHashed, zipPassword);
+				zipDownloadedContent(enclosureId, passwordUnHashed, zipPassword);
 
 				LOGGER.debug(" start upload zip file temp to OSU");
-				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
-						getBaseFolderNameWithZipPrefix(prefix));
+				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(enclosureId),
+						getBaseFolderNameWithZipPrefix(enclosureId));
 
 				LOGGER.debug(" add hashZipFile to redis");
-				addHashFilesToMetData(prefix, getHashFromS3(prefix));
+				addHashFilesToMetData(enclosureId, getHashFromS3(enclosureId));
 
-				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
+				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(enclosureId));
 				LOGGER.debug(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
-				File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
+				File fileZip = new File(getBaseFolderNameWithZipPrefix(enclosureId));
 				if (!fileZip.delete()) {
 					throw new WorkerException("error delete zip file");
 				}
 				LOGGER.debug(" start delete zip file in OSU");
-				deleteFilesFromOSU(manager, bucketName, prefix);
-				notifyEmailWorker(prefix);
+				deleteFilesFromOSU(manager, bucketName, enclosureId);
+				notifyEmailWorker(enclosureId);
+				RedisUtils.updateListOfPli(redisManager, enclosure.getSender(), enclosureId);
 			} else {
-				cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(),
-						subjectVirusFound);
+				cleanUpEnclosure(bucketName, enclosureId, enclosure,
+						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 			LOGGER.debug(" STEP STATE ZIP OK");
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
-			cleanUpEnclosure(bucketName, prefix, enclosure,
+			cleanUpEnclosure(bucketName, enclosureId, enclosure,
 					NotificationTemplateEnum.MAIL_INVALID_ENCLOSURE_SENDER.getValue(), subjectVirusError);
 		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
-			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
-					subjectVirusError);
+			cleanUpEnclosure(bucketName, enclosureId, enclosure,
+					NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(), subjectVirusError);
 		}
 	}
 
