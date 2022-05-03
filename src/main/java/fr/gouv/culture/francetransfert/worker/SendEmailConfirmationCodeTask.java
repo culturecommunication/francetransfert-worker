@@ -11,9 +11,13 @@ public class SendEmailConfirmationCodeTask implements Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SendEmailConfirmationCodeTask.class);
 
-	MailConfirmationCodeServices mailConfirmationCodeServices;
+	private MailConfirmationCodeServices mailConfirmationCodeServices;
 
 	private String mailCode;
+
+	public String getMailCode() {
+		return mailCode;
+	}
 
 	public SendEmailConfirmationCodeTask(String mailCode, MailConfirmationCodeServices mailConfirmationCodeServices) {
 		this.mailCode = mailCode;

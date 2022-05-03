@@ -145,7 +145,7 @@ public class CleanUpServices {
 		// delete hash enclosure
 		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 		// delete enclosureid from sendlist
-		redisManager.lrem(RedisKeysEnum.FT_SEND.getKey(enclosure.getSender()), 1, enclosureId);
+		redisManager.srem(RedisKeysEnum.FT_SEND.getKey(enclosure.getSender()), enclosureId);
 		LOGGER.debug("clean enclosure HASH {}", RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 	}
 

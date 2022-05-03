@@ -13,6 +13,10 @@ public class CleanEnclosureTask implements Runnable {
 
 	private String enclosureId;
 
+	public String getEnclosureId() {
+		return enclosureId;
+	}
+
 	private CleanUpServices cleanService;
 
 	public CleanEnclosureTask(String enclosureId, CleanUpServices cleanService) {

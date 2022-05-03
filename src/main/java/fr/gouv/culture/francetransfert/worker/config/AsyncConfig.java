@@ -1,7 +1,13 @@
 package fr.gouv.culture.francetransfert.worker.config;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,10 +15,18 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.utils.MonitorRunnable;
+
 @Configuration
 @EnableAsync
 @EnableScheduling
 public class AsyncConfig {
+
+	@Autowired
+	RedisManager redisManager;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(AsyncConfig.class);
 
 	@Value("${satisfactionWorkerExecutor.pool.size:3}")
 	private int satisfactionWorkerExecutorPoolSize;
@@ -99,6 +113,14 @@ public class AsyncConfig {
 		exec.setMaxPoolSize(maxPoolSize);
 		exec.setCorePoolSize(maxPoolSize);
 		exec.setKeepAliveSeconds(0);
+		exec.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+			public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+				MonitorRunnable mr = (MonitorRunnable) r;
+				LOGGER.info("ThreadPool is full Putting back to queue {} - {}", mr.getQueue(), mr.getData());
+				redisManager.publishFT(mr.getQueue(), mr.getData());
+				throw new RejectedExecutionException("Queue is full");
+			}
+		});
 		return exec;
 	}
 }
