@@ -13,8 +13,8 @@
             </strong>
         </p>
 
-        <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;margin-left: 2em;" th:text="#{lien.téléchargement}">
-            
+        <p style="margin: 0px 0px 0px 0px;font-style: italic;font-size: small;margin-left: 2em;">
+            <span th:text="#{lien.téléchargement}"></span>
             <span th:text="${enclosure.get('urlDownload').getAsString()}"></span>
         </p>
 </div>
