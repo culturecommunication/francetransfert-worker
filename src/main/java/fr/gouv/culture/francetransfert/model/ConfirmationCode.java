@@ -1,5 +1,7 @@
 package fr.gouv.culture.francetransfert.model;
 
+import java.util.Locale;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,4 +22,6 @@ public class ConfirmationCode {
 	private int sessionTime;
 
 	private int codeTime;
+    
+    //private Locale currentLanguage;
 }

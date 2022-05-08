@@ -4,19 +4,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
+import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.services.mail.notification.enums.NotificationTemplateEnum;
 import fr.gouv.culture.francetransfert.utils.WorkerUtils;
@@ -35,7 +40,7 @@ public class MailDownloadServices {
 	@Autowired
 	private MailNotificationServices mailNotificationServices;
 
-	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) {
+	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) throws MetaloadException {
 		ArrayList<String> recipList = new ArrayList<String>();
 		String sendObject = new String(subjectDownloadProgress);
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
@@ -45,13 +50,16 @@ public class MailDownloadServices {
 				.map(x -> x.getMail()).collect(Collectors.toList()));
 		enclosure.setRecipientDownloadInProgress(recipList);
 
+		Locale language = LocaleUtils.toLocale(
+				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+
 		LOGGER.info("Send email notification download in progress to sender:  {}", enclosure.getSender());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), sendObject, enclosure,
-				NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue());
+				NotificationTemplateEnum.MAIL_DOWNLOAD_SENDER_TEMPLATE.getValue(), language);
 	}
 
 	public void sendMailsDownload() {
-		LOGGER.info("STEP SEND MAIL DOWNLOAD");
+		LOGGER.debug("STEP SEND MAIL DOWNLOAD");
 		List<String> downloadList = redisManager.lrange(RedisQueueEnum.DOWNLOAD_QUEUE.getValue(), 0, -1);
 		redisManager.deleteKey(RedisQueueEnum.DOWNLOAD_QUEUE.getValue());
 		Map<String, Set<String>> encloRecipMap = new HashMap<String, Set<String>>();

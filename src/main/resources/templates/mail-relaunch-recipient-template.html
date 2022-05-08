@@ -21,18 +21,17 @@
 							<div>
 								<p
 									style="margin: 1.5rem 0rem 3rem 0rem; font-size: 26px; text-align: center;">
-									<strong> <span style="color: black">Oups! Vous
-											avez reçu un pli que vous n’avez toujours pas téléchargé </span>
+									<strong> <span style="color: black"  th:text="#{non.téléchargé}"></span>
 									</strong>
 								</p>
 							</div>
 							<div>
 								<p
 									style="margin: 0rem 0rem 2.5rem 0rem; font-size: 16px; text-align: center;">
-									<strong>Il reste disponible jusqu’au </strong> <strong><span
+									<strong  th:text="#{pli.disponible}"></strong> <strong><span
 										style="color: #0269cc"
 										th:text="${enclosure.get('expireDate').getAsString()}"></span>
-									</strong> <strong> (au-delà il sera supprimé).</strong>
+									</strong> <strong  th:text="#{pli.non.supprimé}"></strong>
 								</p>
 							</div>
 							<div th:insert="~{mail-sender :: senderEmail}"></div>

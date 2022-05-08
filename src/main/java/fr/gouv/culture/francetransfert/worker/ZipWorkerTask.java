@@ -11,10 +11,13 @@ public class ZipWorkerTask implements Runnable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZipWorkerTask.class);
 
-//	@Autowired
 	private ZipWorkerServices zipWorkerServices;
 
 	private String enclosureId;
+
+	public String getEnclosureId() {
+		return enclosureId;
+	}
 
 	public ZipWorkerTask(String enclosureId, ZipWorkerServices zipWorkerServices) {
 		this.enclosureId = enclosureId;

@@ -12,17 +12,18 @@ import java.nio.channels.FileChannel;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
@@ -105,12 +106,12 @@ public class ZipWorkerServices {
 
 	private String subjVirusFound;
 
-	public void startZip(String prefix) throws MetaloadException, StorageException {
-		String bucketName = RedisUtils.getBucketName(redisManager, prefix, bucketPrefix);
-		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, prefix);
+	public void startZip(String enclosureId) throws MetaloadException, StorageException {
+		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
+		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, enclosureId);
 		LOGGER.debug(" STEP STATE ZIP ");
 		LOGGER.debug(" SIZE " + list.size() + " LIST ===> " + list.toString());
-		Enclosure enclosure = Enclosure.build(prefix, redisManager);
+		Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 
 		/*
 		 * subjectVirusErr = subjectVirusError; subjVirusFound = subjectVirusFound;
@@ -124,17 +125,20 @@ public class ZipWorkerServices {
 		try {
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
-			String passwordGenerated = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
-					EnclosureKeysEnum.PASSWORD_GENERATED.getKey());
+
+			String zipPassword = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
+					EnclosureKeysEnum.PASSWORD_ZIP.getKey());
+
 			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
 			LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName,
-					list, prefix, bucketPrefix);
+					list, enclosureId, bucketPrefix);
 			downloadFilesToTempFolder(manager, bucketName, list);
 			LOGGER.info(" Start scanning files {} with ClamaV", list);
 			LocalDateTime beginDate = LocalDateTime.now();
 			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
+				LOGGER.warn("VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(), enclosure.getSender());
 			}
 			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
@@ -142,38 +146,39 @@ public class ZipWorkerServices {
 			if (isClean) {
 
 				LOGGER.debug(" start zip files temp to disk");
-				zipDownloadedContent(prefix, passwordUnHashed, passwordGenerated);
+				zipDownloadedContent(enclosureId, passwordUnHashed, zipPassword);
 
 				LOGGER.debug(" start upload zip file temp to OSU");
-				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(prefix),
-						getBaseFolderNameWithZipPrefix(prefix));
+				uploadZippedEnclosure(bucketName, manager, manager.getZippedEnclosureName(enclosureId),
+						getBaseFolderNameWithZipPrefix(enclosureId));
 
 				LOGGER.debug(" add hashZipFile to redis");
-				addHashFilesToMetData(prefix, getHashFromS3(prefix));
+				addHashFilesToMetData(enclosureId, getHashFromS3(enclosureId));
 
-				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(prefix));
+				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(enclosureId));
 				LOGGER.debug(" start delete zip file in local disk");
 				deleteFilesFromTemp(fileToDelete);
-				File fileZip = new File(getBaseFolderNameWithZipPrefix(prefix));
+				File fileZip = new File(getBaseFolderNameWithZipPrefix(enclosureId));
 				if (!fileZip.delete()) {
 					throw new WorkerException("error delete zip file");
 				}
 				LOGGER.debug(" start delete zip file in OSU");
-				deleteFilesFromOSU(manager, bucketName, prefix);
-				notifyEmailWorker(prefix);
+				deleteFilesFromOSU(manager, bucketName, enclosureId);
+				notifyEmailWorker(enclosureId);
+				RedisUtils.updateListOfPli(redisManager, enclosure.getSender(), enclosureId);
 			} else {
-				cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(),
-						subjectVirusFound);
+				cleanUpEnclosure(bucketName, enclosureId, enclosure,
+						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 			LOGGER.debug(" STEP STATE ZIP OK");
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
-			cleanUpEnclosure(bucketName, prefix, enclosure,
+			cleanUpEnclosure(bucketName, enclosureId, enclosure,
 					NotificationTemplateEnum.MAIL_INVALID_ENCLOSURE_SENDER.getValue(), subjectVirusError);
 		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
-			cleanUpEnclosure(bucketName, prefix, enclosure, NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(),
-					subjectVirusError);
+			cleanUpEnclosure(bucketName, enclosureId, enclosure,
+					NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(), subjectVirusError);
 		}
 	}
 
@@ -238,9 +243,9 @@ public class ZipWorkerServices {
 		manager.uploadMultipartForZip(bucketName, fileName, fileZipPath);
 	}
 
-	private void zipDownloadedContent(String zippedFileName, String password, String passwordGenerated)
-			throws IOException {
-		if (passwordGenerated.equalsIgnoreCase("false")) {
+	private void zipDownloadedContent(String zippedFileName, String password, String zipPassword) throws IOException {
+
+		if (zipPassword.equalsIgnoreCase("true")) {
 			String sourceFile = getBaseFolderNameWithEnclosurePrefix(zippedFileName);
 			try (FileOutputStream fos = new FileOutputStream(getBaseFolderNameWithZipPrefix(zippedFileName));
 					ZipOutputStream zipOut = new ZipOutputStream(fos, password.toCharArray());) {
@@ -254,6 +259,7 @@ public class ZipWorkerServices {
 		} else {
 			zipDownloadedContentWithoutPassword(zippedFileName);
 		}
+
 	}
 
 	private void zipDownloadedContentWithoutPassword(String zippedFileName) throws IOException {
@@ -441,7 +447,12 @@ public class ZipWorkerServices {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
 			}
-			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName);
+
+			Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
+					EnclosureKeysEnum.LANGUAGE.getKey()));
+
+			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName,
+					language);
 		} catch (Exception e) {
 			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		}

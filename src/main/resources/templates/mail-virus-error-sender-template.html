@@ -22,16 +22,15 @@
 								<div>
 									<p class="ft-email-main-sender-email"
 										style="margin: 23px 0px 19px 0px; font-size: 26px; text-align: center;">
-										<strong> <span>Un problème a eu lieu lors de
-												l’analyse antivirus, votre pli a donc été supprimé de notre
-												système. </span>
+										<strong> <span th:text="#{analyse.antivirus}"></span>
 										</strong>
 									</p>
 								</div>
 								<div style="margin: 2.5rem 1rem 1.5rem 2rem;">
 									<p class="ft-email-main-enclosure-quantities"
 										style="margin: 13px 0px 13px 0px;">
-										<strong> Référence technique du pli : </strong> <span
+										<strong th:text="#{référence.technique.pli}" >&nbsp;
+										</strong> <span
 											th:text="${enclosure.get('guid').getAsString()}"></span>
 									</p>
 								</div>

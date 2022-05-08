@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +22,7 @@ import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.TypeStat;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
+import fr.gouv.culture.francetransfert.core.utils.FTFileUtils;
 import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 
@@ -31,8 +30,6 @@ import fr.gouv.culture.francetransfert.security.WorkerException;
 public class StatServices {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(StatServices.class);
-
-	private static final DecimalFormat df = new DecimalFormat("#.##");
 
 	@Autowired
 	RedisManager redisManager;
@@ -54,7 +51,7 @@ public class StatServices {
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId).toLowerCase();
 			double plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
-			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
+			String totalSizeEnclosure = FTFileUtils.byteCountToDisplaySize(plisSize);
 			Map<String, String> recipient = RedisUtils.getRecipientsEnclosure(redisManager, enclosureId);
 
 			String recipientList = recipient.keySet().stream().map(x -> x.toLowerCase().split("@")[1]).distinct()
@@ -96,7 +93,7 @@ public class StatServices {
 
 			String sender = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId).toLowerCase();
 			double plisSize = RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId);
-			String totalSizeEnclosure = byteCountToDisplaySize(plisSize);
+			String totalSizeEnclosure = FTFileUtils.byteCountToDisplaySize(plisSize);
 
 			String recipientList = "";
 			String hashedMail = "";
@@ -129,26 +126,6 @@ public class StatServices {
 			LOGGER.error("Error save data in CSV DOWNLOAD : " + e.getMessage(), e);
 			throw new WorkerException("error save data in CSV DOWNLOAD");
 		}
-	}
-
-	private String byteCountToDisplaySize(double plisSize) {
-		String size = byteCountToDisplaySizeCustom(plisSize);
-		return size;
-	}
-
-	private static String byteCountToDisplaySizeCustom(double size) {
-		String displaySize;
-
-		if (size / FileUtils.ONE_GB >= 1) {
-			displaySize = df.format((size / FileUtils.ONE_GB)) + " GB";
-		} else if (size / FileUtils.ONE_MB >= 1) {
-			displaySize = df.format((size / FileUtils.ONE_MB)) + " MB";
-		} else if (size / FileUtils.ONE_KB >= 1) {
-			displaySize = df.format((size / FileUtils.ONE_KB)) + " KB";
-		} else {
-			displaySize = df.format((size)) + " B";
-		}
-		return displaySize;
 	}
 
 }

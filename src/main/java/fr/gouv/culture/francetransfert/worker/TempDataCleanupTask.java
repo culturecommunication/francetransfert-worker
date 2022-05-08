@@ -16,6 +16,10 @@ public class TempDataCleanupTask implements Runnable {
 
 	private String enclosureId;
 
+	public String getEnclosureId() {
+		return enclosureId;
+	}
+
 	public TempDataCleanupTask(String enclosureId, CleanUpServices cleanUpServices) {
 		this.enclosureId = enclosureId;
 		this.cleanUpServices = cleanUpServices;

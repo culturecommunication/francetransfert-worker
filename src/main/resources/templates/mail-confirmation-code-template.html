@@ -1,6 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:th="http://www.w3.org/1999/xhtml">
+
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html  xmlns:th="http://www.thymeleaf.org"
+	th:lang="${#locale.language}" 
+    th:xmllang="${#locale.language}" 
+>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>FranceTransfert : fichiers envoyés</title>
@@ -21,13 +24,14 @@
 							<div>
 								<p
 									style="margin: 23px 0px 19px 0px; font-size: 26px; text-align: center;">
-									<strong> <span style="color: black">Code de
-											confirmation </span>
+									<strong> <span style="color: black"  th:text="#{code.confirmation}" > </span>
 									</strong>
 								</p>
 								<p style="margin: 0 44px; color: #414856; text-align: center;">
-									Utilisez le code suivant pour utiliser le service tant que vous ne
-                    dépassez pas les <span th:text="${enclosure.get('sessionTime').getAsString()}"></span> minutes d'inactivité : </p>
+									 <span th:text="#{login.durée}"></span>
+									 <span th:text="${enclosure.get('sessionTime').getAsString()}"></span>
+									 <span th:text="#{minutes.inactivité}"></span>
+                   				</p>
 							</div>
 							<div>
 								<p
@@ -39,18 +43,12 @@
 							</div>
 							<div>
 								<p style="text-align: center; color: #414856;">
-									Ce code est valable pendant <strong><span
-										th:text="${enclosure.get('codeTime').getAsString()}"></span> minutes</strong>
-									(jusqu’à <span
-										th:text="${enclosure.get('dateExpiration').getAsString()}"></span>
-									CET).
+								<span th:text="#{code.valable}"></span>&nbsp;
+								<strong><span th:text="${enclosure.get('codeTime').getAsString()} + ' ' + #{durée.code}"></span></strong>&nbsp;
+								<span th:text="#{date.disponibilité} + ' ' + ${enclosure.get('dateExpiration').getAsString()} + ' ' + #{cet}"></span>
 								</p>
-								<p
-									style="font-size: 12px; font-style: italic; margin: 24px 17px 0px 9px; text-align: center">
-									Si vous n’êtes pas à l’origine de cette opération, il se peut
-									que votre adresse de courriel ait été usurpée. Nous vous
-									conseillons alors de vous rapprocher de votre support
-									informatique local et de lui montrer ce courriel</p>
+								<p style="font-size: 12px; font-style: italic; margin: 24px 17px 0px 9px; text-align: center" th:text="#{origine.opération}">
+								</p>
 							</div>
 						</td>
 					</tr>

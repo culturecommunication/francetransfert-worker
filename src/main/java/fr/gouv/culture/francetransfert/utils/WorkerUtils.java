@@ -2,12 +2,17 @@ package fr.gouv.culture.francetransfert.utils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 import fr.gouv.culture.francetransfert.security.WorkerException;
 
 public class WorkerUtils {
+
+	public static final List<MonitorRunnable> activeTasks = Collections.synchronizedList(new ArrayList<>());
 
 	private WorkerUtils() {
 		// private Constructor
