@@ -8,9 +8,8 @@
         <div th:fragment="message" style="margin: 0rem 1rem 2rem 2rem  ;color: #000000;">
 
             <p style="margin-block-start: 0em;margin-block-end: 0em;margin-left: 2em;">
-                <strong>Message :</strong>
-                <span th:text="${enclosure.get('message').getAsString()}"></span
-            >
+                <strong th:text="#{message}"></strong>&nbsp;
+                <span th:text="${enclosure.get('message').getAsString()}"></span>
             </p>
 
         </div>

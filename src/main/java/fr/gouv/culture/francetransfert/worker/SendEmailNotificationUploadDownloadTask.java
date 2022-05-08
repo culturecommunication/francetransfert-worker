@@ -1,6 +1,9 @@
 package fr.gouv.culture.francetransfert.worker;
 
 import fr.gouv.culture.francetransfert.core.model.NewRecipient;
+
+import java.util.Locale;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -49,7 +52,7 @@ public class SendEmailNotificationUploadDownloadTask implements Runnable {
 		try {
 			LOGGER.info(" [Worker] Start send email notification availble enclosure to download for enclosure N° {}",
 					enclosureId);
-			mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager), newRec);
+			mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager), newRec,Locale.FRENCH);
 			String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
 			redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 		} catch (Exception e) {

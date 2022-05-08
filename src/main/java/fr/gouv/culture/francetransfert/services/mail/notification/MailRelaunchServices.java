@@ -3,9 +3,11 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +55,7 @@ public class MailRelaunchServices {
 						Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 						LOGGER.info(" send relaunch mail for enclosure N° {}", enclosureId);
 						sendToRecipientsAndSenderRelaunch(enclosure,
-								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
+								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue(), Locale.FRENCH);
 					}
 				} catch (Exception e) {
 					LOGGER.error("Cannot send relaunch for enclosure {} :  {}", enclosureId, e.getMessage(), e);
@@ -63,10 +65,11 @@ public class MailRelaunchServices {
 	}
 
 	// Send mails Relaunch to recipients
-	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName)
+	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName, Locale currentLanguage)
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
 		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
+
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
 				sendRelaunchRecipient = sendRelaunchRecipient.concat(" : ").concat(enclosure.getSubject());
@@ -79,8 +82,12 @@ public class MailRelaunchServices {
 					enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 							recipient.getMail(), recipient.getId()));
 					LOGGER.info(" send relaunch mail to {} ", recipient.getMail());
-					mailNotificationServices.prepareAndSend(recipient.getMail(),
-							sendRelaunchRecipient, enclosure, templateName);
+
+					Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager,
+							enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+
+					mailNotificationServices.prepareAndSend(recipient.getMail(), sendRelaunchRecipient, enclosure,
+							templateName, language);
 				}
 			}
 		}

@@ -24,6 +24,7 @@ import com.amazonaws.services.s3.model.Bucket;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.services.StorageManager;
@@ -72,30 +73,8 @@ public class CleanUpServices {
 							redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId),
 									EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()))
 							.toLocalDate();
-					if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) { // expire date + 1
-						mailEnclosureNoLongerAvailbleServices
-								.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager));
-						LOGGER.info(" clean up for enclosure N° {}", enclosureId);
-						String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
-
-						// clean temp data in REDIS for Enclosure
-						cleanUpEnclosureTempDataInRedis(enclosureId);
-						LOGGER.info("Clean up REDIS temp data");
-
-						// clean enclosure in OSU : delete enclosure
-						LOGGER.info("Clean up OSU");
-
-						try {
-							cleanUpOSU(bucketName, enclosureId);
-						} catch (Exception ex) {
-							LOGGER.error("Cannot delete enclosure " + enclosureId);
-						}
-
-						// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
-						// recipients, sender and enclosure
-						LOGGER.info("Clean up REDIS");
-						cleanUpEnclosureCoreInRedis(enclosureId);
-
+					if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) {
+						cleanEnclosure(enclosureId);
 						// clean enclosure date : delete list enclosureId and date expired
 						cleanUpEnclosureDatesInRedis(date);
 					}
@@ -104,6 +83,32 @@ public class CleanUpServices {
 				}
 			});
 		});
+	}
+
+	public void cleanEnclosure(String enclosureId) throws MetaloadException {
+		// expire date + 1
+		mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager));
+		LOGGER.info(" clean up for enclosure N° {}", enclosureId);
+		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
+
+		// clean temp data in REDIS for Enclosure
+		cleanUpEnclosureTempDataInRedis(enclosureId);
+		LOGGER.info("Clean up REDIS temp data");
+
+		// clean enclosure in OSU : delete enclosure
+		LOGGER.info("Clean up OSU");
+
+		try {
+			cleanUpOSU(bucketName, enclosureId);
+		} catch (Exception ex) {
+			LOGGER.error("Cannot delete enclosure " + enclosureId);
+		}
+
+		// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
+		// recipients, sender and enclosure
+		LOGGER.info("Clean up REDIS");
+		cleanUpEnclosureCoreInRedis(enclosureId);
+
 	}
 
 	/**
@@ -121,8 +126,10 @@ public class CleanUpServices {
 	 *
 	 * @param enclosureId
 	 * @throws WorkerException
+	 * @throws MetaloadException
 	 */
-	public void cleanUpEnclosureCoreInRedis(String enclosureId) throws WorkerException {
+	public void cleanUpEnclosureCoreInRedis(String enclosureId) throws WorkerException, MetaloadException {
+		Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 		// delete list and HASH root-files
 		deleteRootFiles(enclosureId);
 		LOGGER.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
@@ -137,6 +144,8 @@ public class CleanUpServices {
 		LOGGER.debug("clean sender HASH {}", RedisKeysEnum.FT_SENDER.getKey(enclosureId));
 		// delete hash enclosure
 		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+		// delete enclosureid from sendlist
+		redisManager.srem(RedisKeysEnum.FT_SEND.getKey(enclosure.getSender()), enclosureId);
 		LOGGER.debug("clean enclosure HASH {}", RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 	}
 

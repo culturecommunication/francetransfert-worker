@@ -21,16 +21,14 @@
 							<div style="margin: 2.5rem 1rem 0.15rem 2rem;">
 								<div>
 									<p style="font-size: 26px; text-align: center">
-										<strong> <span>Au moins un de vos fichiers ne
-												correspond pas au type de fichier autorisé, votre pli a donc
-												été supprimé de notre système. </span>
+										<strong> <span th:text="#{type.fichier.non.autorisé}"></span>
 										</strong>
 									</p>
 								</div>
 								<div style="margin: 2.5rem 1rem 1.5rem 2rem;">
 									<p>
-										<strong> Référence technique du pli : </strong> <span
-											th:text="${enclosure.get('guid').getAsString()}"></span>
+										<strong th:text="#{référence.technique.pli}"></strong>&nbsp; 
+										<span	th:text="${enclosure.get('guid').getAsString()}"></span>
 									</p>
 								</div>
 
