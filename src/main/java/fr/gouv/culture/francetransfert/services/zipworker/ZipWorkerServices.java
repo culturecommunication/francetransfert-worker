@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
@@ -165,7 +167,13 @@ public class ZipWorkerServices {
 				LOGGER.debug(" start delete zip file in OSU");
 				deleteFilesFromOSU(manager, bucketName, enclosureId);
 				notifyEmailWorker(enclosureId);
-				RedisUtils.updateListOfPli(redisManager, enclosure.getSender(), enclosureId);
+				RedisUtils.updateListOfPliSent(redisManager, enclosure.getSender(), enclosureId);
+				if (!CollectionUtils.isEmpty(enclosure.getRecipients())) {
+					RedisUtils.updateListOfPliReceived(redisManager,
+							enclosure.getRecipients().stream().map(x -> x.getMail()).collect(Collectors.toList()),
+							enclosureId);
+				}
+
 			} else {
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
