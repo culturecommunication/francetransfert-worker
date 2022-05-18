@@ -31,6 +31,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.enums.TypeStat;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
 import fr.gouv.culture.francetransfert.core.services.MimeService;
@@ -174,11 +175,16 @@ public class ZipWorkerServices {
 							enclosureId);
 				}
 
+				String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
+				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
+
 			} else {
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
+
 			LOGGER.debug(" STEP STATE ZIP OK");
+
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
 			cleanUpEnclosure(bucketName, enclosureId, enclosure,
