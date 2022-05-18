@@ -29,6 +29,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.enums.TypeStat;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
 import fr.gouv.culture.francetransfert.core.services.MimeService;
@@ -166,6 +167,8 @@ public class ZipWorkerServices {
 				deleteFilesFromOSU(manager, bucketName, enclosureId);
 				notifyEmailWorker(enclosureId);
 				RedisUtils.updateListOfPli(redisManager, enclosure.getSender(), enclosureId);
+				String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
+				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 			} else {
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);

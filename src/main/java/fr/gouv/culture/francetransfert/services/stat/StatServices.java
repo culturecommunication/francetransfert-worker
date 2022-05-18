@@ -102,7 +102,7 @@ public class StatServices {
 				hashedMail = base64CryptoService.encodedHash(recipientMail);
 			}
 
-			LocalDateTime date = LocalDateTime.parse(enclosureRedis.get(EnclosureKeysEnum.TIMESTAMP.getKey()));
+			LocalDateTime date = LocalDateTime.now();
 			String hostname = InetAddress.getLocalHost().getHostName().split("\\.")[0];
 			LOGGER.debug("Hostname: " + hostname);
 			// FranceTransfert_stats_download_20220114.csv
