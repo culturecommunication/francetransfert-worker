@@ -53,8 +53,6 @@ public class SendEmailNotificationUploadDownloadTask implements Runnable {
 			LOGGER.info(" [Worker] Start send email notification availble enclosure to download for enclosure N° {}",
 					enclosureId);
 			mailAvailbleEnclosureServices.sendMailsAvailableEnclosure(Enclosure.build(enclosureId, redisManager), newRec,Locale.FRENCH);
-			String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
-			redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 		} catch (Exception e) {
 			LOGGER.error("[Worker] email notification error : " + e.getMessage(), e);
 		}
