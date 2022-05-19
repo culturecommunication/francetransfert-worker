@@ -440,6 +440,16 @@ public class ZipWorkerServices {
 	private void cleanUpEnclosure(String bucketName, String prefix, Enclosure enclosure, String emailTemplateName,
 			String emailSubject) {
 		try {
+			// Notify sender
+			if (StringUtils.isNotBlank(enclosure.getSubject())) {
+				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
+			}
+
+			Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
+					EnclosureKeysEnum.LANGUAGE.getKey()));
+
+			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName,
+					language);
 			/** Clean : OSU, REDIS, UPLOADER FOLDER, and NOTIFY SNDER **/
 			LOGGER.info("Processing clean up for enclosure{} - {} / {} - {} ", enclosure.getGuid(), bucketName, prefix,
 					bucketPrefix);
@@ -457,16 +467,6 @@ public class ZipWorkerServices {
 
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
-			// Notify sender
-			if (StringUtils.isNotBlank(enclosure.getSubject())) {
-				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
-			}
-
-			Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
-					EnclosureKeysEnum.LANGUAGE.getKey()));
-
-			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName,
-					language);
 		} catch (Exception e) {
 			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		}
