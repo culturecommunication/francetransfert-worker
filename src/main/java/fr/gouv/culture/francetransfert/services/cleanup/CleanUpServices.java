@@ -109,7 +109,7 @@ public class CleanUpServices {
 		}
 
 		if (countDownload == 0) {
-			LOGGER.warn("NOT_DOWNLOADED || enclosure: {} || sender: {}", enc.getGuid(), enc.getSender());
+			LOGGER.warn("msgtype: NOT_DOWNLOADED || enclosure: {} || sender: {}", enc.getGuid(), enc.getSender());
 		}
 
 		mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enc);

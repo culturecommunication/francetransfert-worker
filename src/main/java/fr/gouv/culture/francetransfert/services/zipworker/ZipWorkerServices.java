@@ -141,7 +141,7 @@ public class ZipWorkerServices {
 			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
-				LOGGER.warn("VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(), enclosure.getSender());
+				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(), enclosure.getSender());
 			}
 			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
