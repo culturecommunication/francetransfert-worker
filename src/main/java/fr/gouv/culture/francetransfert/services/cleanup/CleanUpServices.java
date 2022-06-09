@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -87,7 +88,31 @@ public class CleanUpServices {
 
 	public void cleanEnclosure(String enclosureId) throws MetaloadException {
 		// expire date + 1
-		mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(Enclosure.build(enclosureId, redisManager));
+		Enclosure enc = Enclosure.build(enclosureId, redisManager);
+		Integer countDownload = 0;
+		if (enc.isPublicLink()) {
+			Map<String, String> enclosureMap = redisManager
+					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+			if (enclosureMap != null) {
+				countDownload = Integer.parseInt(enclosureMap.get(EnclosureKeysEnum.PUBLIC_DOWNLOAD_COUNT.getKey()));
+			}
+		} else {
+			countDownload = enc.getRecipients().stream().map(recipi -> {
+				try {
+					return RedisUtils.getNumberOfDownloadsPerRecipient(redisManager, recipi.getId());
+				} catch (MetaloadException e) {
+					LOGGER.error("Cannot get nbDown recipient", e);
+				}
+				return 0;
+			}).collect(Collectors.summingInt(x -> x));
+
+		}
+
+		if (countDownload == 0) {
+			LOGGER.warn("msgtype: NOT_DOWNLOADED || enclosure: {} || sender: {}", enc.getGuid(), enc.getSender());
+		}
+
+		mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enc);
 		LOGGER.info(" clean up for enclosure N° {}", enclosureId);
 		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 
@@ -130,6 +155,12 @@ public class CleanUpServices {
 	 */
 	public void cleanUpEnclosureCoreInRedis(String enclosureId) throws WorkerException, MetaloadException {
 		Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
+		if (!enclosure.isPublicLink()) {
+			// Delete received list
+			enclosure.getRecipients().stream().forEach(x -> {
+				redisManager.srem(RedisKeysEnum.FT_RECEIVE.getKey(x.getMail()), enclosureId);
+			});
+		}
 		// delete list and HASH root-files
 		deleteRootFiles(enclosureId);
 		LOGGER.debug("clean root-files {}", RedisKeysEnum.FT_ROOT_FILES.getKey(enclosureId));
