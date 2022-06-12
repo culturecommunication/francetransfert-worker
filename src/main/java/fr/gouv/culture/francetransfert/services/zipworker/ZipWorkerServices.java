@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.slf4j.Logger;
@@ -139,7 +141,7 @@ public class ZipWorkerServices {
 			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
-				LOGGER.warn("VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(), enclosure.getSender());
+				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(), enclosure.getSender());
 			}
 			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
@@ -166,14 +168,23 @@ public class ZipWorkerServices {
 				LOGGER.debug(" start delete zip file in OSU");
 				deleteFilesFromOSU(manager, bucketName, enclosureId);
 				notifyEmailWorker(enclosureId);
-				RedisUtils.updateListOfPli(redisManager, enclosure.getSender(), enclosureId);
+				RedisUtils.updateListOfPliSent(redisManager, enclosure.getSender(), enclosureId);
+				if (!CollectionUtils.isEmpty(enclosure.getRecipients())) {
+					RedisUtils.updateListOfPliReceived(redisManager,
+							enclosure.getRecipients().stream().map(x -> x.getMail()).collect(Collectors.toList()),
+							enclosureId);
+				}
+
 				String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
 				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
+
 			} else {
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
+
 			LOGGER.debug(" STEP STATE ZIP OK");
+
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
 			cleanUpEnclosure(bucketName, enclosureId, enclosure,
@@ -446,18 +457,25 @@ public class ZipWorkerServices {
 
 			// clean up for Upload directory
 			cleanUpServices.deleteEnclosureTempDirectory(getBaseFolderNameWithEnclosurePrefix(prefix));
-			// Notify sender
-			if (StringUtils.isNotBlank(enclosure.getSubject())) {
-				emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
-			}
-
-			Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
-					EnclosureKeysEnum.LANGUAGE.getKey()));
-
-			mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure, emailTemplateName,
-					language);
 		} catch (Exception e) {
 			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
+		} finally {
+			try {
+				// Notify sender
+				if (StringUtils.isNotBlank(enclosure.getSubject())) {
+					emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
+				}
+
+				Locale language;
+				language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
+						EnclosureKeysEnum.LANGUAGE.getKey()));
+
+				mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure,
+						emailTemplateName, language);
+			} catch (MetaloadException e) {
+				LOGGER.error("Error while sending mail for Enclosure " + enclosure.getGuid() + " : " + e.getMessage(),
+						e);
+			}
 		}
 	}
 
