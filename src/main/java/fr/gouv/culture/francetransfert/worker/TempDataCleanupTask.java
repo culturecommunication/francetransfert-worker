@@ -35,7 +35,7 @@ public class TempDataCleanupTask implements Runnable {
 			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
 			LOGGER.info(" start temp data cleanup process for enclosure N: {}", enclosureId);
-			cleanUpServices.cleanUpEnclosureTempDataInRedis(enclosureId);
+			cleanUpServices.cleanUpEnclosureTempDataInRedis(enclosureId, true);
 		} catch (Exception e) {
 			LOGGER.error("[Worker] temp data cleanup error : " + e.getMessage(), e);
 		}

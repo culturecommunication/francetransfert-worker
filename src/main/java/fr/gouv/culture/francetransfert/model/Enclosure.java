@@ -35,7 +35,9 @@ public class Enclosure {
 	private String totalSize;
 
 	private String expireDate;
-
+	
+	private String expireArchiveDate;
+	
 	private String sender;
 
 	private List<Recipient> recipients;
@@ -85,6 +87,8 @@ public class Enclosure {
 		Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 		String expireEnclosureDate = DateUtils
 				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
+		String expireEnclosureArchiveDate = DateUtils
+				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP_ARCHIVE.getKey()));
 		String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
 		if (StringUtils.isBlank(message)) {
 			message = "";
@@ -99,7 +103,9 @@ public class Enclosure {
 
 		return Enclosure.builder().guid(enclosureId).rootFiles(filesOfEnclosure).rootDirs(dirsOfEnclosure)
 				.countElements(filesOfEnclosure.size() + dirsOfEnclosure.size()).totalSize(totalSize)
-				.expireDate(expireEnclosureDate).sender(senderEnclosure).recipients(recipientsEnclosure)
+				.expireDate(expireEnclosureDate) 
+				.expireArchiveDate(expireEnclosureArchiveDate)
+				.sender(senderEnclosure).recipients(recipientsEnclosure)
 				.message(message).subject(subject).withPassword(withPassword).build();
 	}
 }

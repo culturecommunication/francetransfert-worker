@@ -34,7 +34,7 @@ public class CleanEnclosureTask implements Runnable {
 			LOGGER.info("[Worker] Clean EnclosureId from Delete");
 			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
-			cleanService.cleanEnclosure(enclosureId);
+			cleanService.cleanEnclosure(enclosureId, true);
 
 		} catch (Exception e) {
 			LOGGER.error("[Worker] Clean EnclosureId error : " + e.getMessage(), e);
