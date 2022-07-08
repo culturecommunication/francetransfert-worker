@@ -163,7 +163,7 @@ public class ScheduledTasks {
 			LOGGER.info("Worker : start clean-up expired enclosure Checked and Started");
 			cleanUpServices.cleanUp();
 			LOGGER.info("Worker : start clean-up expired buckets");
-			cleanUpServices.deleteBucketOutOfTime();
+			//cleanUpServices.deleteBucketOutOfTime();
 			LOGGER.info("Worker : finished clean-up expired enclosure");
 		}
 	}

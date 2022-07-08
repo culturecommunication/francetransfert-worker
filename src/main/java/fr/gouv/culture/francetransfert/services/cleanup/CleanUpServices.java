@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +76,7 @@ public class CleanUpServices {
 	 * @throws WorkerException
 	 */
 	public void cleanUp() throws WorkerException {
+
 		redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATES.getKey("")).forEach(date -> {
 			redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_DATE.getKey(date)).forEach(enclosureId -> {
 				try {
@@ -81,10 +84,31 @@ public class CleanUpServices {
 							redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId),
 									EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()))
 							.toLocalDate();
-					if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())) {
-						cleanEnclosure(enclosureId);
+
+					boolean archive = false;
+
+					String archiveDate = redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId),
+							EnclosureKeysEnum.EXPIRED_TIMESTAMP_ARCHIVE.getKey());
+
+					LocalDate enclosureExpireArchiveDateRedis = DateUtils.convertStringToLocalDateTime(
+							redisManager.getHgetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId),
+									EnclosureKeysEnum.EXPIRED_TIMESTAMP_ARCHIVE.getKey()))
+							.toLocalDate();
+
+					if (enclosureExipireDateRedis.plusDays(1).equals(LocalDate.now())
+							|| enclosureExipireDateRedis.plusDays(1).isBefore(LocalDate.now())) {
+						if (StringUtils.isBlank(archiveDate)) {
+							cleanEnclosure(enclosureId, archive);
+						} else {
+							if (!StringUtils.isBlank(archiveDate)
+									&& (enclosureExpireArchiveDateRedis.plusDays(1).equals(LocalDate.now())
+											|| enclosureExpireArchiveDateRedis.plusDays(1).isBefore(LocalDate.now()))) {
+								archive = true;
+								cleanEnclosure(enclosureId, archive);
+								cleanUpEnclosureDatesInRedis(date);
+							}
+						}
 						// clean enclosure date : delete list enclosureId and date expired
-						cleanUpEnclosureDatesInRedis(date);
 					}
 				} catch (Exception e) {
 					LOGGER.error("Cannot clean enclosure {} : " + e.getMessage(), enclosureId, e);
@@ -93,7 +117,7 @@ public class CleanUpServices {
 		});
 	}
 
-	public void cleanEnclosure(String enclosureId) throws MetaloadException {
+	public void cleanEnclosure(String enclosureId, boolean archive) throws MetaloadException {
 		// expire date + 1
 		Enclosure enc = Enclosure.build(enclosureId, redisManager);
 		Integer countDownload = 0;
@@ -119,12 +143,23 @@ public class CleanUpServices {
 			LOGGER.warn("msgtype: NOT_DOWNLOADED || enclosure: {} || sender: {}", enc.getGuid(), enc.getSender());
 		}
 
-		mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enc);
+		if (!archive) {
+			LocalDate enclosureExipireDateRedis = DateUtils.convertStringToLocalDateTime(redisManager.getHgetString(
+					RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()))
+					.toLocalDate();
+			Map<String, String> enclosureMap = redisManager
+					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+			LocalDateTime expiredArchiveDate = enclosureExipireDateRedis.atStartOfDay().plus(Period.ofDays(365));
+			enclosureMap.put(EnclosureKeysEnum.EXPIRED_TIMESTAMP_ARCHIVE.getKey(), expiredArchiveDate.toString());
+			redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId), enclosureMap);
+			mailEnclosureNoLongerAvailbleServices.sendEnclosureNotAvailble(enc);
+		}
+
 		LOGGER.info(" clean up for enclosure N° {}", enclosureId);
 		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 
 		// clean temp data in REDIS for Enclosure
-		cleanUpEnclosureTempDataInRedis(enclosureId);
+		cleanUpEnclosureTempDataInRedis(enclosureId, archive);
 		LOGGER.info("Clean up REDIS temp data");
 
 		// clean enclosure in OSU : delete enclosure
@@ -139,7 +174,10 @@ public class CleanUpServices {
 		// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 		// recipients, sender and enclosure
 		LOGGER.info("Clean up REDIS");
-		cleanUpEnclosureCoreInRedis(enclosureId);
+
+		if (archive) {
+			cleanUpEnclosureCoreInRedis(enclosureId);
+		}
 
 	}
 
@@ -179,6 +217,7 @@ public class CleanUpServices {
 		LOGGER.debug("clean recipients {}", RedisKeysEnum.FT_RECIPIENTS.getKey(enclosureId));
 		// delete hash sender
 		redisManager.deleteKey(RedisKeysEnum.FT_SENDER.getKey(enclosureId));
+		redisManager.deleteKey(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
 		LOGGER.debug("clean sender HASH {}", RedisKeysEnum.FT_SENDER.getKey(enclosureId));
 		// delete hash enclosure
 		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
@@ -194,11 +233,14 @@ public class CleanUpServices {
 	 * @param enclosureId
 	 * @throws WorkerException
 	 */
-	public void cleanUpEnclosureTempDataInRedis(String enclosureId) throws WorkerException {
+	public void cleanUpEnclosureTempDataInRedis(String enclosureId, boolean archive) throws WorkerException {
 		// delete part-etags
 		deleteListPartEtags(enclosureId);
+
 		// delete id container list
-		deleteListIdContainer(enclosureId);
+		if (archive) {
+			deleteListIdContainer(enclosureId);
+		}
 		// delete list and HASH files
 		deleteFiles(enclosureId);
 	}

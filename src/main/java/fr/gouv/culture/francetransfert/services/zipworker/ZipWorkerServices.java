@@ -482,7 +482,7 @@ public class ZipWorkerServices {
 
 			// clean temp data in REDIS for Enclosure
 			LOGGER.debug("clean up REDIS temp data");
-			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix);
+			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix, true);
 
 			// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 			// recipients, sender and enclosure
