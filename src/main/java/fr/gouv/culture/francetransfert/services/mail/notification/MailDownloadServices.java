@@ -41,6 +41,9 @@ public class MailDownloadServices {
 	@Value("${subject.download.progress}")
 	private String subjectDownloadProgress;
 
+	@Value("${subject.download.progressEn}")
+	private String subjectDownloadProgressEn;
+
 	@Autowired
 	RedisManager redisManager;
 
@@ -49,7 +52,14 @@ public class MailDownloadServices {
 
 	public void sendDownloadEnclosure(Enclosure enclosure, List<String> recipientId) throws MetaloadException {
 		ArrayList<String> recipList = new ArrayList<String>();
+		
+		Locale language = LocaleUtils.toLocale(
+				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+		
 		String sendObject = new String(subjectDownloadProgress);
+		if (language.getLanguage().equals("en")){
+			sendObject = new String(subjectDownloadProgressEn);
+		}
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
 			sendObject = sendObject.concat(" : ").concat(enclosure.getSubject());
 		}
@@ -57,8 +67,7 @@ public class MailDownloadServices {
 				.map(x -> x.getMail()).collect(Collectors.toList()));
 		enclosure.setRecipientDownloadInProgress(recipList);
 
-		Locale language = LocaleUtils.toLocale(
-				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+
 
 		LOGGER.info("Send email notification download in progress to sender:  {}", enclosure.getSender());
 		mailNotificationServices.prepareAndSend(enclosure.getSender(), sendObject, enclosure,

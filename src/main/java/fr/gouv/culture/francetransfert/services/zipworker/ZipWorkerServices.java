@@ -38,6 +38,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.enums.TypeStat;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
@@ -95,7 +96,13 @@ public class ZipWorkerServices {
 	private String subjectVirusFound;
 
 	@Value("${subject.virus.error.sender}")
-	private String subjectVirusError;
+	private String subjectVirusError;	
+	
+	@Value("${subject.virus.senderEn}")
+	private String subjectVirusFoundEn;
+
+	@Value("${subject.virus.error.senderEn}")
+	private String subjectVirusErrorEn;
 
 	@Value("${upload.limit}")
 	private long maxEnclosureSize;
@@ -103,6 +110,9 @@ public class ZipWorkerServices {
 	@Value("${upload.file.limit}")
 	private long maxFileSize;
 
+	
+	public String lang;
+	
 	@Autowired
 	MailNotificationServices mailNotificationService;
 
@@ -133,6 +143,13 @@ public class ZipWorkerServices {
 		 */
 
 		try {
+			
+			//---
+			Map<String, String> enclosureMap = redisManager
+					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+			enclosureMap.put(StatutEnum.EN_COURS.getKey(), "030-AAV");
+			enclosureMap.put(StatutEnum.EN_COURS.getValue(), "Analyse antivirale");
+			
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
 
@@ -185,11 +202,21 @@ public class ZipWorkerServices {
 				String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
 				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 
+				
 			} else {
+				//---
+				enclosureMap.put(StatutEnum.EN_COURS.getKey(), "031-EAV");
+				enclosureMap.put(StatutEnum.EN_COURS.getValue(), "Erreur détectée lors de l’analyse antivirale");
+				
+				
+				
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 
+			//---
+			enclosureMap.put(StatutEnum.EN_COURS.getKey(), "032-APT");
+			enclosureMap.put(StatutEnum.EN_COURS.getValue(), "Analyse antivirale du pli terminée");
 			LOGGER.debug(" STEP STATE ZIP OK");
 
 		} catch (InvalidSizeTypeException sizeEx) {
@@ -468,6 +495,9 @@ public class ZipWorkerServices {
 			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		} finally {
 			try {
+				
+
+				
 				// Notify sender
 				if (StringUtils.isNotBlank(enclosure.getSubject())) {
 					emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
@@ -477,6 +507,18 @@ public class ZipWorkerServices {
 				language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 						EnclosureKeysEnum.LANGUAGE.getKey()));
 
+				if(emailSubject == subjectVirusFound) {
+					if (language.getLanguage().equals("en")){
+						emailSubject = subjectVirusFoundEn;
+					}
+					
+				}
+				else if(emailSubject == subjectVirusError) {
+					if (language.getLanguage().equals("en")){
+						emailSubject = subjectVirusErrorEn;
+					}
+				}
+				
 				mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure,
 						emailTemplateName, language);
 			} catch (MetaloadException e) {
