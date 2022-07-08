@@ -1,3 +1,10 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.util.ArrayList;
@@ -33,6 +40,12 @@ public class MailEnclosureNoLongerAvailbleServices {
 
 	@Value("${subject.no.availble.enclosure.sender}")
 	private String subjectNoAvailbleEnclosureSender;
+	
+	@Value("${subject.no.availble.enclosure.recipientEn}")
+	private String subjectNoAvailbleEnclosureRecipientEn;
+
+	@Value("${subject.no.availble.enclosure.senderEn}")
+	private String subjectNoAvailbleEnclosureSenderEn;
 
 	@Autowired
 	private MailNotificationServices mailNotificationServices;
@@ -48,6 +61,10 @@ public class MailEnclosureNoLongerAvailbleServices {
 
 		Locale language = LocaleUtils.toLocale(
 				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+		if (language.getLanguage().equals("en")){
+			sendNoAvailbleEnclosureRecipient = new String(subjectNoAvailbleEnclosureRecipientEn);
+			sendNoAvailbleEnclosureSender = new String(subjectNoAvailbleEnclosureSenderEn);
+		}
 
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {

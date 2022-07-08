@@ -1,3 +1,10 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.model;
 
 import java.util.ArrayList;
@@ -8,6 +15,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.utils.DateUtils;
@@ -57,6 +65,9 @@ public class Enclosure {
 	private String urlAdmin;
 
 	private boolean publicLink;
+	
+	//---
+	private String statut;
 
 	public static Enclosure build(String enclosureId, RedisManager redisManager) throws MetaloadException {
 
@@ -96,10 +107,13 @@ public class Enclosure {
 		String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
 		boolean withPassword = password != null && !password.isEmpty();
 		password = "";
+	
+		//---
+		String statut = enclosureRedis.get(StatutEnum.EN_COURS.getKey());
 
 		return Enclosure.builder().guid(enclosureId).rootFiles(filesOfEnclosure).rootDirs(dirsOfEnclosure)
 				.countElements(filesOfEnclosure.size() + dirsOfEnclosure.size()).totalSize(totalSize)
 				.expireDate(expireEnclosureDate).sender(senderEnclosure).recipients(recipientsEnclosure)
-				.message(message).subject(subject).withPassword(withPassword).build();
+				.message(message).subject(subject).withPassword(withPassword).statut(statut).build();
 	}
 }
