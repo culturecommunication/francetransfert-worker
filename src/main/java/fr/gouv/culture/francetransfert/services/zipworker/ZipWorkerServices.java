@@ -211,7 +211,7 @@ public class ZipWorkerServices {
 				
 				
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
-						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), "subjectVirusFound");
+						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 
 			//---
@@ -226,7 +226,7 @@ public class ZipWorkerServices {
 		} catch (Exception e) {
 			LOGGER.error("Error in zip process : " + e.getMessage(), e);
 			cleanUpEnclosure(bucketName, enclosureId, enclosure,
-					NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(), "subjectVirusError");
+					NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(), subjectVirusError);
 		}
 	}
 
