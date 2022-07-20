@@ -32,7 +32,7 @@ public class MailConfirmationCodeServices {
 
 	@Value("${subject.confirmation.code}")
 	private String subjectConfirmationCode;
-	
+
 	@Value("${subject.confirmation.codeEn}")
 	private String subjectConfirmationCodeEn;
 
@@ -51,16 +51,13 @@ public class MailConfirmationCodeServices {
 		int sessionMin = expireTokenSender / 60;
 		Locale currentLanguage = LocaleUtils.toLocale(extractCurrentLanguage(mailCode));
 
-
-
 		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
 				.dateExpiration(ttlCode).codeTime(codeMin).sessionTime(sessionMin).build();
 		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
-		if (currentLanguage.getLanguage().equals("en")){
+		if (currentLanguage.equals(Locale.US)) {
 			mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCodeEn, confirmationCode,
 					NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
-		}
-		else {
+		} else {
 			mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
 					NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
 		}

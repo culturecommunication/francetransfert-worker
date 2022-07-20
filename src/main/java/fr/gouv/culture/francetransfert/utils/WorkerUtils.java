@@ -60,14 +60,12 @@ public class WorkerUtils {
 			throw new WorkerException("error of extraction value");
 		}
 	}
-	
+
 	public static String getFormatFileSizeLanguage(Locale language, double size) {
-		if (language.getLanguage().equals("en")){
-		return getFormattedFileSizeEn (size);
-		}
-		else
-		{
-			return getFormattedFileSize (size);
+		if (language.equals(Locale.US)) {
+			return getFormattedFileSizeEn(size);
+		} else {
+			return getFormattedFileSize(size);
 		}
 	}
 
@@ -90,7 +88,7 @@ public class WorkerUtils {
 
 		return tmpSize + " " + suffixes[i];
 	}
-	
+
 	// convert bit to octets", "Ko", "Mo", "Go", "To
 	public static String getFormattedFileSizeEn(double size) {
 		String[] suffixes = new String[] { "B", "KB", "MB", "GB", "TB" };

@@ -40,7 +40,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 
 	@Value("${subject.no.availble.enclosure.sender}")
 	private String subjectNoAvailbleEnclosureSender;
-	
+
 	@Value("${subject.no.availble.enclosure.recipientEn}")
 	private String subjectNoAvailbleEnclosureRecipientEn;
 
@@ -61,7 +61,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 
 		Locale language = LocaleUtils.toLocale(
 				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
-		if (language.getLanguage().equals("en")){
+		if (language.equals(Locale.US)) {
 			sendNoAvailbleEnclosureRecipient = new String(subjectNoAvailbleEnclosureRecipientEn);
 			sendNoAvailbleEnclosureSender = new String(subjectNoAvailbleEnclosureSenderEn);
 		}

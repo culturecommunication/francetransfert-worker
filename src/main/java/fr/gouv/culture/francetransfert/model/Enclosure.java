@@ -127,7 +127,7 @@ public class Enclosure {
 		password = "";
 	
 		//---
-		String statut = enclosureRedis.get(StatutEnum.EN_COURS.getKey());
+		String statut = enclosureRedis.get(EnclosureKeysEnum.STATUS_CODE.getKey());
 
 		return Enclosure.builder().guid(enclosureId).rootFiles(filesOfEnclosure).rootDirs(dirsOfEnclosure)
 				.countElements(filesOfEnclosure.size() + dirsOfEnclosure.size()).totalSize(totalSize)
