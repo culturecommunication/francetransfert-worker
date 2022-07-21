@@ -41,6 +41,7 @@ import fr.gouv.culture.francetransfert.core.services.StorageManager;
 import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
 import fr.gouv.culture.francetransfert.core.utils.DateUtils;
 import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
+import fr.gouv.culture.francetransfert.core.utils.StringUploadUtils;
 import fr.gouv.culture.francetransfert.model.Enclosure;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.mail.notification.MailEnclosureNoLongerAvailbleServices;
@@ -66,6 +67,9 @@ public class CleanUpServices {
 
 	@Autowired
 	Base64CryptoService base64CryptoService;
+
+	@Autowired
+	StringUploadUtils stringUploadUtils;
 
 	@Value("${worker.expired.limit}")
 	private int maxUpdateDate;
@@ -140,7 +144,12 @@ public class CleanUpServices {
 		}
 
 		if (countDownload == 0) {
-			LOGGER.warn("msgtype: NOT_DOWNLOADED || enclosure: {} || sender: {}", enc.getGuid(), enc.getSender());
+			if (stringUploadUtils.isValidEmailIgni(enc.getSender())) {
+				LOGGER.warn("msgtype: NOT_DOWNLOADED_AGENT || enclosure: {} || sender: {}", enc.getGuid(),
+						enc.getSender());
+			} else {
+				LOGGER.warn("msgtype: NOT_DOWNLOADED || enclosure: {} || sender: {}", enc.getGuid(), enc.getSender());
+			}
 		}
 
 		if (!archive) {
