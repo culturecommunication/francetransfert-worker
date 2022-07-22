@@ -61,7 +61,7 @@ public class MailEnclosureNoLongerAvailbleServices {
 
 		Locale language = LocaleUtils.toLocale(
 				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
-		if (language.equals(Locale.ENGLISH)) {
+		if (language.equals(Locale.UK)) {
 			sendNoAvailbleEnclosureRecipient = new String(subjectNoAvailbleEnclosureRecipientEn);
 			sendNoAvailbleEnclosureSender = new String(subjectNoAvailbleEnclosureSenderEn);
 		}
