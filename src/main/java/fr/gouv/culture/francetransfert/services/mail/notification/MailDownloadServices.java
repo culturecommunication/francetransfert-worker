@@ -57,7 +57,7 @@ public class MailDownloadServices {
 				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
 
 		String sendObject = new String(subjectDownloadProgress);
-		if (language.equals(Locale.US)) {
+		if (language.equals(Locale.ENGLISH)) {
 			sendObject = new String(subjectDownloadProgressEn);
 		}
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {

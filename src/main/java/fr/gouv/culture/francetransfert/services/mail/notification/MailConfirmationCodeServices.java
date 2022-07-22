@@ -54,7 +54,7 @@ public class MailConfirmationCodeServices {
 		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
 				.dateExpiration(ttlCode).codeTime(codeMin).sessionTime(sessionMin).build();
 		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
-		if (currentLanguage.equals(Locale.US)) {
+		if (currentLanguage.equals(Locale.ENGLISH)) {
 			mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCodeEn, confirmationCode,
 					NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
 		} else {

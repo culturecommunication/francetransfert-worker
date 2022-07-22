@@ -81,7 +81,7 @@ public class MailRelaunchServices {
 		Locale language = LocaleUtils.toLocale(
 				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
 		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
-		if (language.equals(Locale.US)) {
+		if (language.equals(Locale.ENGLISH)) {
 			sendRelaunchRecipient = new String(subjectRelaunchRecipientEn);
 		}
 

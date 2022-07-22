@@ -62,7 +62,7 @@ public class WorkerUtils {
 	}
 
 	public static String getFormatFileSizeLanguage(Locale language, double size) {
-		if (language.equals(Locale.US)) {
+		if (language.equals(Locale.ENGLISH)) {
 			return getFormattedFileSizeEn(size);
 		} else {
 			return getFormattedFileSize(size);

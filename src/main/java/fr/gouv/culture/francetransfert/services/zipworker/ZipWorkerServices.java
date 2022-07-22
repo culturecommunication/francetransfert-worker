@@ -499,12 +499,12 @@ public class ZipWorkerServices {
 				language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 						EnclosureKeysEnum.LANGUAGE.getKey()));
 				if (emailSubject == subjectVirusFound) {
-					if (language.equals(Locale.US)) {
+					if (language.equals(Locale.ENGLISH)) {
 						emailSubject = subjectVirusFoundEn;
 					}
 
 				} else if (emailSubject == subjectVirusError) {
-					if (language.equals(Locale.US)) {
+					if (language.equals(Locale.ENGLISH)) {
 						emailSubject = subjectVirusErrorEn;
 					}
 				}
