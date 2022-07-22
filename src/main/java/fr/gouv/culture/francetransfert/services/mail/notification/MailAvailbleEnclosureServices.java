@@ -110,7 +110,7 @@ public class MailAvailbleEnclosureServices {
 		String subjectRecipientLang = new String();
 		String subjectSenderLinkLang = new String();
 
-		if (language.equals(Locale.ENGLISH)) {
+		if (language.equals(Locale.UK)) {
 			subjectSend = new String(subjectSenderEn);
 			subjectSenderPassw = new String(subjectSenderPasswordEn);
 			subjectRecipientLang = new String(subjectRecipientEn);
@@ -160,7 +160,7 @@ public class MailAvailbleEnclosureServices {
 		subject = subject + " " + enclosure.getSender();
 		String subjectPassword = new String(subjectRecipientPassword);
 
-		if (language.equals(Locale.ENGLISH)) {
+		if (language.equals(Locale.UK)) {
 			subjectPassword = new String(subjectRecipientPasswordEn);
 		}
 
