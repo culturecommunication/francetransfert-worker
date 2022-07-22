@@ -1,13 +1,23 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.utils.DateUtils;
@@ -35,7 +45,9 @@ public class Enclosure {
 	private String totalSize;
 
 	private String expireDate;
-
+	
+	private String expireArchiveDate;
+	
 	private String sender;
 
 	private List<Recipient> recipients;
@@ -57,24 +69,39 @@ public class Enclosure {
 	private String urlAdmin;
 
 	private boolean publicLink;
+	
+	//---
+	private String statut;
 
 	public static Enclosure build(String enclosureId, RedisManager redisManager) throws MetaloadException {
 
+		Locale language;
+		language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosureId,
+				EnclosureKeysEnum.LANGUAGE.getKey()));
+		
 		List<RootData> filesOfEnclosure = new ArrayList<>();
 		for (Map.Entry<String, Long> rootFile : RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
 			filesOfEnclosure.add(
 					RootData.builder().name(rootFile.getKey()).extension(WorkerUtils.getExtension(rootFile.getKey()))
-							.size(WorkerUtils.getFormattedFileSize(rootFile.getValue()))
+							.size(WorkerUtils.getFormatFileSizeLanguage(language, rootFile.getValue()))
 							.nameWithoutExtension(FilenameUtils.removeExtension(rootFile.getKey())).build());
 		}
 		List<RootData> dirsOfEnclosure = new ArrayList<>();
 		for (Map.Entry<String, Long> rootDir : RedisUtils.getRootDirsWithSize(redisManager, enclosureId).entrySet()) {
 			dirsOfEnclosure.add(
-					RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormattedFileSize(rootDir.getValue()))
+					RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormatFileSizeLanguage(language, rootDir.getValue()))
 							.nameWithoutExtension(rootDir.getKey()).build());
 		}
-		String totalSize = WorkerUtils
-				.getFormattedFileSize(RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
+
+
+			String totalSize = WorkerUtils
+						.getFormatFileSizeLanguage(language, RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
+
+
+			
+		
+		
+
 		String senderEnclosure = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
 		List<Recipient> recipientsEnclosure = new ArrayList<>();
 		for (Map.Entry<String, String> recipient : RedisUtils.getRecipientsEnclosure(redisManager, enclosureId)
@@ -85,6 +112,8 @@ public class Enclosure {
 		Map<String, String> enclosureRedis = RedisUtils.getEnclosure(redisManager, enclosureId);
 		String expireEnclosureDate = DateUtils
 				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP.getKey()));
+		String expireEnclosureArchiveDate = DateUtils
+				.formatLocalDateTime(enclosureRedis.get(EnclosureKeysEnum.EXPIRED_TIMESTAMP_ARCHIVE.getKey()));
 		String message = enclosureRedis.get(EnclosureKeysEnum.MESSAGE.getKey());
 		if (StringUtils.isBlank(message)) {
 			message = "";
@@ -96,10 +125,13 @@ public class Enclosure {
 		String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
 		boolean withPassword = password != null && !password.isEmpty();
 		password = "";
+	
+		//---
+		String statut = enclosureRedis.get(EnclosureKeysEnum.STATUS_CODE.getKey());
 
 		return Enclosure.builder().guid(enclosureId).rootFiles(filesOfEnclosure).rootDirs(dirsOfEnclosure)
 				.countElements(filesOfEnclosure.size() + dirsOfEnclosure.size()).totalSize(totalSize)
 				.expireDate(expireEnclosureDate).sender(senderEnclosure).recipients(recipientsEnclosure)
-				.message(message).subject(subject).withPassword(withPassword).build();
+				.message(message).subject(subject).withPassword(withPassword).statut(statut).build();
 	}
 }

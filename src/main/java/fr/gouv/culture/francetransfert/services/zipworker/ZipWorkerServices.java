@@ -1,3 +1,10 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.services.zipworker;
 
 import java.io.BufferedInputStream;
@@ -31,6 +38,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisQueueEnum;
+import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.enums.TypeStat;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StorageException;
@@ -90,11 +98,19 @@ public class ZipWorkerServices {
 	@Value("${subject.virus.error.sender}")
 	private String subjectVirusError;
 
+	@Value("${subject.virus.senderEn}")
+	private String subjectVirusFoundEn;
+
+	@Value("${subject.virus.error.senderEn}")
+	private String subjectVirusErrorEn;
+
 	@Value("${upload.limit}")
 	private long maxEnclosureSize;
 
 	@Value("${upload.file.limit}")
 	private long maxFileSize;
+
+	public String lang;
 
 	@Autowired
 	MailNotificationServices mailNotificationService;
@@ -126,6 +142,13 @@ public class ZipWorkerServices {
 		 */
 
 		try {
+
+			// ---
+			Map<String, String> enclosureMap = redisManager
+					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.AAV.getCode());
+			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.AAV.getWord());
+
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
 
@@ -141,7 +164,8 @@ public class ZipWorkerServices {
 			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
-				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(), enclosure.getSender());
+				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(),
+						enclosure.getSender());
 			}
 			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
@@ -179,10 +203,17 @@ public class ZipWorkerServices {
 				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 
 			} else {
+				// ---
+				enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EAV.getCode());
+				enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EAV.getWord());
+
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 
+			// ---
+			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode());
+			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord());
 			LOGGER.debug(" STEP STATE ZIP OK");
 
 		} catch (InvalidSizeTypeException sizeEx) {
@@ -448,7 +479,7 @@ public class ZipWorkerServices {
 
 			// clean temp data in REDIS for Enclosure
 			LOGGER.debug("clean up REDIS temp data");
-			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix);
+			cleanUpServices.cleanUpEnclosureTempDataInRedis(prefix, true);
 
 			// clean enclosure Core in REDIS : delete files, root-files, root-dirs,
 			// recipients, sender and enclosure
@@ -461,14 +492,26 @@ public class ZipWorkerServices {
 			LOGGER.error("Error while cleaning up Enclosure " + enclosure.getGuid() + " : " + e.getMessage(), e);
 		} finally {
 			try {
+
 				// Notify sender
-				if (StringUtils.isNotBlank(enclosure.getSubject())) {
-					emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
-				}
 
 				Locale language;
 				language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 						EnclosureKeysEnum.LANGUAGE.getKey()));
+				if (emailSubject == subjectVirusFound) {
+					if (language.equals(Locale.ENGLISH)) {
+						emailSubject = subjectVirusFoundEn;
+					}
+
+				} else if (emailSubject == subjectVirusError) {
+					if (language.equals(Locale.ENGLISH)) {
+						emailSubject = subjectVirusErrorEn;
+					}
+				}
+
+				if (StringUtils.isNotBlank(enclosure.getSubject())) {
+					emailSubject = emailSubject.concat(" : ").concat(enclosure.getSubject());
+				}
 
 				mailNotificationService.prepareAndSend(enclosure.getSender(), emailSubject, enclosure,
 						emailTemplateName, language);

@@ -1,3 +1,10 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.worker;
 
 import org.slf4j.Logger;
@@ -34,7 +41,7 @@ public class CleanEnclosureTask implements Runnable {
 			LOGGER.info("[Worker] Clean EnclosureId from Delete");
 			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
-			cleanService.cleanEnclosure(enclosureId);
+			cleanService.cleanEnclosure(enclosureId, true);
 
 		} catch (Exception e) {
 			LOGGER.error("[Worker] Clean EnclosureId error : " + e.getMessage(), e);

@@ -1,3 +1,10 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.time.LocalDate;
@@ -38,6 +45,9 @@ public class MailRelaunchServices {
 	@Value("${subject.relaunch.recipient}")
 	private String subjectRelaunchRecipient;
 
+	@Value("${subject.relaunch.recipientEn}")
+	private String subjectRelaunchRecipientEn;
+
 	@Autowired
 	MailNotificationServices mailNotificationServices;
 
@@ -68,7 +78,12 @@ public class MailRelaunchServices {
 	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName, Locale currentLanguage)
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
+		Locale language = LocaleUtils.toLocale(
+				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
 		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
+		if (language.equals(Locale.ENGLISH)) {
+			sendRelaunchRecipient = new String(subjectRelaunchRecipientEn);
+		}
 
 		if (!CollectionUtils.isEmpty(recipients)) {
 			if (StringUtils.isNotBlank(enclosure.getSubject())) {
@@ -82,9 +97,6 @@ public class MailRelaunchServices {
 					enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 							recipient.getMail(), recipient.getId()));
 					LOGGER.info(" send relaunch mail to {} ", recipient.getMail());
-
-					Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager,
-							enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
 
 					mailNotificationServices.prepareAndSend(recipient.getMail(), sendRelaunchRecipient, enclosure,
 							templateName, language);

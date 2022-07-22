@@ -1,8 +1,16 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
@@ -14,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StatException;
 import fr.gouv.culture.francetransfert.core.model.NewRecipient;
@@ -52,12 +62,34 @@ public class MailAvailbleEnclosureServices {
 	@Value("${subject.recipient.password}")
 	private String subjectRecipientPassword;
 
+	@Value("${subject.senderEn}")
+	private String subjectSenderEn;
+
+	@Value("${subject.sender.linkEn}")
+	private String subjectSenderLinkEn;
+
+	@Value("${subject.recipientEn}")
+	private String subjectRecipientEn;
+
+	@Value("${subject.sender.passwordEn}")
+	private String subjectSenderPasswordEn;
+
+	@Value("${subject.recipient.passwordEn}")
+	private String subjectRecipientPasswordEn;
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
 	// Send Mails to snder and recipients
 	public void sendMailsAvailableEnclosure(Enclosure enclosure, NewRecipient metaDataRecipient, Locale currentLanguage)
 			throws MetaloadException, StatException {
+
+		// ---
+		Map<String, String> enclosureMap = redisManager
+				.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));
+		// ---
+		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EDC.getCode());
+		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EDC.getWord());
+
 		LOGGER.info("send email notification availble to sender: {} for enclosure {}", enclosure.getSender(),
 				enclosure.getGuid());
 		String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
@@ -69,37 +101,68 @@ public class MailAvailbleEnclosureServices {
 		passwordRedis = "";
 		enclosure.setPublicLink(publicLink);
 		enclosure.setUrlAdmin(mailNotificationServices.generateUrlAdmin(enclosure.getGuid()));
-		String subjectSend = new String(subjectSender);
-		String subjectSenderPassw = new String(subjectSenderPassword);
+
+		Locale language = LocaleUtils.toLocale(
+				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+
+		String subjectSend = new String();
+		String subjectSenderPassw = new String();
+		String subjectRecipientLang = new String();
+		String subjectSenderLinkLang = new String();
+
+		if (language.equals(Locale.ENGLISH)) {
+			subjectSend = new String(subjectSenderEn);
+			subjectSenderPassw = new String(subjectSenderPasswordEn);
+			subjectRecipientLang = new String(subjectRecipientEn);
+			subjectSenderLinkLang = new String(subjectSenderLinkEn);
+		} else {
+			subjectSend = new String(subjectSender);
+			subjectSenderPassw = new String(subjectSenderPassword);
+			subjectRecipientLang = new String(subjectRecipient);
+			subjectSenderLinkLang = new String(subjectSenderLink);
+		}
 
 		if (publicLink) {
 			enclosure.setUrlDownload(mailNotificationServices.generateUrlPublicForDownload(enclosure.getGuid()));
-			subjectSend = subjectSenderLink;
+			subjectSend = subjectSenderLinkLang;
 		}
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
 			subjectSend = subjectSend.concat(" : ").concat(enclosure.getSubject());
 			subjectSenderPassw = subjectSenderPassw.concat(" : ").concat(enclosure.getSubject());
 		}
 		if (metaDataRecipient == null) {
-			Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
-					EnclosureKeysEnum.LANGUAGE.getKey()));
-
 			mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
 					NotificationTemplateEnum.MAIL_AVAILABLE_SENDER.getValue(), language);
 			mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSenderPassw, enclosure,
 					NotificationTemplateEnum.MAIL_PASSWORD_SENDER.getValue(), language);
 		}
 		if (!publicLink)
-			sendToRecipients(enclosure, new String(subjectRecipient),
+			sendToRecipients(enclosure, new String(subjectRecipientLang),
 					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), metaDataRecipient, currentLanguage);
+
+		// ---
+		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.PAT.getCode());
+		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.PAT.getWord());
+
 	}
 
 	// Send mails to recipients
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName,
 			NewRecipient metaDataRecipient, Locale currentLanguage) throws MetaloadException {
 
+		// ---
+		Map<String, String> enclosureMap = redisManager
+				.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));
+
+		Locale language = LocaleUtils.toLocale(
+				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
+
 		subject = subject + " " + enclosure.getSender();
 		String subjectPassword = new String(subjectRecipientPassword);
+
+		if (language.equals(Locale.ENGLISH)) {
+			subjectPassword = new String(subjectRecipientPasswordEn);
+		}
 
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
 			subject = subject.concat(" : ").concat(enclosure.getSubject());
@@ -124,9 +187,6 @@ public class MailAvailbleEnclosureServices {
 						LOGGER.info("send email notification availble to recipient: {} for enclosure {}",
 								recipient.getMail(), enclosure.getGuid());
 
-						Locale language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager,
-								enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
-
 						enclosure.setUrlDownload(mailNotificationServices.generateUrlForDownload(enclosure.getGuid(),
 								recipient.getMail(), recipient.getId()));
 						mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName,
@@ -135,6 +195,11 @@ public class MailAvailbleEnclosureServices {
 								NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
 
 					} catch (Exception e) {
+
+						// ---
+						enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EEC.getCode());
+						enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EEC.getWord());
+
 						LOGGER.error("Cannot send mail recipient mail {} for enclosure {}", recipient.getMail(),
 								enclosure.getGuid());
 					}
