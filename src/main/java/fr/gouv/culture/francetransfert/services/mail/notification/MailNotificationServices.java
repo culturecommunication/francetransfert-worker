@@ -1,3 +1,10 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.io.IOException;
@@ -21,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
 import fr.gouv.culture.francetransfert.security.WorkerException;
@@ -56,6 +64,8 @@ public class MailNotificationServices {
 	private RedisManager redisManager;
 
 	public void prepareAndSend(String to, String subject, Object object, String templateName, Locale locale) {
+		
+
 		try {
 			LOGGER.debug("start send emails for enclosure ");
 			if (locale == null || locale.toString().isEmpty()) {
@@ -75,6 +85,8 @@ public class MailNotificationServices {
 			String htmlContent = htmlBuilder.build(object, templateName, locale);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
+			
+	
 		} catch (MessagingException | IOException e) {
 			throw new WorkerException("Enclosure build error", e);
 		}

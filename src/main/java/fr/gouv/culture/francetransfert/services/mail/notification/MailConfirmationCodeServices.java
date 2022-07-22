@@ -1,3 +1,10 @@
+/*
+  * Copyright (c) Ministère de la Culture (2022) 
+  * 
+  * SPDX-License-Identifier: Apache-2.0 
+  * License-Filename: LICENSE.txt 
+  */
+
 package fr.gouv.culture.francetransfert.services.mail.notification;
 
 import java.util.Locale;
@@ -26,6 +33,9 @@ public class MailConfirmationCodeServices {
 	@Value("${subject.confirmation.code}")
 	private String subjectConfirmationCode;
 
+	@Value("${subject.confirmation.codeEn}")
+	private String subjectConfirmationCodeEn;
+
 	@Value("${expire.confirmation.code}")
 	private int secondsToExpireConfirmationCode;
 
@@ -40,11 +50,18 @@ public class MailConfirmationCodeServices {
 		int codeMin = secondsToExpireConfirmationCode / 60;
 		int sessionMin = expireTokenSender / 60;
 		Locale currentLanguage = LocaleUtils.toLocale(extractCurrentLanguage(mailCode));
+
 		ConfirmationCode confirmationCode = ConfirmationCode.builder().code(code).mail(senderMail)
 				.dateExpiration(ttlCode).codeTime(codeMin).sessionTime(sessionMin).build();
 		LOGGER.info("Send email confirmation code to sender:  {}", senderMail);
-		mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
-				NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
+		if (currentLanguage.equals(Locale.ENGLISH)) {
+			mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCodeEn, confirmationCode,
+					NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
+		} else {
+			mailNotificationServices.prepareAndSend(senderMail, subjectConfirmationCode, confirmationCode,
+					NotificationTemplateEnum.MAIL_CONFIRMATION_CODE.getValue(), currentLanguage);
+		}
+
 	}
 
 	/**
