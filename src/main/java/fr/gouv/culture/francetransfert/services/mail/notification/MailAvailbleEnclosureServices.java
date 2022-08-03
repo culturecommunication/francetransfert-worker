@@ -83,13 +83,10 @@ public class MailAvailbleEnclosureServices {
 	public void sendMailsAvailableEnclosure(Enclosure enclosure, NewRecipient metaDataRecipient, Locale currentLanguage)
 			throws MetaloadException, StatException {
 
-		// ---
-		Map<String, String> enclosureMap = redisManager
-				.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));
-		// ---
-		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EDC.getCode());
-		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EDC.getWord());
-		redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EDC.getCode(), -1);
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EDC.getWord(), -1);
 
 		LOGGER.info("send email notification availble to sender: {} for enclosure {}", enclosure.getSender(),
 				enclosure.getGuid());
@@ -142,9 +139,10 @@ public class MailAvailbleEnclosureServices {
 					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), metaDataRecipient, currentLanguage);
 
 		// ---
-		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.PAT.getCode());
-		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.PAT.getWord());
-		redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.PAT.getCode(), -1);
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.PAT.getWord(), -1);
 	}
 
 	// Send mails to recipients
@@ -196,11 +194,10 @@ public class MailAvailbleEnclosureServices {
 								NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
 
 					} catch (Exception e) {
-
-						// ---
-						enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EEC.getCode());
-						enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EEC.getWord());
-						redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
+						redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+								EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EEC.getCode(), -1);
+						redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+								EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EEC.getWord(), -1);
 						LOGGER.error("Cannot send mail recipient mail {} for enclosure {}", recipient.getMail(),
 								enclosure.getGuid());
 					}

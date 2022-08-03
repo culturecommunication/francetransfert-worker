@@ -143,12 +143,11 @@ public class ZipWorkerServices {
 
 		try {
 
-			// ---
-			Map<String, String> enclosureMap = redisManager
-					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
-			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.AAV.getCode());
-			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.AAV.getWord());
-			redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.AAV.getCode(), -1);
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.AAV.getWord(), -1);
+
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
 
@@ -181,7 +180,6 @@ public class ZipWorkerServices {
 
 				LOGGER.debug(" add hashZipFile to redis");
 				addHashFilesToMetData(enclosureId, getHashFromS3(enclosureId));
-				enclosureMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(enclosureId));
 				LOGGER.debug(" start delete zip file in local disk");
@@ -204,18 +202,20 @@ public class ZipWorkerServices {
 				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 
 			} else {
-				// ---
-				enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EAV.getCode());
-				enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EAV.getWord());
-				redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
+
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EAV.getCode(), -1);
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EAV.getWord(), -1);
+
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 
-			// ---
-			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode());
-			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord());
-			redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode(), -1);
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord(), -1);
 			LOGGER.debug(" STEP STATE ZIP OK");
 
 		} catch (InvalidSizeTypeException sizeEx) {
