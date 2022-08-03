@@ -89,6 +89,7 @@ public class MailAvailbleEnclosureServices {
 		// ---
 		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EDC.getCode());
 		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EDC.getWord());
+		redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
 
 		LOGGER.info("send email notification availble to sender: {} for enclosure {}", enclosure.getSender(),
 				enclosure.getGuid());
@@ -143,7 +144,7 @@ public class MailAvailbleEnclosureServices {
 		// ---
 		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.PAT.getCode());
 		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.PAT.getWord());
-
+		redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
 	}
 
 	// Send mails to recipients
@@ -199,7 +200,7 @@ public class MailAvailbleEnclosureServices {
 						// ---
 						enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EEC.getCode());
 						enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EEC.getWord());
-
+						redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
 						LOGGER.error("Cannot send mail recipient mail {} for enclosure {}", recipient.getMail(),
 								enclosure.getGuid());
 					}

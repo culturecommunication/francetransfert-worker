@@ -148,7 +148,7 @@ public class ZipWorkerServices {
 					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.AAV.getCode());
 			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.AAV.getWord());
-
+			redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
 
@@ -181,6 +181,7 @@ public class ZipWorkerServices {
 
 				LOGGER.debug(" add hashZipFile to redis");
 				addHashFilesToMetData(enclosureId, getHashFromS3(enclosureId));
+				enclosureMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
 
 				File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(enclosureId));
 				LOGGER.debug(" start delete zip file in local disk");
@@ -206,7 +207,7 @@ public class ZipWorkerServices {
 				// ---
 				enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EAV.getCode());
 				enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EAV.getWord());
-
+				redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
@@ -214,6 +215,7 @@ public class ZipWorkerServices {
 			// ---
 			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode());
 			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord());
+			redisManager.insertHASH(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), enclosureMap);
 			LOGGER.debug(" STEP STATE ZIP OK");
 
 		} catch (InvalidSizeTypeException sizeEx) {
