@@ -45,9 +45,9 @@ public class Enclosure {
 	private String totalSize;
 
 	private String expireDate;
-	
+
 	private String expireArchiveDate;
-	
+
 	private String sender;
 
 	private List<Recipient> recipients;
@@ -69,16 +69,19 @@ public class Enclosure {
 	private String urlAdmin;
 
 	private boolean publicLink;
-	
-	//---
+
+	// ---
 	private String statut;
 
 	public static Enclosure build(String enclosureId, RedisManager redisManager) throws MetaloadException {
 
-		Locale language;
-		language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosureId,
-				EnclosureKeysEnum.LANGUAGE.getKey()));
-		
+		Locale language = Locale.FRANCE;
+
+		String redisLang = RedisUtils.getEnclosureValue(redisManager, enclosureId, EnclosureKeysEnum.LANGUAGE.getKey());
+		if (StringUtils.isNotBlank(redisLang)) {
+			language = LocaleUtils.toLocale(redisLang);
+		}
+
 		List<RootData> filesOfEnclosure = new ArrayList<>();
 		for (Map.Entry<String, Long> rootFile : RedisUtils.getRootFilesWithSize(redisManager, enclosureId).entrySet()) {
 			filesOfEnclosure.add(
@@ -88,19 +91,13 @@ public class Enclosure {
 		}
 		List<RootData> dirsOfEnclosure = new ArrayList<>();
 		for (Map.Entry<String, Long> rootDir : RedisUtils.getRootDirsWithSize(redisManager, enclosureId).entrySet()) {
-			dirsOfEnclosure.add(
-					RootData.builder().name(rootDir.getKey()).size(WorkerUtils.getFormatFileSizeLanguage(language, rootDir.getValue()))
-							.nameWithoutExtension(rootDir.getKey()).build());
+			dirsOfEnclosure.add(RootData.builder().name(rootDir.getKey())
+					.size(WorkerUtils.getFormatFileSizeLanguage(language, rootDir.getValue()))
+					.nameWithoutExtension(rootDir.getKey()).build());
 		}
 
-
-			String totalSize = WorkerUtils
-						.getFormatFileSizeLanguage(language, RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
-
-
-			
-		
-		
+		String totalSize = WorkerUtils.getFormatFileSizeLanguage(language,
+				RedisUtils.getTotalSizeEnclosure(redisManager, enclosureId));
 
 		String senderEnclosure = RedisUtils.getEmailSenderEnclosure(redisManager, enclosureId);
 		List<Recipient> recipientsEnclosure = new ArrayList<>();
@@ -125,8 +122,8 @@ public class Enclosure {
 		String password = enclosureRedis.get(EnclosureKeysEnum.PASSWORD.getKey());
 		boolean withPassword = password != null && !password.isEmpty();
 		password = "";
-	
-		//---
+
+		// ---
 		String statut = enclosureRedis.get(EnclosureKeysEnum.STATUS_CODE.getKey());
 
 		return Enclosure.builder().guid(enclosureId).rootFiles(filesOfEnclosure).rootDirs(dirsOfEnclosure)
