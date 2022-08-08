@@ -65,7 +65,7 @@ public class MailRelaunchServices {
 						Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 						LOGGER.info(" send relaunch mail for enclosure N° {}", enclosureId);
 						sendToRecipientsAndSenderRelaunch(enclosure,
-								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue(), Locale.FRENCH);
+								NotificationTemplateEnum.MAIL_RELAUNCH_RECIPIENT.getValue());
 					}
 				} catch (Exception e) {
 					LOGGER.error("Cannot send relaunch for enclosure {} :  {}", enclosureId, e.getMessage(), e);
@@ -75,13 +75,13 @@ public class MailRelaunchServices {
 	}
 
 	// Send mails Relaunch to recipients
-	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName, Locale currentLanguage)
+	private void sendToRecipientsAndSenderRelaunch(Enclosure enclosure, String templateName)
 			throws WorkerException, MetaloadException {
 		List<Recipient> recipients = enclosure.getRecipients();
 		Locale language = LocaleUtils.toLocale(
 				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
 		String sendRelaunchRecipient = new String(subjectRelaunchRecipient);
-		if (language.equals(Locale.UK)) {
+		if (Locale.UK.equals(language)) {
 			sendRelaunchRecipient = new String(subjectRelaunchRecipientEn);
 		}
 

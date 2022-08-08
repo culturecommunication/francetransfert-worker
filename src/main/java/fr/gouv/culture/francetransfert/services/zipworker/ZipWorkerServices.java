@@ -501,12 +501,12 @@ public class ZipWorkerServices {
 				language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 						EnclosureKeysEnum.LANGUAGE.getKey()));
 				if (emailSubject == subjectVirusFound) {
-					if (language.equals(Locale.UK)) {
+					if (Locale.UK.equals(language)) {
 						emailSubject = subjectVirusFoundEn;
 					}
 
 				} else if (emailSubject == subjectVirusError) {
-					if (language.equals(Locale.UK)) {
+					if (Locale.UK.equals(language)) {
 						emailSubject = subjectVirusErrorEn;
 					}
 				}
