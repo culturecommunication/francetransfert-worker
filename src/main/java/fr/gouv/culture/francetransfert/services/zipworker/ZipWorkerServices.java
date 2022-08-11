@@ -530,6 +530,7 @@ public class ZipWorkerServices {
 	private JSONObject getUuidGlimps(String file) {
 
 		ObjectMapper objectMapper = new ObjectMapper();
+		JSONObject responseJSON = new JSONObject();
 		try {
 			String requestBody = objectMapper.writeValueAsString(file);
 
@@ -540,11 +541,12 @@ public class ZipWorkerServices {
 	                .header(glimpsTokenKey, glimpsTokenValue).build();
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
-	        return new JSONObject(response);
+	        responseJSON =  new JSONObject(response);
 		 }
 		 catch(IOException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 		 }
+		return responseJSON;
 	}
 
 	private boolean getResultScanGlimps(String uuid) {
