@@ -545,7 +545,7 @@ public class ZipWorkerServices {
 		 } catch (IOException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 		 } catch (InterruptedException e) {
-			 throw e;
+			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 		 }
 		return responseJSON;
 	}
@@ -563,7 +563,9 @@ public class ZipWorkerServices {
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
 		} catch (IOException e) {
-			throw e;
+			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
+		 } catch (InterruptedException e) {
+			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 }
 		return responseJSON.getBoolean("is_malware");
 	}
