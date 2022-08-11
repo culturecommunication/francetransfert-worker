@@ -527,20 +527,24 @@ public class ZipWorkerServices {
 		return isClean;
 	}
 
-	private JSONObject getUuidGlimps(String file) throws IOException, InterruptedException {
+	private JSONObject getUuidGlimps(String file) {
 
 		ObjectMapper objectMapper = new ObjectMapper();
-        String requestBody = objectMapper.writeValueAsString(file);
+		try {
+			String requestBody = objectMapper.writeValueAsString(file);
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .header(glimpsTokenKey, glimpsTokenValue).build();
-        HttpResponse<String> response = client.send(request,
-                HttpResponse.BodyHandlers.ofString());
-
-        return new JSONObject(response);
+	        HttpClient client = HttpClient.newHttpClient();
+	        HttpRequest request = HttpRequest.newBuilder()
+	                .uri(URI.create(url))
+	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+	                .header(glimpsTokenKey, glimpsTokenValue).build();
+	        HttpResponse<String> response = client.send(request,
+	                HttpResponse.BodyHandlers.ofString());
+	        return new JSONObject(response);
+		 }
+		 catch(IOException e) {
+			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+		 }
 	}
 
 	private boolean getResultScanGlimps(String uuid) {
