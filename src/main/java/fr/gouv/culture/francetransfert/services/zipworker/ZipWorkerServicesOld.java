@@ -15,17 +15,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.channels.FileChannel;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -34,29 +27,13 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.AbstractHttpMessage;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import com.amazonaws.services.s3.model.S3Object;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
@@ -133,15 +110,6 @@ public class ZipWorkerServices {
 	@Value("${upload.file.limit}")
 	private long maxFileSize;
 
-	@Value("${glimps.url}")
-	private String url;
-
-	@Value("${glimps.auth.token.key}")
-	private String glimpsTokenKey;
-
-	@Value("${glimps.auth.token.value}")
-	private String glimpsTokenValue;
-
 	public String lang;
 
 	@Autowired
@@ -175,11 +143,10 @@ public class ZipWorkerServices {
 
 		try {
 
-			// ---
-			Map<String, String> enclosureMap = redisManager
-					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
-			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.AAV.getCode());
-			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.AAV.getWord());
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.AAV.getCode(), -1);
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.AAV.getWord(), -1);
 
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
@@ -193,7 +160,7 @@ public class ZipWorkerServices {
 			downloadFilesToTempFolder(manager, bucketName, list);
 			LOGGER.info(" Start scanning files {} with ClamaV", list);
 			LocalDateTime beginDate = LocalDateTime.now();
-			boolean isClean = performScanGlimps(list);
+			boolean isClean = performScan(list);
 			if (!isClean) {
 				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
 				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(),
@@ -235,17 +202,20 @@ public class ZipWorkerServices {
 				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 
 			} else {
-				// ---
-				enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EAV.getCode());
-				enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EAV.getWord());
+
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EAV.getCode(), -1);
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EAV.getWord(), -1);
 
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 
-			// ---
-			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode());
-			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord());
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode(), -1);
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord(), -1);
 			LOGGER.debug(" STEP STATE ZIP OK");
 
 		} catch (InvalidSizeTypeException sizeEx) {
@@ -483,80 +453,6 @@ public class ZipWorkerServices {
 		return isClean;
 	}
 
-	private boolean performScanGlimps(ArrayList<String> list) throws InvalidSizeTypeException {
-
-		boolean isClean = true;
-		String currentFileName = null;
-		long enclosureSize = 0;
-		try {
-			for (String fileName : list) {
-
-				long currentSize = 0;
-
-				if (!isClean) {
-					break;
-				}
-				currentFileName = fileName;
-				if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
-					String baseFolderName = getBaseFolderName();
-					try (FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);) {
-
-						currentSize = fileInputStream.getChannel().size();
-
-						enclosureSize += currentSize;
-
-						checkSizeAndMimeType(currentFileName, enclosureSize, currentSize, fileInputStream);
-
-						FileChannel fileChannel = fileInputStream.getChannel();
-						if (fileChannel.size() <= scanMaxFileSize) {
-							
-							JSONObject uuidGlimps = getUuidGlimps(fileName);
-							String uuid = uuidGlimps.getString("uuid");
-							isClean = getResultScanGlimps(uuid);
-						}
-					}
-				}
-			}
-		} catch (InvalidSizeTypeException ex) {
-			throw ex;
-		} catch (Exception e) {
-			LOGGER.error("Error lors du traitement du fichier {} : {}  ", currentFileName, e.getMessage(), e);
-			throw new WorkerException("Error During File scanning [" + currentFileName + "]");
-		}
-
-		return isClean;
-	}
-
-	private JSONObject getUuidGlimps(String file) throws IOException, InterruptedException {
-
-		ObjectMapper objectMapper = new ObjectMapper();
-        String requestBody = objectMapper.writeValueAsString(file);
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .header(glimpsTokenKey, glimpsTokenValue).build();
-        HttpResponse<String> response = client.send(request,
-                HttpResponse.BodyHandlers.ofString());
-
-        return new JSONObject(response);
-	}
-
-	private boolean getResultScanGlimps(String uuid) {
-		HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url+"?uuid="+uuid))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = client.send(request,
-                HttpResponse.BodyHandlers.ofString());
-
-         return new JSONObject(response).getBoolean("is_malware");
-
-	}
-
 	private void checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
 			FileInputStream fileInputStream) throws IOException, InvalidSizeTypeException {
 		if (!mimeService.isAuthorisedMimeTypeFromFile(fileInputStream)) {
@@ -605,12 +501,12 @@ public class ZipWorkerServices {
 				language = LocaleUtils.toLocale(RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 						EnclosureKeysEnum.LANGUAGE.getKey()));
 				if (emailSubject == subjectVirusFound) {
-					if (language.equals(Locale.US)) {
+					if (Locale.UK.equals(language)) {
 						emailSubject = subjectVirusFoundEn;
 					}
 
 				} else if (emailSubject == subjectVirusError) {
-					if (language.equals(Locale.US)) {
+					if (Locale.UK.equals(language)) {
 						emailSubject = subjectVirusErrorEn;
 					}
 				}
