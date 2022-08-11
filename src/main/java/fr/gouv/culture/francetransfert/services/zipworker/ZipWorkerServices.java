@@ -542,25 +542,30 @@ public class ZipWorkerServices {
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
-		 }
-		 catch(IOException e) {
+		 } catch (IOException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+		 } catch (InterruptedException e) {
+			 throw e;
 		 }
 		return responseJSON;
 	}
 
 	private boolean getResultScanGlimps(String uuid) {
 		HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url+"?uuid="+uuid))
-                .GET()
-                .build();
-
-        HttpResponse<String> response = client.send(request,
-                HttpResponse.BodyHandlers.ofString());
-
-         return new JSONObject(response).getBoolean("is_malware");
-
+		JSONObject responseJSON = new JSONObject();
+		try {
+	        HttpRequest request = HttpRequest.newBuilder()
+	                .uri(URI.create(url+"?uuid="+uuid))
+	                .GET()
+	                .build();
+	
+	        HttpResponse<String> response = client.send(request,
+	                HttpResponse.BodyHandlers.ofString());
+	        responseJSON =  new JSONObject(response);
+		} catch (IOException e) {
+			throw e;
+		 }
+		return responseJSON.getBoolean("is_malware");
 	}
 
 	private void checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
