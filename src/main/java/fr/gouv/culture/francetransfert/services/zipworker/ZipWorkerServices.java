@@ -144,9 +144,9 @@ public class ZipWorkerServices {
 		try {
 
 			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
-					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.AAV.getCode(), -1);
+					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.ANA.getCode(), -1);
 			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
-					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.AAV.getWord(), -1);
+					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.ANA.getWord(), -1);
 
 			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
 					EnclosureKeysEnum.PASSWORD.getKey());
