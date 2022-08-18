@@ -227,6 +227,8 @@ public class CleanUpServices {
 		// delete hash sender
 		redisManager.deleteKey(RedisKeysEnum.FT_SENDER.getKey(enclosureId));
 		redisManager.deleteKey(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
+		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId));
+		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE_SCAN_DELAY.getKey(enclosureId));
 		LOGGER.debug("clean sender HASH {}", RedisKeysEnum.FT_SENDER.getKey(enclosureId));
 		// delete hash enclosure
 		redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));

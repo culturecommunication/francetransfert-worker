@@ -16,12 +16,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -31,7 +30,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import com.amazonaws.services.s3.model.S3Object;
 
@@ -49,6 +57,8 @@ import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
 import fr.gouv.culture.francetransfert.core.utils.RedisUtils;
 import fr.gouv.culture.francetransfert.exception.InvalidSizeTypeException;
 import fr.gouv.culture.francetransfert.model.Enclosure;
+import fr.gouv.culture.francetransfert.model.GlimpsInitResponse;
+import fr.gouv.culture.francetransfert.model.GlimpsResultResponse;
 import fr.gouv.culture.francetransfert.security.WorkerException;
 import fr.gouv.culture.francetransfert.services.clamav.ClamAVScannerManager;
 import fr.gouv.culture.francetransfert.services.cleanup.CleanUpServices;
@@ -83,6 +93,9 @@ public class ZipWorkerServices {
 	@Autowired
 	ClamAVScannerManager clamAVScannerManager;
 
+	@Autowired
+	private RestTemplate restTemplate;
+
 	@Value("${tmp.folder.path}")
 	private String tmpFolderPath;
 
@@ -110,7 +123,23 @@ public class ZipWorkerServices {
 	@Value("${upload.file.limit}")
 	private long maxFileSize;
 
-	public String lang;
+	@Value("${glimps.scan.url}")
+	private String glimpsScanUrl;
+
+	@Value("${glimps.check.url}")
+	private String glimpsCheckUrl;
+
+	@Value("${glimps.auth.token.key}")
+	private String glimpsTokenKey;
+
+	@Value("${glimps.auth.token.value}")
+	private String glimpsTokenValue;
+
+	@Value("${glimps.delay.minute}")
+	private int glimpsDelay;
+
+	@Value("${glimps.enabled}")
+	private boolean glimpsEnabled;
 
 	@Autowired
 	MailNotificationServices mailNotificationService;
@@ -121,10 +150,6 @@ public class ZipWorkerServices {
 	@Autowired
 	Base64CryptoService base64CryptoService;
 
-	private String subjectVirusErr;
-
-	private String subjVirusFound;
-
 	public void startZip(String enclosureId) throws MetaloadException, StorageException {
 		String bucketName = RedisUtils.getBucketName(redisManager, enclosureId, bucketPrefix);
 		ArrayList<String> list = manager.getUploadedEnclosureFiles(bucketName, enclosureId);
@@ -132,44 +157,72 @@ public class ZipWorkerServices {
 		LOGGER.debug(" SIZE " + list.size() + " LIST ===> " + list.toString());
 		Enclosure enclosure = Enclosure.build(enclosureId, redisManager);
 
-		/*
-		 * subjectVirusErr = subjectVirusError; subjVirusFound = subjectVirusFound;
-		 * 
-		 * if(StringUtils.isNotBlank(enclosure.getSubject())){ subjectVirusErr =
-		 * subjectVirusError.concat(" : ").concat(enclosure.getSubject());
-		 * subjVirusFound =
-		 * subjectVirusFound.concat(" : ").concat(enclosure.getSubject()); }
-		 */
-
 		try {
 
-			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
-					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.ANA.getCode(), -1);
-			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
-					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.ANA.getWord(), -1);
+			boolean finishedScan = false;
+			boolean isClean = false;
 
-			String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
-					EnclosureKeysEnum.PASSWORD.getKey());
+			String encStatut = enclosure.getStatut();
 
-			String zipPassword = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
-					EnclosureKeysEnum.PASSWORD_ZIP.getKey());
+			if (StatutEnum.CHT.getCode().equals(encStatut)) {
 
-			String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
-			LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName,
-					list, enclosureId, bucketPrefix);
-			downloadFilesToTempFolder(manager, bucketName, list);
-			LOGGER.info(" Start scanning files {} with ClamaV", list);
-			LocalDateTime beginDate = LocalDateTime.now();
-			boolean isClean = performScan(list);
-			if (!isClean) {
-				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
-				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(),
-						enclosure.getSender());
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.ANA.getCode(), -1);
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.ANA.getWord(), -1);
+
+				LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ",
+						bucketName, list, enclosureId, bucketPrefix);
+
+				downloadFilesToTempFolder(manager, bucketName, list);
+				sizeCheck(list);
+
+				if (glimpsEnabled) {
+					sendToGlipms(list, enclosureId);
+					File fileToDelete = new File(getBaseFolderNameWithEnclosurePrefix(enclosureId));
+					deleteFilesFromTemp(fileToDelete);
+				} else {
+					isClean = performScan(list);
+					finishedScan = true;
+				}
+
+			} else if (StatutEnum.ANA.getCode().equals(encStatut)) {
+				LOGGER.info("Checking glimps for enclosure {}", enclosureId);
+				String lastGlimpsCheckStr = redisManager
+						.getString(RedisKeysEnum.FT_ENCLOSURE_SCAN_DELAY.getKey(enclosureId));
+				if (StringUtils.isBlank(lastGlimpsCheckStr) || LocalDateTime.parse(lastGlimpsCheckStr)
+						.plusMinutes(glimpsDelay).isBefore(LocalDateTime.now())) {
+					isClean = checkGlipms(enclosureId);
+					if (!isClean) {
+						redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId));
+					}
+					if (CollectionUtils.isEmpty(
+							redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId)))) {
+						finishedScan = true;
+					}
+					redisManager.setString(RedisKeysEnum.FT_ENCLOSURE_SCAN_DELAY.getKey(enclosureId),
+							LocalDateTime.now().toString());
+				} else {
+					LOGGER.debug("Waiting before next call");
+					isClean = true;
+					finishedScan = false;
+				}
 			}
-			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
-					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
 
-			if (isClean) {
+			if (isClean && finishedScan) {
+				LOGGER.info("Finished scan for enclosure {}", enclosureId);
+
+				if (glimpsEnabled) {
+					downloadFilesToTempFolder(manager, bucketName, list);
+				}
+
+				String passwordRedis = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
+						EnclosureKeysEnum.PASSWORD.getKey());
+
+				String zipPassword = RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(),
+						EnclosureKeysEnum.PASSWORD_ZIP.getKey());
+
+				String passwordUnHashed = base64CryptoService.aesDecrypt(passwordRedis);
 
 				LOGGER.debug(" start zip files temp to disk");
 				zipDownloadedContent(enclosureId, passwordUnHashed, zipPassword);
@@ -201,7 +254,17 @@ public class ZipWorkerServices {
 				String statMessage = TypeStat.UPLOAD + ";" + enclosureId;
 				redisManager.publishFT(RedisQueueEnum.STAT_QUEUE.getValue(), statMessage);
 
-			} else {
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode(), -1);
+				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+						EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord(), -1);
+				LOGGER.debug(" STEP STATE ZIP OK");
+
+			} else if (!isClean && finishedScan) {
+
+				LOGGER.error("Virus found in bucketName [{}] files {} ", bucketName, list);
+				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(),
+						enclosure.getSender());
 
 				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
 						EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EAV.getCode(), -1);
@@ -210,13 +273,10 @@ public class ZipWorkerServices {
 
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
+			} else if (!finishedScan) {
+				LOGGER.info("Scan in progress for enclosure {}", enclosureId);
+				redisManager.publishFT(RedisQueueEnum.ZIP_QUEUE.getValue(), enclosure.getGuid());
 			}
-
-			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
-					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode(), -1);
-			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
-					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord(), -1);
-			LOGGER.debug(" STEP STATE ZIP OK");
 
 		} catch (InvalidSizeTypeException sizeEx) {
 			LOGGER.error("Enclosure " + enclosure.getGuid() + " as invalid type or size : " + sizeEx);
@@ -227,6 +287,61 @@ public class ZipWorkerServices {
 			cleanUpEnclosure(bucketName, enclosureId, enclosure,
 					NotificationTemplateEnum.MAIL_VIRUS_ERROR_SENDER.getValue(), subjectVirusError);
 		}
+	}
+
+	private boolean checkGlipms(String enclosureId) {
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set(glimpsTokenKey, glimpsTokenValue);
+		boolean isClean = true;
+		Set<String> scanUuidList = redisManager.smembersString(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId));
+		isClean = scanUuidList.stream().map(uuid -> {
+			HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+			GlimpsResultResponse ret = restTemplate
+					.exchange(glimpsCheckUrl + uuid, HttpMethod.GET, requestEntity, GlimpsResultResponse.class)
+					.getBody();
+			if (ret.isDone() && ret.isStatus()) {
+				redisManager.srem(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId), uuid);
+				if (ret.is_malware()) {
+					LOGGER.error("Virus found in file {}", uuid);
+					return false;
+				}
+				if (StringUtils.isNotBlank(ret.getError())) {
+					LOGGER.error("Error while scanning file {}", uuid);
+					return false;
+				}
+			}
+			return true;
+		}).allMatch(x -> (x == true));
+
+		return isClean;
+	}
+
+	private void sendToGlipms(ArrayList<String> list, String enclosureId) {
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set(glimpsTokenKey, glimpsTokenValue);
+		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+		try {
+			for (String fileName : list) {
+				if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
+					String baseFolderName = getBaseFolderName();
+					File file = new File(baseFolderName + fileName);
+					MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+					body.add("file", new FileSystemResource(file));
+					HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+					ResponseEntity<GlimpsInitResponse> initResponse = restTemplate.exchange(glimpsScanUrl,
+							HttpMethod.POST, requestEntity, GlimpsInitResponse.class);
+					redisManager.saddString(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId),
+							initResponse.getBody().getUuid());
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error("Error while sending to glimps ", e);
+			throw new WorkerException("Error while sending to glimps enclosure :" + enclosureId, e);
+		}
+
 	}
 
 	private String getHashFromS3(String enclosureId) throws MetaloadException, StorageException {
@@ -410,18 +525,12 @@ public class ZipWorkerServices {
 	 * @return
 	 * @throws InvalidSizeTypeException
 	 */
-	private boolean performScan(ArrayList<String> list) throws InvalidSizeTypeException {
-		boolean isClean = true;
+	private void sizeCheck(ArrayList<String> list) throws InvalidSizeTypeException {
 		String currentFileName = null;
 		long enclosureSize = 0;
 		try {
 			for (String fileName : list) {
-
 				long currentSize = 0;
-
-				if (!isClean) {
-					break;
-				}
 				currentFileName = fileName;
 				if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
 					String baseFolderName = getBaseFolderName();
@@ -432,19 +541,41 @@ public class ZipWorkerServices {
 						enclosureSize += currentSize;
 
 						checkSizeAndMimeType(currentFileName, enclosureSize, currentSize, fileInputStream);
+					}
+				}
+			}
+		} catch (InvalidSizeTypeException ex) {
+			throw ex;
+		} catch (Exception e) {
+			LOGGER.error("Error lors du traitement du fichier {} : {}  ", currentFileName, e.getMessage(), e);
+			throw new WorkerException("Error During File size check [" + currentFileName + "]");
+		}
+	}
+
+	private boolean performScan(ArrayList<String> list) throws InvalidSizeTypeException {
+		boolean isClean = true;
+		String currentFileName = null;
+		try {
+			for (String fileName : list) {
+
+				if (!isClean) {
+					break;
+				}
+				currentFileName = fileName;
+				if (!fileName.endsWith(File.separator) && !fileName.endsWith("\\") && !fileName.endsWith("/")) {
+					String baseFolderName = getBaseFolderName();
+					try (FileInputStream fileInputStream = new FileInputStream(baseFolderName + fileName);) {
 
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
 							String status = clamAVScannerManager.performScan(fileChannel);
-							if (!Objects.equals("OK", status)) {
+							if (!StringUtils.equalsIgnoreCase("OK", status)) {
 								isClean = false;
 							}
 						}
 					}
 				}
 			}
-		} catch (InvalidSizeTypeException ex) {
-			throw ex;
 		} catch (Exception e) {
 			LOGGER.error("Error lors du traitement du fichier {} : {}  ", currentFileName, e.getMessage(), e);
 			throw new WorkerException("Error During File scanning [" + currentFileName + "]");
