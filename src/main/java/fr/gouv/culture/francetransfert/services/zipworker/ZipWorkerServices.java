@@ -245,9 +245,10 @@ public class ZipWorkerServices {
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			}
 
-			// ---
-			enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode());
-			enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord());
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.APT.getCode(), -1);
+			redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+					EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.APT.getWord(), -1);
 			LOGGER.debug(" STEP STATE ZIP OK");
 
 		} catch (InvalidSizeTypeException sizeEx) {
