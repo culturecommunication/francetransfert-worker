@@ -17,14 +17,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.channels.FileChannel;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,27 +32,15 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.AbstractHttpMessage;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import com.amazonaws.services.s3.model.S3Object;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 
@@ -191,7 +177,7 @@ public class ZipWorkerServices {
 			LOGGER.info(" start copy files temp to disk and scan for vulnerabilities {} / {} - {} ++ {} ", bucketName,
 					list, enclosureId, bucketPrefix);
 			downloadFilesToTempFolder(manager, bucketName, list);
-			LOGGER.info(" Start scanning files {} with ClamaV", list);
+			LOGGER.info(" Start scanning files {} with Glimps", list);
 			LocalDateTime beginDate = LocalDateTime.now();
 			boolean isClean = performScanGlimps(list);
 			if (!isClean) {
@@ -199,7 +185,7 @@ public class ZipWorkerServices {
 				LOGGER.warn("msgtype: VIRUS || enclosure: {} || sender: {}", enclosure.getGuid(),
 						enclosure.getSender());
 			}
-			LOGGER.info(" End scanning file {} with ClamaV. Duration(s) = [{}]", list,
+			LOGGER.info(" End scanning file {} with Glimps. Duration(s) = [{}]", list,
 					Duration.between(beginDate, LocalDateTime.now()).getSeconds());
 
 			if (isClean) {
@@ -516,6 +502,8 @@ public class ZipWorkerServices {
 							JSONObject uuidGlimps = getUuidGlimps(fileName);
 							String uuid = uuidGlimps.getString("uuid");
 							isClean = getResultScanGlimps(uuid);
+							LOGGER.info("UUID du fichier {} : {} ", currentFileName, uuid);
+							LOGGER.info("Scan du fichier {} : {} ", currentFileName, isClean);
 						}
 					}
 				}
