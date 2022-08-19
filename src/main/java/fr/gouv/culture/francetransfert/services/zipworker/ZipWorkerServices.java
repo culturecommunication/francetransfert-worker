@@ -501,7 +501,7 @@ public class ZipWorkerServices {
 							
 							JSONObject uuidGlimps = getUuidGlimps(fileName);
 							String uuid = uuidGlimps.getString("uuid");
-							isClean = getResultScanGlimps(uuid);
+							isClean = isScanGlimpsClean(uuid);
 							LOGGER.info("UUID du fichier {} : {} ", currentFileName, uuid);
 							LOGGER.info("Scan du fichier {} : {} ", currentFileName, isClean);
 						}
@@ -541,7 +541,7 @@ public class ZipWorkerServices {
 		return responseJSON;
 	}
 
-	private boolean getResultScanGlimps(String uuid) {
+	private boolean isScanGlimpsClean(String uuid) {
 		HttpClient client = HttpClient.newHttpClient();
 		JSONObject responseJSON = new JSONObject();
 		try {
@@ -553,12 +553,14 @@ public class ZipWorkerServices {
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
+
+			LOGGER.info(" is_malware {} ", responseJSON.getBoolean("is_malware"));
 		} catch (IOException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 } catch (InterruptedException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 }
-		return responseJSON.getBoolean("is_malware");
+		return !responseJSON.getBoolean("is_malware");
 	}
 
 	private void checkSizeAndMimeType(String currentFileName, long enclosureSize, long currentSize,
