@@ -499,8 +499,10 @@ public class ZipWorkerServices {
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
 							
-							JSONObject uuidGlimps = getUuidGlimps(fileName);
-							String uuid = uuidGlimps.getString("uuid");
+							String uuid = getUuidGlimps(fileName);
+							if (uuid == null) {
+								return false;
+							}
 							isClean = isScanGlimpsClean(uuid);
 							LOGGER.info("UUID du fichier {} : {} ", currentFileName, uuid);
 							LOGGER.info("Scan du fichier {} : {} ", currentFileName, isClean);
@@ -518,7 +520,7 @@ public class ZipWorkerServices {
 		return isClean;
 	}
 
-	private JSONObject getUuidGlimps(String file) {
+	private String getUuidGlimps(String file) {
 
 		ObjectMapper objectMapper = new ObjectMapper();
 		JSONObject responseJSON = new JSONObject();
@@ -533,12 +535,16 @@ public class ZipWorkerServices {
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
+	        if (!responseJSON.getBoolean("status")) {
+	        	LOGGER.error("Erreur lors de la requete post Glimps du fichier {} : {}  ", file, responseJSON.get("error"));
+	        	return null;
+	        }
 		 } catch (IOException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 		 } catch (InterruptedException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 		 }
-		return responseJSON;
+		return responseJSON.getString("uuid");
 	}
 
 	private boolean isScanGlimpsClean(String uuid) {
