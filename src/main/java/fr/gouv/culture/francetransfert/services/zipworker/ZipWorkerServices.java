@@ -166,6 +166,8 @@ public class ZipWorkerServices {
 
 			if (StatutEnum.CHT.getCode().equals(encStatut)) {
 
+				LOGGER.info("[Worker] Start scan process for enclosur N°  {}", enclosureId);
+
 				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
 						EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.ANA.getCode(), -1);
 				redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
@@ -187,11 +189,11 @@ public class ZipWorkerServices {
 				}
 
 			} else if (StatutEnum.ANA.getCode().equals(encStatut)) {
-				LOGGER.info("Checking glimps for enclosure {}", enclosureId);
 				String lastGlimpsCheckStr = redisManager
 						.getString(RedisKeysEnum.FT_ENCLOSURE_SCAN_DELAY.getKey(enclosureId));
 				if (StringUtils.isBlank(lastGlimpsCheckStr) || LocalDateTime.parse(lastGlimpsCheckStr)
 						.plusMinutes(glimpsDelay).isBefore(LocalDateTime.now())) {
+					LOGGER.info("Checking glimps for enclosure {}", enclosureId);
 					isClean = checkGlipms(enclosureId);
 					if (!isClean) {
 						redisManager.deleteKey(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId));
@@ -210,7 +212,7 @@ public class ZipWorkerServices {
 			}
 
 			if (isClean && finishedScan) {
-				LOGGER.info("Finished scan for enclosure {}", enclosureId);
+				LOGGER.info("Finished scan start zipping for enclosure {}", enclosureId);
 
 				if (glimpsEnabled) {
 					downloadFilesToTempFolder(manager, bucketName, list);
@@ -274,7 +276,7 @@ public class ZipWorkerServices {
 				cleanUpEnclosure(bucketName, enclosureId, enclosure,
 						NotificationTemplateEnum.MAIL_VIRUS_SENDER.getValue(), subjectVirusFound);
 			} else if (!finishedScan) {
-				LOGGER.info("Scan in progress for enclosure {}", enclosureId);
+				LOGGER.debug("Scan in progress for enclosure {}", enclosureId);
 				redisManager.publishFT(RedisQueueEnum.ZIP_QUEUE.getValue(), enclosure.getGuid());
 			}
 

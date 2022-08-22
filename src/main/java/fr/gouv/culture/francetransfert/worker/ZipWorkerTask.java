@@ -37,15 +37,15 @@ public class ZipWorkerTask implements Runnable {
 
 	@Override
 	public void run() {
-		LOGGER.info("[Worker] Start zip  process for enclosur N°  {}", enclosureId);
+		LOGGER.debug("[Worker] Start zip  process for enclosur N°  {}", enclosureId);
 		try {
-			LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
+			LOGGER.debug("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
 					+ Thread.currentThread().getId());
 			zipWorkerServices.startZip(enclosureId);
 		} catch (Exception e) {
 			LOGGER.error("[Worker] Zip worker error : " + e.getMessage(), e);
 		}
-		LOGGER.info("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: " + Thread.currentThread().getId()
-				+ " IS DEAD");
+		LOGGER.debug("ThreadName: " + Thread.currentThread().getName() + " | ThreadId: "
+				+ Thread.currentThread().getId() + " IS DEAD");
 	}
 }
