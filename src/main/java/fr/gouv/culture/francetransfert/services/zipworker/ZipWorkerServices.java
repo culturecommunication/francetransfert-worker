@@ -302,13 +302,13 @@ public class ZipWorkerServices {
 			GlimpsResultResponse ret = restTemplate
 					.exchange(glimpsCheckUrl + uuid, HttpMethod.GET, requestEntity, GlimpsResultResponse.class)
 					.getBody();
-			if (ret.isDone() && ret.isStatus()) {
+			if (ret.isDone()) {
 				redisManager.srem(RedisKeysEnum.FT_ENCLOSURE_SCAN.getKey(enclosureId), uuid);
 				if (ret.is_malware()) {
 					LOGGER.error("Virus found in file {}", uuid);
 					return false;
 				}
-				if (StringUtils.isNotBlank(ret.getError())) {
+				if (StringUtils.isNotBlank(ret.getError()) || !ret.isStatus()) {
 					LOGGER.error("Error while scanning file {}", uuid);
 					return false;
 				}
