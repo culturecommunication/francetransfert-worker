@@ -473,7 +473,7 @@ public class ZipWorkerServices {
 	}
 
 	private boolean performScanGlimps(ArrayList<String> list) throws InvalidSizeTypeException {
-
+		LOGGER.debug("Perform Scan Glimps : Start");
 		boolean isClean = true;
 		String currentFileName = null;
 		long enclosureSize = 0;
@@ -506,6 +506,7 @@ public class ZipWorkerServices {
 							isClean = isScanGlimpsClean(uuid);
 							LOGGER.debug("UUID du fichier {} : {} ", currentFileName, uuid);
 							LOGGER.debug("Scan du fichier {} : {} ", currentFileName, isClean);
+							LOGGER.debug("Perform Scan Glimps : End");
 						}
 					}
 				}
