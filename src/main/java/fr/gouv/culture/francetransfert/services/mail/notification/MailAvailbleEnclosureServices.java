@@ -125,8 +125,8 @@ public class MailAvailbleEnclosureServices {
 			subjectSend = subjectSenderLinkLang;
 		}
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
-			subjectSend = subjectSend.concat(" : ").concat(enclosure.getSubject());
-			subjectSenderPassw = subjectSenderPassw.concat(" : ").concat(enclosure.getSubject());
+			subjectSend = subjectSend.concat(enclosure.getSubject());
+			subjectSenderPassw = subjectSenderPassw.concat(enclosure.getSubject());
 		}
 		if (metaDataRecipient == null) {
 			mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
@@ -164,8 +164,14 @@ public class MailAvailbleEnclosureServices {
 		}
 
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
-			subject = subject.concat(" : ").concat(enclosure.getSubject());
-			subjectPassword = subjectPassword.concat(" : ").concat(enclosure.getSubject());
+			
+			if(Locale.UK.equals(language)) {
+				subject = subject.concat(": ").concat(enclosure.getSubject());	
+			}else {
+				subject = subject.concat(" : ").concat(enclosure.getSubject());
+			}
+			subjectPassword = subjectPassword.concat(enclosure.getSubject());
+
 
 		}
 		List<Recipient> recipients = enclosure.getRecipients();
