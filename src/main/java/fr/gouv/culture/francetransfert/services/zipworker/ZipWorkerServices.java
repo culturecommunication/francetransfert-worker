@@ -504,8 +504,8 @@ public class ZipWorkerServices {
 								return false;
 							}
 							isClean = isScanGlimpsClean(uuid);
-							LOGGER.info("UUID du fichier {} : {} ", currentFileName, uuid);
-							LOGGER.info("Scan du fichier {} : {} ", currentFileName, isClean);
+							LOGGER.debug("UUID du fichier {} : {} ", currentFileName, uuid);
+							LOGGER.debug("Scan du fichier {} : {} ", currentFileName, isClean);
 						}
 					}
 				}
@@ -560,7 +560,7 @@ public class ZipWorkerServices {
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
 
-			LOGGER.info(" is_malware {} ", responseJSON.getBoolean("is_malware"));
+			LOGGER.debug(" is_malware {} ", responseJSON.getBoolean("is_malware"));
 		} catch (IOException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 } catch (InterruptedException e) {
