@@ -144,7 +144,13 @@ public class MailNotificationServices {
 	}
 
 	public String generateUrlPublicForDownload(String enclosureId) {
-		return urlDownloadApi + "download-info-public?enclosure=" + enclosureId;
+		String publicDownloadurl = urlDownloadApi + "download-info-public?enclosure=" + enclosureId;
+		Map<String, String> enclosureMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+		String lang = enclosureMap.get(EnclosureKeysEnum.LANGUAGE.getKey());
+		if (StringUtils.isNotBlank(lang)) {
+			publicDownloadurl = publicDownloadurl + "&lang=" + lang.replace("_", "-");
+		}
+		return publicDownloadurl;
 	}
 
 	public boolean getPublicLink(String enclosureId) {
