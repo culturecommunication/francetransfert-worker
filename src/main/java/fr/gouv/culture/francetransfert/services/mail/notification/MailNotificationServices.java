@@ -28,7 +28,6 @@ import org.springframework.stereotype.Component;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
-import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.services.RedisManager;
 import fr.gouv.culture.francetransfert.core.utils.Base64CryptoService;
 import fr.gouv.culture.francetransfert.security.WorkerException;
@@ -64,7 +63,6 @@ public class MailNotificationServices {
 	private RedisManager redisManager;
 
 	public void prepareAndSend(String to, String subject, Object object, String templateName, Locale locale) {
-		
 
 		try {
 			LOGGER.debug("start send emails for enclosure ");
@@ -85,8 +83,7 @@ public class MailNotificationServices {
 			String htmlContent = htmlBuilder.build(object, templateName, locale);
 			helper.setText(htmlContent, true);
 			emailSender.send(message);
-			
-	
+
 		} catch (MessagingException | IOException e) {
 			throw new WorkerException("Enclosure build error", e);
 		}
@@ -132,8 +129,15 @@ public class MailNotificationServices {
 
 	public String generateUrlForDownload(String enclosureId, String recipientMail, String recipientId) {
 		try {
-			return urlDownloadApi + "?enclosure=" + enclosureId + "&recipient="
+			Map<String, String> enclosureMap = redisManager
+					.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+			String lang = enclosureMap.get(EnclosureKeysEnum.LANGUAGE.getKey());
+			String urlDownload = urlDownloadApi + "?enclosure=" + enclosureId + "&recipient="
 					+ base64CryptoService.base64Encoder(recipientMail) + "&token=" + recipientId;
+			if (StringUtils.isNotBlank(lang)) {
+				urlDownload = urlDownload + "&lang=" + lang.replace("_", "-");
+			}
+			return urlDownload;
 		} catch (UnsupportedEncodingException e) {
 			throw new WorkerException("Download url error", e);
 		}
@@ -150,7 +154,15 @@ public class MailNotificationServices {
 
 	public String generateUrlAdmin(String enclosureId) {
 		Map<String, String> tokenMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ADMIN_TOKEN.getKey(enclosureId));
-		return urlAdminPage + "?token=" + tokenMap.get(EnclosureKeysEnum.TOKEN.getKey()) + "&enclosure=" + enclosureId;
+		String adminUrl = urlAdminPage + "?token=" + tokenMap.get(EnclosureKeysEnum.TOKEN.getKey()) + "&enclosure="
+				+ enclosureId;
+		Map<String, String> enclosureMap = redisManager.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosureId));
+		String lang = enclosureMap.get(EnclosureKeysEnum.LANGUAGE.getKey());
+		if (StringUtils.isNotBlank(lang)) {
+			adminUrl = adminUrl + "&lang=" + lang.replace("_", "-");
+		}
+		return adminUrl;
+
 	}
 
 	public void send(String to, String subject, String content) {
