@@ -149,6 +149,8 @@ public class MailAvailbleEnclosureServices {
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName,
 			NewRecipient metaDataRecipient, Locale currentLanguage) throws MetaloadException {
 
+		Boolean source = Boolean.parseBoolean(redisManager.getHgetString(
+				RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), EnclosureKeysEnum.ENVOIMDPDEST.getKey()));
 		// ---
 		Map<String, String> enclosureMap = redisManager
 				.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));
@@ -190,9 +192,10 @@ public class MailAvailbleEnclosureServices {
 								recipient.getMail(), recipient.getId()));
 						mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName,
 								language);
-						mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
-								NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
-
+						if(source) {
+							mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
+									NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
+							}
 					} catch (Exception e) {
 						redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
 								EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EEC.getCode(), -1);
