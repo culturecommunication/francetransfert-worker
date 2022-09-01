@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
+import org.apache.http.client.methods.HttpPost;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -530,13 +531,26 @@ public class ZipWorkerServices {
 			String requestBody = objectMapper.writeValueAsString(file);
 
 	        HttpClient client = HttpClient.newHttpClient();
+	        
+	        
+	        HttpPost post = new HttpPost(url+"/submit");
+	        post.addHeader(glimpsTokenKey, glimpsTokenValue);
+	        
+
+FileBody fileBody = new FileBody(file, ContentType.DEFAULT_BINARY);
+	        
+	        
+	        
+	        
+	        
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create(url+"/submit"))
 	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
 	                .header(glimpsTokenKey, glimpsTokenValue).build();
+
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
-	        LOGGER.debug("Response Uuid Glimps : {} ", response.toString());
+
 	        LOGGER.debug("Response Uuid Glimps body : {} ", response.body());
 	        LOGGER.debug("Response Uuid Glimps status : {} ", response.statusCode());
 	        responseJSON =  new JSONObject(response);
