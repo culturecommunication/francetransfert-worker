@@ -522,19 +522,23 @@ public class ZipWorkerServices {
 	}
 
 	private String getUuidGlimps(String file) {
-
+		LOGGER.debug("Get Uuid Glimps : Start");
 		ObjectMapper objectMapper = new ObjectMapper();
 		JSONObject responseJSON = new JSONObject();
 		try {
 			String requestBody = objectMapper.writeValueAsString(file);
 
 	        HttpClient client = HttpClient.newHttpClient();
+	        LOGGER.debug("Request Uuid Glimps : Start");
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create(url))
 	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
 	                .header(glimpsTokenKey, glimpsTokenValue).build();
+	        LOGGER.debug("Request Uuid Glimps : End");
+	        LOGGER.debug("Response Uuid Glimps : Start");
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
+	        LOGGER.debug("Response Uuid Glimps : End");
 	        responseJSON =  new JSONObject(response);
 	        if (!responseJSON.getBoolean("status")) {
 	        	LOGGER.error("Erreur lors de la requete post Glimps du fichier {} : {}  ", file, responseJSON.get("error"));
@@ -545,28 +549,35 @@ public class ZipWorkerServices {
 		 } catch (InterruptedException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 		 }
+		LOGGER.debug("Get Uuid Glimps : End");
 		return responseJSON.getString("uuid");
 	}
 
 	private boolean isScanGlimpsClean(String uuid) {
+		LOGGER.debug("Is scan Glimps clean : Start");
 		HttpClient client = HttpClient.newHttpClient();
 		JSONObject responseJSON = new JSONObject();
 		try {
+			LOGGER.debug("Request Glimps clean : Start");
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create(url+"?uuid="+uuid))
 	                .GET()
 	                .build();
-	
+	        LOGGER.debug("Request Glimps clean : End");
+
+	        LOGGER.debug("Response Glimps clean : Start");
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
-
+	        LOGGER.debug("Response Glimps clean : End");
+	        
 			LOGGER.debug(" is_malware {} ", responseJSON.getBoolean("is_malware"));
 		} catch (IOException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 } catch (InterruptedException e) {
 			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 }
+		LOGGER.debug("Is scan Glimps clean : End");
 		return !responseJSON.getBoolean("is_malware");
 	}
 
