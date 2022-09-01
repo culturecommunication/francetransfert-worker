@@ -538,7 +538,8 @@ public class ZipWorkerServices {
 	        LOGGER.debug("Response Uuid Glimps : Start");
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
-	        LOGGER.debug("Response Uuid Glimps : End");
+	        LOGGER.debug("Response Uuid Glimps : {} ", response.toString());
+	        LOGGER.debug("Response Uuid Glimps json : {} ", new JSONObject(response));
 	        responseJSON =  new JSONObject(response);
 	        if (!responseJSON.getBoolean("status")) {
 	        	LOGGER.error("Erreur lors de la requete post Glimps du fichier {} : {}  ", file, responseJSON.get("error"));
