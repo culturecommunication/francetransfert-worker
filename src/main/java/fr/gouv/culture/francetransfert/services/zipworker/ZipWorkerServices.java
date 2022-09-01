@@ -119,8 +119,8 @@ public class ZipWorkerServices {
 	@Value("${upload.file.limit}")
 	private long maxFileSize;
 
-	@Value("${glimps.url}")
-	private String url;
+	//Value("${glimps.url}")
+	private String url="https://gmalware-prod-7967.glimps.re:443/api/lite/v2";
 
 	@Value("${glimps.auth.token.key}")
 	private String glimpsTokenKey;
@@ -529,13 +529,10 @@ public class ZipWorkerServices {
 			String requestBody = objectMapper.writeValueAsString(file);
 
 	        HttpClient client = HttpClient.newHttpClient();
-	        LOGGER.debug("Request Uuid Glimps : Start");
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create(url))
 	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
 	                .header(glimpsTokenKey, glimpsTokenValue).build();
-	        LOGGER.debug("Request Uuid Glimps : End");
-	        LOGGER.debug("Response Uuid Glimps : Start");
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        LOGGER.debug("Response Uuid Glimps : {} ", response.toString());
