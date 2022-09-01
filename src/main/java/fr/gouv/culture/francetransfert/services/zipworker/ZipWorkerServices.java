@@ -33,6 +33,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.content.FileBody;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -500,7 +502,7 @@ public class ZipWorkerServices {
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
 							
-							String uuid = getUuidGlimps(fileName);
+							String uuid = getUuidGlimps(new File(fileName));
 							if (uuid == null) {
 								return false;
 							}
@@ -522,7 +524,7 @@ public class ZipWorkerServices {
 		return isClean;
 	}
 
-	private String getUuidGlimps(String file) {
+	private String getUuidGlimps(File file) {
 
 		LOGGER.debug("Get Uuid Glimps : Start");
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -533,11 +535,11 @@ public class ZipWorkerServices {
 	        HttpClient client = HttpClient.newHttpClient();
 	        
 	        
-	        HttpPost post = new HttpPost(url+"/submit");
-	        post.addHeader(glimpsTokenKey, glimpsTokenValue);
-	        
-
-FileBody fileBody = new FileBody(file, ContentType.DEFAULT_BINARY);
+//	        HttpPost post = new HttpPost(url+"/submit");
+//	        post.addHeader(glimpsTokenKey, glimpsTokenValue);
+//	        
+//
+//FileBody fileBody = new FileBody(file, ContentType.DEFAULT_BINARY);
 	        
 	        
 	        
