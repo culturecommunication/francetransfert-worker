@@ -18,8 +18,10 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,7 +34,11 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -500,7 +506,7 @@ public class ZipWorkerServices {
 						FileChannel fileChannel = fileInputStream.getChannel();
 						if (fileChannel.size() <= scanMaxFileSize) {
 							
-							String uuid = getUuidGlimps(new File(fileName));
+							String uuid = getUuidGlimps(fileName);
 							if (uuid == null) {
 								return false;
 							}
@@ -522,9 +528,9 @@ public class ZipWorkerServices {
 		return isClean;
 	}
 
-	private String getUuidGlimps(File file) {
+	private String getUuidGlimps(String file) {
 
-		LOGGER.debug("Get Uuid Glimps : Start");
+		LOGGER.debug("Get Uuid Glimps file {} : Start", file);
 		ObjectMapper objectMapper = new ObjectMapper();
 		JSONObject responseJSON = new JSONObject();
 		try {
@@ -533,20 +539,21 @@ public class ZipWorkerServices {
 	        HttpClient client = HttpClient.newHttpClient();
 	        
 	        
-//	        HttpPost post = new HttpPost(url+"/submit");
-//	        post.addHeader(glimpsTokenKey, glimpsTokenValue);
-//	        
-//
-//FileBody fileBody = new FileBody(file, ContentType.DEFAULT_BINARY);
 	        
 	        
-	        
-	        
-	        
+
+	        // Request body from a File
 	        HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create(url+"/submit"))
-	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-	                .header(glimpsTokenKey, glimpsTokenValue).build();
+	             .uri(URI.create(url+"/submit"))
+	             .POST(BodyPublishers.ofFile(Paths.get(file)))
+	             .header(glimpsTokenKey, glimpsTokenValue).build();
+	        
+	        
+	        
+//	        HttpRequest request = HttpRequest.newBuilder()
+//	                .uri(URI.create(url+"/submit"))
+//	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+//	                .header(glimpsTokenKey, glimpsTokenValue).build();
 
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
