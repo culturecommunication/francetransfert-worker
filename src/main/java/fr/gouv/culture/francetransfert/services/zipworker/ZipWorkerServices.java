@@ -522,6 +522,34 @@ public class ZipWorkerServices {
 	}
 
 	private String getUuidGlimps(String file) {
+		
+		
+//		try {
+//			File file = new File("src/data/a.txt");
+//			HttpClient httpClient = HttpClient.newHttpClient();
+//			HttpRequest httpRequest = HttpRequest.newBuilder()
+//										.uri(new URI("http://localhost:8080/myserver/api/demo/show"))
+//										.POST(HttpRequest.BodyProcessor.fromFile(file.toPath()))
+//										.build();
+//			HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandler.asString());
+//			System.out.println("Status Code: " + httpResponse.statusCode());
+//			System.out.println("Content: " + httpResponse.body());
+//		} catch (Exception e) {
+//			System.err.println("Error: " + e.getMessage());
+//		}
+//		
+//		
+//		
+//		
+//		
+//		
+//		
+		
+		
+		
+		
+		
+		
 		LOGGER.debug("Get Uuid Glimps : Start");
 		ObjectMapper objectMapper = new ObjectMapper();
 		JSONObject responseJSON = new JSONObject();
@@ -530,13 +558,14 @@ public class ZipWorkerServices {
 
 	        HttpClient client = HttpClient.newHttpClient();
 	        HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create(url))
+	                .uri(URI.create(url+"/submit"))
 	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
 	                .header(glimpsTokenKey, glimpsTokenValue).build();
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        LOGGER.debug("Response Uuid Glimps : {} ", response.toString());
-	        LOGGER.debug("Response Uuid Glimps json : {} ", new JSONObject(response));
+	        LOGGER.debug("Response Uuid Glimps body : {} ", response.body());
+	        LOGGER.debug("Response Uuid Glimps status : {} ", response.statusCode());
 	        responseJSON =  new JSONObject(response);
 	        if (!responseJSON.getBoolean("status")) {
 	        	LOGGER.error("Erreur lors de la requete post Glimps du fichier {} : {}  ", file, responseJSON.get("error"));
