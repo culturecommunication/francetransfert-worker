@@ -522,34 +522,7 @@ public class ZipWorkerServices {
 	}
 
 	private String getUuidGlimps(String file) {
-		
-		
-//		try {
-//			File file = new File("src/data/a.txt");
-//			HttpClient httpClient = HttpClient.newHttpClient();
-//			HttpRequest httpRequest = HttpRequest.newBuilder()
-//										.uri(new URI("http://localhost:8080/myserver/api/demo/show"))
-//										.POST(HttpRequest.BodyProcessor.fromFile(file.toPath()))
-//										.build();
-//			HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandler.asString());
-//			System.out.println("Status Code: " + httpResponse.statusCode());
-//			System.out.println("Content: " + httpResponse.body());
-//		} catch (Exception e) {
-//			System.err.println("Error: " + e.getMessage());
-//		}
-//		
-//		
-//		
-//		
-//		
-//		
-//		
-		
-		
-		
-		
-		
-		
+
 		LOGGER.debug("Get Uuid Glimps : Start");
 		ObjectMapper objectMapper = new ObjectMapper();
 		JSONObject responseJSON = new JSONObject();
