@@ -126,8 +126,8 @@ public class ZipWorkerServices {
 	@Value("${upload.file.limit}")
 	private long maxFileSize;
 
-	//Value("${glimps.url}")
-	private String url="https://gmalware-prod-7967.glimps.re:443/api/lite/v2";
+	@Value("${glimps.url}")
+	private String url;
 
 	@Value("${glimps.auth.token.key}")
 	private String glimpsTokenKey;
@@ -511,8 +511,6 @@ public class ZipWorkerServices {
 								return false;
 							}
 							isClean = isScanGlimpsClean(uuid);
-							LOGGER.debug("UUID du fichier {} : {} ", currentFileName, uuid);
-							LOGGER.debug("Scan du fichier {} : {} ", currentFileName, isClean);
 							LOGGER.debug("Perform Scan Glimps : End");
 						}
 					}
@@ -538,15 +536,11 @@ public class ZipWorkerServices {
 //			String requestBody = objectMapper.writeValueAsString(file);
 
 	        HttpClient client = HttpClient.newHttpClient();
-	        
-	        
-	        
-	        
-
+	        String baseFolderName = getBaseFolderName();
 	        // Request body from a File
 	        HttpRequest request = HttpRequest.newBuilder()
 	             .uri(URI.create(url+"/submit"))
-	             .POST(BodyPublishers.ofFile(Paths.get(file)))
+	             .POST(BodyPublishers.ofFile(Paths.get(baseFolderName + file)))
 	             .header(glimpsTokenKey, glimpsTokenValue).build();
 	        
 	        
@@ -561,7 +555,8 @@ public class ZipWorkerServices {
 
 	        LOGGER.debug("Response Uuid Glimps body : {} ", response.body());
 	        LOGGER.debug("Response Uuid Glimps status : {} ", response.statusCode());
-	        responseJSON =  new JSONObject(response);
+	        responseJSON =  new JSONObject(response.body());
+	        LOGGER.debug("Uuid Glimps : {} ", responseJSON.getString("uuid"));
 	        if (!responseJSON.getBoolean("status")) {
 	        	LOGGER.error("Erreur lors de la requete post Glimps du fichier {} : {}  ", file, responseJSON.get("error"));
 	        	return null;
@@ -578,15 +573,12 @@ public class ZipWorkerServices {
 	}
 
 	private boolean isScanGlimpsClean(String uuid) {
-		LOGGER.debug("Is scan Glimps clean : Start");
 		HttpClient client = HttpClient.newHttpClient();
 		JSONObject responseJSON = new JSONObject();
 		try {
 	        HttpRequest request = HttpRequest.newBuilder() .uri(URI.create(url+"/results/"+uuid))
 	                .GET().header(glimpsTokenKey, glimpsTokenValue).build();
-
 	        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
 	        responseJSON =  new JSONObject(response.body());
 	        LOGGER.debug("Response Glimps clean body {} : ", response.body());
 	        LOGGER.debug("Response Glimps clean en json {} : ", responseJSON);
@@ -596,7 +588,6 @@ public class ZipWorkerServices {
 		 } catch (InterruptedException e) {
 			 LOGGER.error("InterruptedException: Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 }
-		LOGGER.debug("Is scan Glimps clean : End");
 		return !responseJSON.getBoolean("is_malware");
 	}
 
