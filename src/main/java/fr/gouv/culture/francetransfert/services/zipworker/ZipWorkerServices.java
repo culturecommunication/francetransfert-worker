@@ -583,14 +583,14 @@ public class ZipWorkerServices {
 		JSONObject responseJSON = new JSONObject();
 		try {
 	        HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create(url+"results?uuid="+uuid))
+	                .uri(URI.create(url+"results/"+uuid))
 	                .GET().header(glimpsTokenKey, glimpsTokenValue).build();
 
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
-	        LOGGER.debug("Response Glimps clean {} : " + response.body());
-	        LOGGER.debug("Response Glimps clean {} : " + responseJSON);
+	        LOGGER.debug("Response Glimps clean body {} : " + response.body());
+	        LOGGER.debug("Response Glimps clean en json {} : " + responseJSON);
 			LOGGER.debug(" is_malware {} ", responseJSON.getBoolean("is_malware"));
 		} catch (IOException e) {
 			 LOGGER.error("IOException: Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
