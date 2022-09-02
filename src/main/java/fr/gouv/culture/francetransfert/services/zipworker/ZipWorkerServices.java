@@ -531,10 +531,11 @@ public class ZipWorkerServices {
 	private String getUuidGlimps(String file) {
 
 		LOGGER.debug("Get Uuid Glimps file {} : Start", file);
+		String uuid = "5dc54314-5f36-473e-85e1-582527788eae";
 		ObjectMapper objectMapper = new ObjectMapper();
 		JSONObject responseJSON = new JSONObject();
 		try {
-			String requestBody = objectMapper.writeValueAsString(file);
+//			String requestBody = objectMapper.writeValueAsString(file);
 
 	        HttpClient client = HttpClient.newHttpClient();
 	        
@@ -566,9 +567,11 @@ public class ZipWorkerServices {
 	        	return null;
 	        }
 		 } catch (IOException e) {
-			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+			 LOGGER.error("IOException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+			 return uuid;
 		 } catch (InterruptedException e) {
-			 LOGGER.error("Error lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+			 LOGGER.error("InterruptedException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+			 return uuid;
 		 }
 		LOGGER.debug("Get Uuid Glimps : End");
 		return responseJSON.getString("uuid");
@@ -581,7 +584,7 @@ public class ZipWorkerServices {
 		try {
 			LOGGER.debug("Request Glimps clean : Start");
 	        HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create(url+"?uuid="+uuid))
+	                .uri(URI.create(url+"results?uuid="+uuid))
 	                .GET()
 	                .build();
 	        LOGGER.debug("Request Glimps clean : End");
@@ -594,9 +597,9 @@ public class ZipWorkerServices {
 	        
 			LOGGER.debug(" is_malware {} ", responseJSON.getBoolean("is_malware"));
 		} catch (IOException e) {
-			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
+			 LOGGER.error("IOException: Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 } catch (InterruptedException e) {
-			 LOGGER.error("Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
+			 LOGGER.error("InterruptedException: Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
 		 }
 		LOGGER.debug("Is scan Glimps clean : End");
 		return !responseJSON.getBoolean("is_malware");
