@@ -533,28 +533,42 @@ public class ZipWorkerServices {
 		ObjectMapper objectMapper = new ObjectMapper();
 		JSONObject responseJSON = new JSONObject();
 		try {
-//			String requestBody = objectMapper.writeValueAsString(file);
 
-	        HttpClient client = HttpClient.newHttpClient();
+		    HttpPost httppost = new HttpPost(url+"/submit");
+
+		    httppost.setHeader(glimpsTokenKey, glimpsTokenValue);
+
 	        String baseFolderName = getBaseFolderName();
-	        // Request body from a File
-	        HttpRequest request = HttpRequest.newBuilder()
-	             .uri(URI.create(url+"/submit"))
-	             .POST(BodyPublishers.ofFile(Paths.get(baseFolderName + file)))
-	             .header(glimpsTokenKey, glimpsTokenValue).build();
+		    FileEntity entity = new FileEntity(new File(baseFolderName + file));
+		    httppost.setEntity(entity);
+		    CloseableHttpClient httpClient = HttpClients.createDefault();
+
+		    HttpResponse response = (HttpResponse) httpClient.execute(httppost);
+			
+			
+			
+			
+			
+			
+//	        HttpClient client = HttpClient.newHttpClient();
+//	        String baseFolderName = getBaseFolderName();
+//	        // Request body from a File
+//	        HttpRequest request = HttpRequest.newBuilder()
+//	             .uri(URI.create(url+"/submit"))
+//	             .POST(BodyPublishers.ofFile(Paths.get(baseFolderName + file)))
+//	             .header(glimpsTokenKey, glimpsTokenValue).build();
 	        
 	        
-	        
+//			String requestBody = objectMapper.writeValueAsString(file);
 //	        HttpRequest request = HttpRequest.newBuilder()
 //	                .uri(URI.create(url+"/submit"))
 //	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
 //	                .header(glimpsTokenKey, glimpsTokenValue).build();
 
-	        HttpResponse<String> response = client.send(request,
-	                HttpResponse.BodyHandlers.ofString());
+//	        HttpResponse<String> response = client.send(request,
+//	                HttpResponse.BodyHandlers.ofString());
 
 	        LOGGER.debug("Response Uuid Glimps body : {} ", response.body());
-	        LOGGER.debug("Response Uuid Glimps status : {} ", response.statusCode());
 	        responseJSON =  new JSONObject(response.body());
 	        LOGGER.debug("Uuid Glimps : {} ", responseJSON.getString("uuid"));
 	        if (!responseJSON.getBoolean("status")) {
