@@ -575,13 +575,14 @@ public class ZipWorkerServices {
 	        	LOGGER.error("Erreur lors de la requete post Glimps du fichier {} : {}  ", file, responseJSON.get("error"));
 	        	return null;
 	        }
-		 } catch (InterruptedException e) {
-			 LOGGER.error("InterruptedException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
-			 return uuid;
 		 } catch (IOException e) {
 			 LOGGER.error("IOException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 			 return uuid;
 		 }
+//		catch (InterruptedException e) {
+//			 LOGGER.error("InterruptedException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+//			 return uuid;
+//		 }
 		LOGGER.debug("Get Uuid Glimps : End");
 		return responseJSON.getString("uuid");
 	}
