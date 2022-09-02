@@ -35,9 +35,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -534,29 +531,20 @@ public class ZipWorkerServices {
 		JSONObject responseJSON = new JSONObject();
 		try {
 
-		    HttpPost httppost = new HttpPost(url+"/submit");
 
-		    httppost.setHeader(glimpsTokenKey, glimpsTokenValue);
 
+			
+			
+			
+			
+			
+	        HttpClient client = HttpClient.newHttpClient();
 	        String baseFolderName = getBaseFolderName();
-		    FileEntity entity = new FileEntity(new File(baseFolderName + file));
-		    httppost.setEntity(entity);
-		    CloseableHttpClient httpClient = HttpClients.createDefault();
-
-		    HttpResponse response = (HttpResponse) httpClient.execute(httppost);
-			
-			
-			
-			
-			
-			
-//	        HttpClient client = HttpClient.newHttpClient();
-//	        String baseFolderName = getBaseFolderName();
-//	        // Request body from a File
-//	        HttpRequest request = HttpRequest.newBuilder()
-//	             .uri(URI.create(url+"/submit"))
-//	             .POST(BodyPublishers.ofFile(Paths.get(baseFolderName + file)))
-//	             .header(glimpsTokenKey, glimpsTokenValue).build();
+	        // Request body from a File
+	        HttpRequest request = HttpRequest.newBuilder()
+	             .uri(URI.create(url+"/submit?file=" + baseFolderName + file))
+	             .POST(BodyPublishers.ofFile(Paths.get(baseFolderName + file)))
+	             .header(glimpsTokenKey, glimpsTokenValue).build();
 	        
 	        
 //			String requestBody = objectMapper.writeValueAsString(file);
@@ -565,8 +553,8 @@ public class ZipWorkerServices {
 //	                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
 //	                .header(glimpsTokenKey, glimpsTokenValue).build();
 
-//	        HttpResponse<String> response = client.send(request,
-//	                HttpResponse.BodyHandlers.ofString());
+	        HttpResponse<String> response = client.send(request,
+	                HttpResponse.BodyHandlers.ofString());
 
 	        LOGGER.debug("Response Uuid Glimps body : {} ", response.body());
 	        responseJSON =  new JSONObject(response.body());
