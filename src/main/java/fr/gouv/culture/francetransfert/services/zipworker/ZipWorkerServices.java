@@ -567,10 +567,10 @@ public class ZipWorkerServices {
 			 LOGGER.error("IOException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
 			 return uuid;
 		 }
-//		catch (InterruptedException e) {
-//			 LOGGER.error("InterruptedException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
-//			 return uuid;
-//		 }
+		catch (InterruptedException e) {
+			 LOGGER.error("InterruptedException: Erreur lors de la requete post Glimps du fichier {} : {}  ", file, e.getMessage(), e);
+			 return uuid;
+		 }
 		LOGGER.debug("Get Uuid Glimps : End");
 		return responseJSON.getString("uuid");
 	}
