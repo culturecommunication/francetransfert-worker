@@ -582,19 +582,16 @@ public class ZipWorkerServices {
 		HttpClient client = HttpClient.newHttpClient();
 		JSONObject responseJSON = new JSONObject();
 		try {
-			LOGGER.debug("Request Glimps clean : Start");
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create(url+"results?uuid="+uuid))
 	                .GET()
 	                .build();
-	        LOGGER.debug("Request Glimps clean : End");
 
-	        LOGGER.debug("Response Glimps clean : Start");
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
 	        responseJSON =  new JSONObject(response);
-	        LOGGER.debug("Response Glimps clean : End");
-	        
+	        LOGGER.debug("Response Glimps clean {} : " + response.body());
+	        LOGGER.debug("Response Glimps clean {} : " + responseJSON);
 			LOGGER.debug(" is_malware {} ", responseJSON.getBoolean("is_malware"));
 		} catch (IOException e) {
 			 LOGGER.error("IOException: Error lors de la requete post Glimps du uuid {} : {}  ", uuid, e.getMessage(), e);
