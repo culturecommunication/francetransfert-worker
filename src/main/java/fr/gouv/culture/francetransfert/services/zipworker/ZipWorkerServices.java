@@ -584,8 +584,7 @@ public class ZipWorkerServices {
 		try {
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create(url+"results?uuid="+uuid))
-	                .GET()
-	                .build();
+	                .GET().header(glimpsTokenKey, glimpsTokenValue).build();
 
 	        HttpResponse<String> response = client.send(request,
 	                HttpResponse.BodyHandlers.ofString());
