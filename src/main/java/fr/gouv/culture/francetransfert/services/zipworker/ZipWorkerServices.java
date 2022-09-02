@@ -582,13 +582,12 @@ public class ZipWorkerServices {
 		HttpClient client = HttpClient.newHttpClient();
 		JSONObject responseJSON = new JSONObject();
 		try {
-	        HttpRequest request = HttpRequest.newBuilder()
-	                .uri(URI.create(url+"/results/"+uuid))
+	        HttpRequest request = HttpRequest.newBuilder() .uri(URI.create(url+"/results/"+uuid))
 	                .GET().header(glimpsTokenKey, glimpsTokenValue).build();
 
-	        HttpResponse<String> response = client.send(request,
-	                HttpResponse.BodyHandlers.ofString());
-	        responseJSON =  new JSONObject(response);
+	        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+	        responseJSON =  new JSONObject(response.body());
 	        LOGGER.debug("Response Glimps clean body {} : ", response.body());
 	        LOGGER.debug("Response Glimps clean en json {} : ", responseJSON);
 			LOGGER.debug(" is_malware {} ", responseJSON.getBoolean("is_malware"));
