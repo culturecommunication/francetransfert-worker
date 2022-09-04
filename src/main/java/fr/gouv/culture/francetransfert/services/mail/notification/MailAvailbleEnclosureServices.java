@@ -10,7 +10,6 @@ package fr.gouv.culture.francetransfert.services.mail.notification;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.LocaleUtils;
@@ -23,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 
 import fr.gouv.culture.francetransfert.core.enums.EnclosureKeysEnum;
 import fr.gouv.culture.francetransfert.core.enums.RedisKeysEnum;
+import fr.gouv.culture.francetransfert.core.enums.SourceEnum;
 import fr.gouv.culture.francetransfert.core.enums.StatutEnum;
 import fr.gouv.culture.francetransfert.core.exception.MetaloadException;
 import fr.gouv.culture.francetransfert.core.exception.StatException;
@@ -83,12 +83,10 @@ public class MailAvailbleEnclosureServices {
 	public void sendMailsAvailableEnclosure(Enclosure enclosure, NewRecipient metaDataRecipient, Locale currentLanguage)
 			throws MetaloadException, StatException {
 
-		// ---
-		Map<String, String> enclosureMap = redisManager
-				.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));
-		// ---
-		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EDC.getCode());
-		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EDC.getWord());
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EDC.getCode(), -1);
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EDC.getWord(), -1);
 
 		LOGGER.info("send email notification availble to sender: {} for enclosure {}", enclosure.getSender(),
 				enclosure.getGuid());
@@ -110,7 +108,7 @@ public class MailAvailbleEnclosureServices {
 		String subjectRecipientLang = new String();
 		String subjectSenderLinkLang = new String();
 
-		if (language.equals(Locale.UK)) {
+		if (Locale.UK.equals(language)) {
 			subjectSend = new String(subjectSenderEn);
 			subjectSenderPassw = new String(subjectSenderPasswordEn);
 			subjectRecipientLang = new String(subjectRecipientEn);
@@ -127,8 +125,8 @@ public class MailAvailbleEnclosureServices {
 			subjectSend = subjectSenderLinkLang;
 		}
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
-			subjectSend = subjectSend.concat(" : ").concat(enclosure.getSubject());
-			subjectSenderPassw = subjectSenderPassw.concat(" : ").concat(enclosure.getSubject());
+			subjectSend = subjectSend.concat(enclosure.getSubject());
+			subjectSenderPassw = subjectSenderPassw.concat(enclosure.getSubject());
 		}
 		if (metaDataRecipient == null) {
 			mailNotificationServices.prepareAndSend(enclosure.getSender(), subjectSend, enclosure,
@@ -141,18 +139,20 @@ public class MailAvailbleEnclosureServices {
 					NotificationTemplateEnum.MAIL_AVAILABLE_RECIPIENT.getValue(), metaDataRecipient, currentLanguage);
 
 		// ---
-		enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.PAT.getCode());
-		enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.PAT.getWord());
-
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.PAT.getCode(), -1);
+		redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+				EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.PAT.getWord(), -1);
 	}
 
 	// Send mails to recipients
 	public void sendToRecipients(Enclosure enclosure, String subject, String templateName,
 			NewRecipient metaDataRecipient, Locale currentLanguage) throws MetaloadException {
 
-		// ---
-		Map<String, String> enclosureMap = redisManager
-				.hmgetAllString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()));
+		boolean fromPublicApi = SourceEnum.PUBLIC.getValue().equalsIgnoreCase(redisManager.getHgetString(
+				RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), EnclosureKeysEnum.SOURCE.getKey()));
+		boolean sendToRecipient = Boolean.parseBoolean(redisManager.getHgetString(
+				RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()), EnclosureKeysEnum.ENVOIMDPDEST.getKey()));
 
 		Locale language = LocaleUtils.toLocale(
 				RedisUtils.getEnclosureValue(redisManager, enclosure.getGuid(), EnclosureKeysEnum.LANGUAGE.getKey()));
@@ -160,13 +160,19 @@ public class MailAvailbleEnclosureServices {
 		subject = subject + " " + enclosure.getSender();
 		String subjectPassword = new String(subjectRecipientPassword);
 
-		if (language.equals(Locale.UK)) {
+		if (Locale.UK.equals(language)) {
 			subjectPassword = new String(subjectRecipientPasswordEn);
 		}
 
 		if (StringUtils.isNotBlank(enclosure.getSubject())) {
-			subject = subject.concat(" : ").concat(enclosure.getSubject());
-			subjectPassword = subjectPassword.concat(" : ").concat(enclosure.getSubject());
+			
+			if(Locale.UK.equals(language)) {
+				subject = subject.concat(": ").concat(enclosure.getSubject());	
+			}else {
+				subject = subject.concat(" : ").concat(enclosure.getSubject());
+			}
+			subjectPassword = subjectPassword.concat(enclosure.getSubject());
+
 
 		}
 		List<Recipient> recipients = enclosure.getRecipients();
@@ -191,15 +197,16 @@ public class MailAvailbleEnclosureServices {
 								recipient.getMail(), recipient.getId()));
 						mailNotificationServices.prepareAndSend(recipient.getMail(), subject, enclosure, templateName,
 								language);
-						mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
-								NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
-
+						// Send mail from web or api if check
+						if ((fromPublicApi && sendToRecipient) || !fromPublicApi) {
+							mailNotificationServices.prepareAndSend(recipient.getMail(), subjectPassword, enclosure,
+									NotificationTemplateEnum.MAIL_PASSWORD_RECIPIENT.getValue(), language);
+						}
 					} catch (Exception e) {
-
-						// ---
-						enclosureMap.put(EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EEC.getCode());
-						enclosureMap.put(EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EEC.getWord());
-
+						redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+								EnclosureKeysEnum.STATUS_CODE.getKey(), StatutEnum.EEC.getCode(), -1);
+						redisManager.hsetString(RedisKeysEnum.FT_ENCLOSURE.getKey(enclosure.getGuid()),
+								EnclosureKeysEnum.STATUS_WORD.getKey(), StatutEnum.EEC.getWord(), -1);
 						LOGGER.error("Cannot send mail recipient mail {} for enclosure {}", recipient.getMail(),
 								enclosure.getGuid());
 					}
